@@ -1,0 +1,48 @@
+﻿@page "/binarytree"
+@rendermode InteractiveServer
+@inject TreeService treeService
+
+<h3>Binary Tree Visualization</h3>
+
+<div>
+    <h4>Add Node</h4>
+    <input type="number" @bind="newNodeValue" />
+    <button @onclick="AddNode">Add Node</button>
+</div>
+
+<svg width="800" height="600" style="border:1px solid black">
+    @foreach (var line in lines)
+    {
+        <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2" stroke="black" stroke-width="2" />
+    }
+
+    @foreach (var nodePosition in nodePositions)
+    {
+        <circle cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2" fill="white" />
+        <svg x="@nodePosition.x - 10" y="@nodePosition.y + 5" font-size="12" fill="black">@nodePosition.node.Value</svg>
+    }
+</svg>
+
+@code {
+    @using BinaryTreeVisualization.Components.Services
+    private int newNodeValue;
+    private List<(ClassNode node, double x, double y)> nodePositions = new List<(ClassNode node, double x, double y)>();
+    private List<(double x1, double y1, double x2, double y2)> lines = new List<(double x1, double y1, double x2, double y2)>();
+
+    protected override void OnInitialized()
+    {
+        // Không cần khởi tạo lại treeService ở đây nếu đã được tiêm
+    }
+
+    private void AddNode()
+    {
+        treeService.AddNode(newNodeValue);
+        UpdateTreeDrawing();
+    }
+
+    private void UpdateTreeDrawing()
+    {
+        nodePositions = treeService.GetNodePositions(treeService.Root, 400, 50, 200);
+        lines = treeService.GetLines(); // Lấy danh sách các đường nối
+    }
+}

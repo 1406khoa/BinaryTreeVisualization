@@ -4,9 +4,6 @@ public class TreeService
 {
     public NodeService? Root { get; private set; }
 
-
-
-
     // Hàm thêm nút vào cây nhị phân
     public void AddNode(int value)
     {
@@ -111,5 +108,4 @@ public class TreeService
             CollectLines(node.RightChild, lines);
         }
     }
-
 }

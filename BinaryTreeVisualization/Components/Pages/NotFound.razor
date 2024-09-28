@@ -1,0 +1,32 @@
+﻿@page "/notfound/{statusCode:int}"
+@layout Layout.NoMenuLayout
+@inject NavigationManager _nav
+
+<PageTitle>@_heading</PageTitle>
+
+<div class="container">
+    <h1 class="heading">@_heading</h1>
+
+    <div class="main">
+            @if (_is404)
+            {
+                    <div class="announcement">Sorry! The page you are looking for does not exist!</div>
+                    <img class="image" src="Images/page-not-found.png" />
+                    <a href="/" class="button">Back to Home Page</a>
+            }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int StatusCode { get; set; }
+
+    private bool _is404;
+    private string _heading = "";
+    protected override void OnInitialized()
+    {
+        _is404 = StatusCode == 404;
+
+        _heading = _is404 ? "Error 404 | Page Not Found" : $"Error {StatusCode}";
+    }
+}

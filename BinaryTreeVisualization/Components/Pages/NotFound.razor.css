@@ -1,0 +1,52 @@
+﻿body {
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 50px;
+}
+
+.heading {
+    font-size: 45px;
+    font-weight: 600;
+    margin-bottom: 50px;
+}
+
+.announcement {
+    font-size: 30px;
+    font-weight: 500;
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.image {
+    width: 200px;
+    margin: 20px;
+}
+
+.button {
+    background-color: #cfbdff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: black;
+    font-weight: 600;
+    width: 35%;
+    height: 70px;
+    font-size: 20px;
+    margin-top: 50px;
+    border-radius: 10px;
+}
+
+.button:hover {
+    background-color: #8d72d5;
+    transition: 0.3s;
+    color: white;
+}

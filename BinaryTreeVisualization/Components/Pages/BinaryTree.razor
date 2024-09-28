@@ -16,13 +16,16 @@
 <svg width="100%" height="100vh" style="overflow: visible;">
     @foreach (var line in lines)
     {
-        <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2" stroke="black" stroke-width="2" />
+        <!-- Đường nối giữa các node -->
+        <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
+              stroke="@((line.IsHighlighted) ? "yellow" : "black")" stroke-width="2" />
     }
 
     @foreach (var nodePosition in nodePositions)
     {
-        <!-- Vẽ hình tròn cho node -->
-        <circle cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2" fill="white" />
+        <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
+        <circle cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
+                fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")" />
 
         <!-- Sử dụng RenderTreeBuilder để in giá trị -->
         @((RenderFragment)((builder) =>
@@ -46,23 +49,84 @@
     @using BinaryTreeVisualization.Components.Services
     private int newNodeValue;
     private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
-    private List<(double x1, double y1, double x2, double y2)> lines = new List<(double x1, double y1, double x2, double y2)>();
+    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
+    new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
-    protected override void OnInitialized()
+
+    private async Task AddNode()
     {
-        // Không cần khởi tạo lại treeService ở đây nếu đã được tiêm
+        var newNodeID = treeService.AddNode(newNodeValue); // Lấy NodeID của node vừa được thêm
+        UpdateTreeDrawing();
+
+        // Thực hiện tô màu node và đường line trong 2 giây
+        HighlightNodeAndLine(newNodeID);
+        await Task.Delay(2000);
+
+        // Khôi phục lại màu mặc định sau khi tô màu
+        RemoveHighlighting();
+        UpdateTreeDrawing();  // Cập nhật lại giao diện
     }
 
-    private void AddNode()
+    // Hàm để xóa bỏ highlight trên các node và đường nối
+    private void RemoveHighlighting()
     {
-        treeService.AddNode(newNodeValue);
-        UpdateTreeDrawing();
+        // Bỏ đánh dấu highlight cho tất cả các node
+        foreach (var node in nodePositions)
+        {
+            node.node.IsHighlighted = false;
+        }
+
+        // Bỏ highlight cho tất cả các đường nối
+        for (int i = 0; i < lines.Count; i++)
+        {
+            lines[i] = (lines[i].x1, lines[i].y1, lines[i].x2, lines[i].y2, IsHighlighted: false, lines[i].LineID);
+        }
+    }
+
+    private void HighlightNodeAndLine(Guid newNodeID)
+    {
+        // Tìm node vừa được thêm vào bằng NodeID
+        var newNode = nodePositions.FirstOrDefault(np => np.node.NodeID == newNodeID);
+        if (newNode.node == null) return;
+
+        // Đánh dấu node mới được thêm
+        newNode.node.IsHighlighted = true;
+
+        // Đánh dấu đường line kết nối với node đó
+        var parentLine = treeService.GetParentLine(newNode.node);
+        if (parentLine != null)
+        {
+            // Tìm line kết nối dựa trên tọa độ của đường line cha - con
+            var lineToHighlight = lines.FirstOrDefault(line =>
+                line.x1 == parentLine.Value.x1 && line.y1 == parentLine.Value.y1 &&
+                line.x2 == parentLine.Value.x2 && line.y2 == parentLine.Value.y2);
+
+            if (lineToHighlight != default)
+            {
+                int index = lines.IndexOf(lineToHighlight);
+                if (index != -1)
+                {
+                    // Đánh dấu đường line với IsHighlighted = true
+                    lines[index] = (lines[index].x1, lines[index].y1, lines[index].x2, lines[index].y2, IsHighlighted: true, lines[index].LineID);
+                }
+            }
+        }
     }
 
     private void UpdateTreeDrawing()
     {
-        // Cập nhật nodePositions bằng cách gọi hàm GetNodePositions
+        // Cập nhật node và vị trí từ TreeService
         nodePositions = treeService.GetNodePositions(treeService.Root);
-        lines = treeService.GetLines(); // Lấy danh sách các đường nối
+
+        // Cập nhật lines từ TreeService với kiểu dữ liệu mới
+        lines = treeService.GetLines()
+                           .Select(line => (
+                               line.x1, line.y1, line.x2, line.y2,
+                               IsHighlighted: false,                // Đặt cờ IsHighlighted ban đầu là false
+                               LineID: Guid.NewGuid()                // Tạo mới LineID cho mỗi đường nối
+                           )).ToList();
+
+        StateHasChanged(); // Cập nhật lại giao diện
     }
+
 }

@@ -5,18 +5,20 @@ public class TreeService
     public NodeService? Root { get; private set; }
 
     // Hàm thêm nút vào cây nhị phân
-    public void AddNode(int value)
+    public Guid AddNode(int value)
     {
         NodeService newNode = new NodeService(value);
         if (Root == null)
         {
             Root = newNode;
-            SetNodePosition(Root, 800, 50); // Tọa độ gốc (giữa màn hình)
+            SetNodePosition(Root, 800, 50); // Đặt vị trí root node
         }
         else
         {
-            AddNodeRecursive(Root, newNode, 800, 200); // Thêm node với tọa độ ban đầu và khoảng cách x
+            AddNodeRecursive(Root, newNode, 800, 200);
         }
+
+        return newNode.NodeID; // Trả về NodeID của node vừa được thêm
     }
 
     private void AddNodeRecursive(NodeService current, NodeService newNode, double x, double offsetX)
@@ -26,11 +28,12 @@ public class TreeService
             if (current.LeftChild == null)
             {
                 current.LeftChild = newNode;
-                SetNodePosition(current.LeftChild, x - offsetX, current.PositionY + 100); // Di chuyển sang trái
+                SetNodePosition(current.LeftChild, x - offsetX, current.PositionY + 100);
+                current.LeftChild.Parent = current;  // Liên kết cha
             }
             else
             {
-                AddNodeRecursive(current.LeftChild, newNode, x - offsetX, offsetX * 0.8); // Giảm offsetX từ từ hơn
+                AddNodeRecursive(current.LeftChild, newNode, x - offsetX, offsetX * 0.8);
             }
         }
         else
@@ -38,13 +41,48 @@ public class TreeService
             if (current.RightChild == null)
             {
                 current.RightChild = newNode;
-                SetNodePosition(current.RightChild, x + offsetX, current.PositionY + 100); // Di chuyển sang phải
+                SetNodePosition(current.RightChild, x + offsetX, current.PositionY + 100);
+                current.RightChild.Parent = current;  // Liên kết cha
             }
             else
             {
-                AddNodeRecursive(current.RightChild, newNode, x + offsetX, offsetX * 0.8); // Giảm offsetX từ từ hơn
+                AddNodeRecursive(current.RightChild, newNode, x + offsetX, offsetX * 0.8);
             }
         }
+    }
+
+    // Hàm duyệt ngược để xác định đường line kết nối với node hiện tại
+    public (double x1, double y1, double x2, double y2, Guid LineID)? GetParentLine(NodeService node)
+    {
+        if (node.Parent == null)
+        {
+            return null; // Nếu không có cha, tức là node gốc
+        }
+
+        var parent = node.Parent;
+        // Trả về tọa độ đường line kết nối cha - con cùng với LineID của nó
+        return (parent.PositionX, parent.PositionY, node.PositionX, node.PositionY, Guid.NewGuid());
+    }
+
+    // Hàm kiểm tra xem cây có cân bằng không (dành cho cây AVL)
+    public bool IsBalanced(NodeService? node)
+    {
+        if (node == null) return true;
+
+        int leftHeight = GetHeight(node.LeftChild);
+        int rightHeight = GetHeight(node.RightChild);
+
+        // Kiểm tra chênh lệch độ cao của nhánh trái và nhánh phải
+        return Math.Abs(leftHeight - rightHeight) <= 1
+            && IsBalanced(node.LeftChild)
+            && IsBalanced(node.RightChild);
+    }
+
+    // Hàm tính độ cao của cây
+    private int GetHeight(NodeService? node)
+    {
+        if (node == null) return 0;
+        return 1 + Math.Max(GetHeight(node.LeftChild), GetHeight(node.RightChild));
     }
 
 
@@ -70,41 +108,30 @@ public class TreeService
     }
 
     // Hàm thu thập các đường nối giữa node cha và con
-    public List<(double x1, double y1, double x2, double y2)> GetLines()
+    public List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()
     {
-        var lines = new List<(double x1, double y1, double x2, double y2)>();
+        var lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
         CollectLines(Root, lines);
         return lines;
     }
 
-    private void CollectLines(NodeService? node, List<(double x1, double y1, double x2, double y2)> lines)
+    private void CollectLines(NodeService? node, List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines)
     {
-        const double circleRadius = 20;  // Bán kính của hình tròn
-        const double adjustment = 5;
-        const double separation = 10;
         if (node == null) return;
 
-        // Nếu có con trái, vẽ đường từ giữa cạnh dưới của nút cha đến giữa cạnh trên của nút con trái
+        // Nếu có con trái, thêm đường nối từ cha đến con trái
         if (node.LeftChild != null)
         {
-            lines.Add((
-                node.PositionX - separation,                                   // Vị trí x của nút cha
-                node.PositionY + circleRadius - adjustment,         // Dưới hình tròn cha
-                node.LeftChild.PositionX,                           // Vị trí x của nút con trái
-                node.LeftChild.PositionY - circleRadius             // Phía trên hình tròn con trái
-            ));
+            var lineID = Guid.NewGuid();  // Tạo một LineID duy nhất cho đường nối
+            lines.Add((node.PositionX, node.PositionY, node.LeftChild.PositionX, node.LeftChild.PositionY, IsHighlighted: false, lineID));
             CollectLines(node.LeftChild, lines);
         }
 
-        // Nếu có con phải, vẽ đường từ giữa cạnh dưới của nút cha đến giữa cạnh trên của nút con phải
+        // Nếu có con phải, thêm đường nối từ cha đến con phải
         if (node.RightChild != null)
         {
-            lines.Add((
-                node.PositionX + separation,                // Dịch sang phải
-                node.PositionY + circleRadius - adjustment, // Điều chỉnh y để đường line đi lên một chút
-                node.RightChild.PositionX,                  // Tọa độ x của nút con phải
-                node.RightChild.PositionY - circleRadius    // Tọa độ y của nút con phải (kết thúc ở trên hình tròn con)
-            ));
+            var lineID = Guid.NewGuid();  // Tạo một LineID duy nhất cho đường nối
+            lines.Add((node.PositionX, node.PositionY, node.RightChild.PositionX, node.RightChild.PositionY, IsHighlighted: false, lineID));
             CollectLines(node.RightChild, lines);
         }
     }

@@ -22,6 +22,8 @@ namespace BinaryTreeVisualization
                 app.UseHsts();
             }
 
+            app.UseStatusCodePagesWithRedirects("/notfound/{0}");
+
             app.UseHttpsRedirection();
 
             app.UseStaticFiles();

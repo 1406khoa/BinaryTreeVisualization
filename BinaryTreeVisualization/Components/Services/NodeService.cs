@@ -14,8 +14,8 @@
         // Liên kết đến node cha
         public NodeService? Parent { get; set; }
 
-        // Độ sâu của node trong cây
-        public int Depth { get; set; }
+        // Độ cao của node trong cây
+        public int Height { get; set; }
 
         // Định danh duy nhất cho node
         public Guid NodeID { get; set; }
@@ -30,7 +30,7 @@
             PositionX = 0;
             PositionY = 0;
             IsHighlighted = false;
-            Depth = 0;
+            Height = 0;
             NodeID = Guid.NewGuid(); // Tạo ID duy nhất cho node
         }
     }

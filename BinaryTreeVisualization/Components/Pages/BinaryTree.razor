@@ -12,6 +12,17 @@
     <button @onclick="AddNode">Add Node</button>
 </div>
 
+<h4>Create Random Tree</h4>
+<div>
+    <label>Number of Nodes:</label>
+    <input type="number" @bind="nodeCount" />
+    <label>Min Value:</label>
+    <input type="number" @bind="minValue" />
+    <label>Max Value:</label>
+    <input type="number" @bind="maxValue" />
+    <button @onclick="CreateRandomBinaryTree">Create Random Binary Tree</button>
+</div>
+
 <!-- Khối SVG -->
 <svg width="100%" height="100vh" style="overflow: visible;">
     @foreach (var line in lines)
@@ -52,6 +63,11 @@
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
     new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
+    //Phần khai báo để xài cho hàm random với nhập
+    //số lượng node, giới hạn giá trị nhỏ nhất và lớn nhất tùy chỉnh
+    private int nodeCount;
+    private int minValue;
+    private int maxValue;
 
     private async Task AddNode()
     {
@@ -129,4 +145,10 @@
         StateHasChanged(); // Cập nhật lại giao diện
     }
 
+    private void CreateRandomBinaryTree()
+    {
+        treeService.ResetTree(); // Đặt lại cây trước khi tạo cây mới
+        treeService.BuildRandomTree(nodeCount, minValue, maxValue, "BinaryTree");
+        UpdateTreeDrawing(); // Cập nhật lại giao diện
+    }
 }

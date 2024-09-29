@@ -135,4 +135,49 @@ public class TreeService
             CollectLines(node.RightChild, lines);
         }
     }
+
+    // Hàm tạo giá trị ngẫu nhiên để sử dụng cho hàm tạo cây ngẫu nhiên
+    private List<int> GenerateRandomValues(int count, int minValue, int maxValue)
+    {
+        Random random = new Random();
+        List<int> values = new List<int>();
+
+        for (int i = 0; i < count; i++)
+        {
+            values.Add(random.Next(minValue, maxValue + 1));
+        }
+
+        return values;
+    }
+
+
+    // Hàm tạo cây ngẫu nhiên
+    public void BuildRandomTree(int nodeCount, int minValue, int maxValue, string treeType)
+    {
+        List<int> randomValues = GenerateRandomValues(nodeCount, minValue, maxValue);
+
+        foreach (var value in randomValues)
+        {
+            switch (treeType)
+            {
+                case "BinaryTree":
+                    AddNode(value);  // Thêm node vào cây Binary Tree
+                    break;
+
+                //case "BinarySearchTree":
+                //    AddNodeToBST(value);  // Cần viết hàm riêng cho BST
+                //    break;
+
+                //case "AVLTree":
+                //    AddNodeToAVLTree(value);  // Cần viết hàm riêng cho AVL Tree
+                //    break;
+            }
+        }
+    }
+
+    //Hàm xóa cây
+    public void ResetTree()
+    {
+        Root = null; // Đặt lại root về null
+    }
 }

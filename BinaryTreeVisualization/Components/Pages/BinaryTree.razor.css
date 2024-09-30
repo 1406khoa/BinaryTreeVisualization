@@ -1,0 +1,60 @@
+﻿body {
+}
+
+.basic-operation {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.add, .delete {
+    width: 20%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.random-tree {
+    margin-top: 20px;
+}
+
+.random-tree > div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: 5px;
+}
+
+input {
+    width: 100px;
+    border-radius: 5px;
+    padding: 0 5px;
+    margin: 0 5px;
+}
+
+.button,
+.create-random-button {
+    background-color: #9375e2;
+    text-decoration: none;
+    color: white;
+    height: 28px;
+    font-size: 12px;
+    border-radius: 5px;
+    border: none;
+    margin-left: 5px;
+}
+
+.button {
+    width: 35%;
+}
+
+.create-random-button {
+    width: 15%;
+}
+
+.button:hover,
+.create-random-button:hover {
+    background-color: #6a4cba;
+    transition: 0.3s;
+    color: white;
+}

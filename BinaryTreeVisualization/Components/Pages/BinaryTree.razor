@@ -4,23 +4,40 @@
 
 <PageTitle>Binary Tree</PageTitle>
 
-<h3>Binary Tree Visualization</h3>
-
-<div>
-    <h4>Add Node</h4>
-    <input type="number" @bind="newNodeValue" />
-    <button @onclick="AddNode">Add Node</button>
+<h4>Basic Operation</h4>
+<div class="basic-operation">
+    <div class="add">
+        <input type="number" @bind="newNodeValue" />
+        <button class="button" @onclick="AddNode">Add Node</button>
+    </div>
+    <div class="edit">
+        <input type="number" @bind="newNodeValue" />
+        <button class="button">Edit Node</button>
+    </div>
+    <div class="delete-node">
+        <input type="number" @bind="newNodeValue" />
+        <button class="button">Delete Node</button>
+    </div>
+    <div class="find">
+        <input type="number" @bind="newNodeValue" />
+        <button class="button">Find Node</button>
+    </div>
+    <div class="delete-tree">
+        <button class="button" @onclick="DeleteTree">Delete Tree</button>
+    </div>
 </div>
 
-<h4>Create Random Tree</h4>
-<div>
-    <label>Number of Nodes:</label>
-    <input type="number" @bind="nodeCount" />
-    <label>Min Value:</label>
-    <input type="number" @bind="minValue" />
-    <label>Max Value:</label>
-    <input type="number" @bind="maxValue" />
-    <button @onclick="CreateRandomBinaryTree">Create Random Binary Tree</button>
+<div class="random-tree">
+    <h4>Create Random Tree</h4>
+    <div>
+        <label>Number of Nodes:</label>
+        <input type="number" @bind="nodeCount" />
+        <label>Min Value:</label>
+        <input type="number" @bind="minValue" />
+        <label>Max Value:</label>
+        <input type="number" @bind="maxValue" />
+        <button class="create-random-button" @onclick="CreateRandomBinaryTree">Create Random Binary Tree</button>
+    </div>
 </div>
 
 <!-- Khối SVG -->
@@ -63,8 +80,7 @@
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
     new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
-    //Phần khai báo để xài cho hàm random với nhập
-    //số lượng node, giới hạn giá trị nhỏ nhất và lớn nhất tùy chỉnh
+    //Phần khai báo để sử dụng cho hàm random
     private int nodeCount;
     private int minValue;
     private int maxValue;
@@ -145,10 +161,19 @@
         StateHasChanged(); // Cập nhật lại giao diện
     }
 
+    //Create Random Tree
     private void CreateRandomBinaryTree()
     {
         treeService.ResetTree(); // Đặt lại cây trước khi tạo cây mới
         treeService.BuildRandomTree(nodeCount, minValue, maxValue, "BinaryTree");
         UpdateTreeDrawing(); // Cập nhật lại giao diện
+    }
+
+    //Delete Tree
+    private void DeleteTree()
+    {
+        treeService.ResetTree();
+        UpdateTreeDrawing();
+        StateHasChanged();
     }
 }

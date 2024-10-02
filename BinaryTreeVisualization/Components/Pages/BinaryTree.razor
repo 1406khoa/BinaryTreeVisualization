@@ -10,7 +10,19 @@
         <input type="number" @bind="newNodeValue" />
         <button class="button" @onclick="AddNode">Add Node</button>
     </div>
-    <div class="delete">
+    <div class="edit">
+        <input type="number" @bind="newNodeValue" />
+        <button class="button">Edit Node</button>
+    </div>
+    <div class="delete-node">
+        <input type="number" @bind="newNodeValue" />
+        <button class="button">Delete Node</button>
+    </div>
+    <div class="find">
+        <input type="number" @bind="newNodeValue" />
+        <button class="button">Find Node</button>
+    </div>
+    <div class="delete-tree">
         <button class="button" @onclick="DeleteTree">Delete Tree</button>
     </div>
 </div>

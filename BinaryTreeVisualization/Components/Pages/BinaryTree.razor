@@ -18,7 +18,7 @@
     </div>
     <div class="delete-node">
         <input type="number" @bind="newNodeValue" />
-        <button class="button" @onclick="DeleteNode">Delete Node</button>
+        <button class="button">Delete Node</button>
     </div>
     <div class="find">
         <input type="number" @bind="newNodeValue" />
@@ -214,9 +214,9 @@
         StateHasChanged();
     }
 
-    private void DeleteNode()
-    {
-        treeService.DeleteNode(newNodeValue);
-        UpdateTreeDrawing();
-    }
+    // private void DeleteNode()
+    // {
+    //     treeService.DeleteNode(newNodeValue);
+    //     UpdateTreeDrawing();
+    // }
 }

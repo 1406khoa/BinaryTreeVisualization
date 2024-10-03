@@ -1,24 +1,40 @@
 ﻿using BinaryTreeVisualization.Components.Services;
-
+using System;
+using System.Collections.Generic;
 public class TreeService
 {
+    
     public NodeService? Root { get; private set; }
+    private const double RootX = 800; // Xác định vị trí cố định cho node gốc
+    private const double RootY = 50;  // Y cố định cho node gốc
 
-    // Hàm thêm nút vào cây nhị phân
+    public double GetRootX() => RootX;
+    public double GetRootY() => RootY;
+
+
+
+    // Danh sách để lưu trữ giá trị của các node đã thêm vào cây
+    private List<int> nodeValues = new List<int>();
+
+    // Thay đổi: Không cần khôi phục lại node gốc nữa vì root sẽ không thay đổi khi duyệt cây.
+    private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
+
+    // Hàm thêm node vào cây nhị phân
     public Guid AddNode(int value)
     {
         NodeService newNode = new NodeService(value);
         if (Root == null)
         {
             Root = newNode;
-            SetNodePosition(Root, 800, 50); // Đặt vị trí root node
+            Root.IsRoot = true; // Đánh dấu đây là node gốc
+            SetNodePosition(Root, RootX, RootY); // Cố định vị trí của node gốc
         }
         else
         {
-            AddNodeRecursive(Root, newNode, 800, 200);
+            AddNodeRecursive(Root, newNode, RootX, 200);
         }
-
-        return newNode.NodeID; // Trả về NodeID của node vừa được thêm
+        nodeValues.Add(value); // Lưu lại giá trị của node đã thêm
+        return newNode.NodeID;
     }
 
     private void AddNodeRecursive(NodeService current, NodeService newNode, double x, double offsetX)
@@ -33,7 +49,7 @@ public class TreeService
             }
             else
             {
-                AddNodeRecursive(current.LeftChild, newNode, x - offsetX, offsetX * 0.8);
+                AddNodeRecursive(current.LeftChild, newNode, x - offsetX, offsetX * 0.5);
             }
         }
         else
@@ -46,7 +62,7 @@ public class TreeService
             }
             else
             {
-                AddNodeRecursive(current.RightChild, newNode, x + offsetX, offsetX * 0.8);
+                AddNodeRecursive(current.RightChild, newNode, x + offsetX, offsetX * 0.5);
             }
         }
     }
@@ -64,18 +80,20 @@ public class TreeService
         return (parent.PositionX, parent.PositionY, node.PositionX, node.PositionY, Guid.NewGuid());
     }
 
-    // Hàm kiểm tra xem cây có cân bằng không (dành cho cây AVL)
+    // Hàm kiểm tra tính cân bằng của cây AVL dựa trên thuộc tính Height
     public bool IsBalanced(NodeService? node)
     {
         if (node == null) return true;
 
-        int leftHeight = GetHeight(node.LeftChild);
-        int rightHeight = GetHeight(node.RightChild);
+        // Tính chiều cao của nhánh trái và nhánh phải
+        int leftHeight = node.LeftChild?.Height ?? 0;
+        int rightHeight = node.RightChild?.Height ?? 0;
 
-        // Kiểm tra chênh lệch độ cao của nhánh trái và nhánh phải
-        return Math.Abs(leftHeight - rightHeight) <= 1
-            && IsBalanced(node.LeftChild)
-            && IsBalanced(node.RightChild);
+        // Kiểm tra sự chênh lệch chiều cao giữa nhánh trái và nhánh phải
+        bool isBalanced = Math.Abs(leftHeight - rightHeight) <= 1;
+
+        // Đệ quy kiểm tra cân bằng cho các node con
+        return isBalanced && IsBalanced(node.LeftChild) && IsBalanced(node.RightChild);
     }
 
     // Hàm tính độ cao của cây
@@ -86,34 +104,168 @@ public class TreeService
     }
 
 
-    // Hàm thiết lập vị trí cho các nút
+    // Hàm thiết lập vị trí cho các nút, giữ nguyên vị trí node gốc
     private void SetNodePosition(NodeService node, double x, double y)
     {
-        node.PositionX = x;
-        node.PositionY = y;
+        if (node == Root)
+        {
+            node.PositionX = RootX; // Node gốc luôn nằm ở vị trí cố định (RootX, RootY)
+            node.PositionY = RootY;
+        }
+        else
+        {
+            node.PositionX = x;
+            node.PositionY = y;
+        }
     }
 
-    // Hàm thu thập vị trí của các nút
-    public List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node)
+    // Phương thức này trả về danh sách vị trí của các node trong cây
+    public List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
     {
         var positions = new List<(NodeService node, double x, double y)>();
-        if (node != null)
+
+        if (node == null)
         {
-            // Sử dụng trực tiếp PositionX và PositionY của node thay vì tính lại
-            positions.Add((node, node.PositionX, node.PositionY));
-            positions.AddRange(GetNodePositions(node.LeftChild));
-            positions.AddRange(GetNodePositions(node.RightChild));
+            return positions; // Trả về danh sách rỗng nếu node là null
         }
+
+        // Duyệt qua cây theo kiểu được chọn và lưu trữ các node
+        var nodesInOrder = TraverseTree(node, traversalType);
+
+        // Ghi lại vị trí của mỗi node trong danh sách
+        foreach (var n in nodesInOrder)
+        {
+            positions.Add((n, n.PositionX, n.PositionY));
+        }
+
         return positions;
     }
 
-    // Hàm thu thập các đường nối giữa node cha và con
+    
+
+    // Tìm node nhỏ nhất trong cây con
+    private NodeService FindMin(NodeService node)
+    {
+        while (node.LeftChild != null)
+        {
+            node = node.LeftChild;
+        }
+        return node;
+    }
+    public void AssignPositionsBasedOnTreeStructure(NodeService node, double x, double y, double offsetX)
+    {
+        double minOffset = 50;
+
+        // Thiết lập vị trí cho node hiện tại
+        SetNodePosition(node, x, y);
+
+        if (offsetX > minOffset)
+        {
+            offsetX *= 0.75; // Giảm dần offsetX cho các node tiếp theo
+        }
+
+        // Đặt vị trí cho node con trái (LeftChild)
+        if (node.LeftChild != null)
+        {
+            double leftX = x - offsetX;
+            double leftY = y + 100;
+            AssignPositionsBasedOnTreeStructure(node.LeftChild, leftX, leftY, offsetX);
+        }
+
+        // Đặt vị trí cho node con phải (RightChild)
+        if (node.RightChild != null)
+        {
+            double rightX = x + offsetX;
+            double rightY = y + 100;
+            AssignPositionsBasedOnTreeStructure(node.RightChild, rightX, rightY, offsetX);
+        }
+    }
+
+
+    // Cập nhật phương thức TraverseTree để duyệt cây theo kiểu hiện tại mà không thay đổi cấu trúc cây
+    public List<NodeService> TraverseTree(NodeService? node)
+    {
+        return TraverseTree(node, CurrentTraversalType);
+    }
+
+
+    // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
+    public List<NodeService> TraverseTree(NodeService? node, string traversalType)
+    {
+        var result = new List<NodeService>();
+        if (node == null) return result;
+
+        // Tạo một hành động (Action) để thêm node vào danh sách result
+        Action<NodeService> addToResult = node => result.Add(node);
+
+        switch (traversalType)
+        {
+            case "pre-order":
+                PreOrderTraversal(node, addToResult);
+                break;
+            case "in-order":
+                InOrderTraversal(node, addToResult);
+                break;
+            case "post-order":
+                PostOrderTraversal(node, addToResult);
+                break;
+            case "reverse-in-order":
+                ReverseInOrderTraversal(node, addToResult);
+                break;
+            default:
+                InOrderTraversal(node, addToResult); // Mặc định là In-order
+                break;
+        }
+        return result;
+    }
+
+    public void SetTraversalType(string traversalType)
+    {
+        CurrentTraversalType = traversalType;
+    }
+
+
+
+    // Hàm thu thập đường nối giữa các node cha - con
     public List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()
     {
         var lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
         CollectLines(Root, lines);
         return lines;
     }
+
+    private void InOrderTraversal(NodeService? node, Action<NodeService> action)
+    {
+        if (node == null) return;
+        InOrderTraversal(node.LeftChild, action);  // Duyệt trái
+        action(node);                              // Thao tác với node hiện tại
+        InOrderTraversal(node.RightChild, action); // Duyệt phải
+    }
+
+    private void PreOrderTraversal(NodeService? node, Action<NodeService> action)
+    {
+        if (node == null) return;
+        action(node);                              // Thao tác với node hiện tại
+        PreOrderTraversal(node.LeftChild, action); // Duyệt trái
+        PreOrderTraversal(node.RightChild, action);// Duyệt phải
+    }
+
+    private void PostOrderTraversal(NodeService? node, Action<NodeService> action)
+    {
+        if (node == null) return;
+        PostOrderTraversal(node.LeftChild, action); // Duyệt trái
+        PostOrderTraversal(node.RightChild, action);// Duyệt phải
+        action(node);                               // Thao tác với node hiện tại
+    }
+
+    private void ReverseInOrderTraversal(NodeService? node, Action<NodeService> action)
+    {
+        if (node == null) return;
+        ReverseInOrderTraversal(node.RightChild, action); // Duyệt phải trước
+        action(node);                                     // Thao tác với node hiện tại
+        ReverseInOrderTraversal(node.LeftChild, action);  // Duyệt trái sau
+    }
+
 
     private void CollectLines(NodeService? node, List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines)
     {
@@ -164,13 +316,13 @@ public class TreeService
                     AddNode(value);  // Thêm node vào cây Binary Tree
                     break;
 
-                //case "BinarySearchTree":
-                //    AddNodeToBST(value);  // Cần viết hàm riêng cho BST
-                //    break;
+                    //case "BinarySearchTree":
+                    //    AddNodeToBST(value);  // Cần viết hàm riêng cho BST
+                    //    break;
 
-                //case "AVLTree":
-                //    AddNodeToAVLTree(value);  // Cần viết hàm riêng cho AVL Tree
-                //    break;
+                    //case "AVLTree":
+                    //    AddNodeToAVLTree(value);  // Cần viết hàm riêng cho AVL Tree
+                    //    break;
             }
         }
     }
@@ -180,4 +332,51 @@ public class TreeService
     {
         Root = null; // Đặt lại root về null
     }
+
+
+
+    //// Hàm xóa node theo giá trị
+    //public bool DeleteNode(int value)
+    //{
+    //    Root = DeleteNodeRecursive(Root, value);
+
+    //    // Sau khi xóa node, cập nhật lại vị trí của tất cả các node
+    //    if (Root != null)
+    //    {
+    //        AssignPositionsBasedOnTreeStructure(Root, RootX, RootY, 200);
+    //    }
+
+    //    return Root != null;
+    //}
+
+    //// Đệ quy xóa node khỏi cây nhị phân
+    //private NodeService? DeleteNodeRecursive(NodeService? node, int value)
+    //{
+    //    if (node == null) return null;
+
+    //    if (value < node.Value)
+    //    {
+    //        node.LeftChild = DeleteNodeRecursive(node.LeftChild, value);
+    //    }
+    //    else if (value > node.Value)
+    //    {
+    //        node.RightChild = DeleteNodeRecursive(node.RightChild, value);
+    //    }
+    //    else
+    //    {
+    //        // Node cần xóa được tìm thấy
+
+    //        // Trường hợp 1: Node không có con hoặc chỉ có 1 con
+    //        if (node.LeftChild == null) return node.RightChild;
+    //        if (node.RightChild == null) return node.LeftChild;
+
+    //        // Trường hợp 2: Node có 2 con
+    //        // Tìm node nhỏ nhất trong nhánh phải
+    //        var minLargerNode = FindMin(node.RightChild);
+    //        node.Value = minLargerNode.Value; // Thay thế giá trị node hiện tại bằng giá trị node nhỏ nhất nhánh phải
+    //        node.RightChild = DeleteNodeRecursive(node.RightChild, minLargerNode.Value); // Xóa node nhỏ nhất nhánh phải
+    //    }
+
+    //    return node;
+    //}
 }

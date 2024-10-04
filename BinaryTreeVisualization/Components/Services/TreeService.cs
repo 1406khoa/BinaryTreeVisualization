@@ -137,7 +137,6 @@ public class TreeService
         return positions;
     }
 
-    
     // Tìm node nhỏ nhất trong cây con
     private NodeService FindMin(NodeService node)
     {
@@ -176,13 +175,11 @@ public class TreeService
         }
     }
 
-
     // Cập nhật phương thức TraverseTree để duyệt cây theo kiểu hiện tại mà không thay đổi cấu trúc cây
     public List<NodeService> TraverseTree(NodeService? node)
     {
         return TraverseTree(node, CurrentTraversalType);
     }
-
 
     // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
     public List<NodeService> TraverseTree(NodeService? node, string traversalType)
@@ -213,12 +210,10 @@ public class TreeService
         }
         return result;
     }
-
     public void SetTraversalType(string traversalType)
     {
         CurrentTraversalType = traversalType;
     }
-
 
     // Hàm thu thập đường nối giữa các node cha - con
     public List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()
@@ -260,7 +255,6 @@ public class TreeService
         ReverseInOrderTraversal(node.LeftChild, action);  // Duyệt trái sau
     }
 
-
     private void CollectLines(NodeService? node, List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines)
     {
         if (node == null) return;
@@ -295,7 +289,6 @@ public class TreeService
 
         return values;
     }
-
 
     // Hàm tạo cây ngẫu nhiên
     public void BuildRandomTree(int nodeCount, int minValue, int maxValue, string treeType)
@@ -370,5 +363,26 @@ public class TreeService
         }
 
         return node;
+    }
+
+    // Hàm tìm kiếm nút
+    public NodeService? SearchNode(NodeService? currentNode, int value)
+    {
+        if (currentNode == null)
+        {
+            return null;
+        }
+        if (currentNode.Value == value)
+        {
+            return currentNode;
+        }
+        else if (value < currentNode.Value)
+        {
+            return SearchNode(currentNode.LeftChild, value);
+        }
+        else
+        {
+            return SearchNode(currentNode.RightChild, value);
+        }
     }
 }

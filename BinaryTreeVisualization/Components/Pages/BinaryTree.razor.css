@@ -25,7 +25,10 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    margin-left: 5px;
+}
+
+.first-input {
+    margin-left: 0px !important;
 }
 
 input {
@@ -62,3 +65,10 @@ input {
     color: white;
 }
 
+.browse-tree {
+    margin-top: 20px;
+}
+
+select {
+    border-radius: 5px;
+}

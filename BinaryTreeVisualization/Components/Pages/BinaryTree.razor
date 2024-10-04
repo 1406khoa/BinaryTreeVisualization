@@ -8,7 +8,7 @@
 <h4>Basic Operation</h4>
 <div class="basic-operation">
     <div class="add">
-        <input type="number" @bind="newNodeValue" />
+        <input class="first-input" type="number" @bind="newNodeValue" />
         <button class="button" @onclick="AddNode">Add Node</button>
     </div>
     <div class="edit">
@@ -20,8 +20,8 @@
         <button class="button" @onclick="DeleteNode">Delete Node</button>
     </div>
     <div class="find">
-        <input type="number" @bind="newNodeValue" />
-        <button class="button">Find Node</button>
+        <input type="number" @bind="searchNodeValue" />
+        <button class="button" @onclick="FindNode">Find Node</button>
     </div>
     <div class="delete-tree">
         <button class="button" @onclick="DeleteTree">Delete Tree</button>
@@ -41,7 +41,7 @@
     </div>
 </div>
 
-<div>
+<div class="browse-tree">
     <label>Select Traversal Method</label>
     <select @onchange="OnTraversalMethodChange">
         <option value="pre-order">Pre-order (NLR)</option>
@@ -100,6 +100,7 @@
     private int newNodeValue;
     private int nodeToDeleteValue;
     private int editedNodeValue;
+    private int searchNodeValue;
     private NodeService? selectedNode;
     private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
@@ -219,15 +220,6 @@
     {
         bool isDeleted = treeService.DeleteNode(nodeToDeleteValue);
 
-        if (isDeleted)
-        {
-            statusMessage = $"Node {nodeToDeleteValue} has been deleted.";
-        }
-        else
-        {
-            statusMessage = $"Node {nodeToDeleteValue} could not be found.";
-        }
-
         UpdateTreeDrawing(); // Cập nhật lại giao diện sau khi xóa
     }
 
@@ -258,6 +250,48 @@
 
             RemoveHighlighting();
             UpdateTreeDrawing();
+        }
+    }
+
+    private async Task FindNode()
+    {
+        RemoveHighlighting(); // Đặt lại trạng thái trước khi tìm kiếm
+        var foundNode = treeService.SearchNode(treeService.Root, searchNodeValue);
+        if (foundNode != null)
+        {
+            // Tô màu cho các nút trên đường đi
+            await HighlightPathToNode(treeService.Root, searchNodeValue);
+
+            // Tô màu cho nút đã tìm thấy
+            foundNode.IsHighlighted = true;
+            UpdateTreeDrawing();
+        }
+
+        await Task.Delay(2000);
+        RemoveHighlighting();
+        UpdateTreeDrawing();
+    }
+
+    private async Task HighlightPathToNode(NodeService? currentNode, int targetValue)
+    {
+        if (currentNode == null) return;
+
+        currentNode.IsHighlighted = true;
+        UpdateTreeDrawing();
+
+        await Task.Delay(1000);
+
+        // Nếu tìm thấy giá trị, dừng lại
+        if (currentNode.Value == targetValue) return;
+
+        // Nhỏ hơn tìm bên trái, lớn hơn tìm bên phải
+        if (targetValue < currentNode.Value)
+        {
+            await HighlightPathToNode(currentNode.LeftChild, targetValue);
+        }
+        else
+        {
+            await HighlightPathToNode(currentNode.RightChild, targetValue);
         }
     }
 }

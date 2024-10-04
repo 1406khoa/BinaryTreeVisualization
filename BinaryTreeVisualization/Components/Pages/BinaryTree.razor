@@ -5,7 +5,6 @@
 
 <PageTitle>Binary Tree</PageTitle>
 
-
 <h4>Basic Operation</h4>
 <div class="basic-operation">
     <div class="add">
@@ -13,8 +12,8 @@
         <button class="button" @onclick="AddNode">Add Node</button>
     </div>
     <div class="edit">
-        <input type="number" @bind="newNodeValue" />
-        <button class="button">Edit Node</button>
+        <input type="number" @bind="editedNodeValue" />
+        <button class="button" @onclick="EditNode">Edit Node</button>
     </div>
     <div class="delete-node">
         <input type="number" @bind="nodeToDeleteValue" />
@@ -74,7 +73,8 @@
     {
         <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
         <circle cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
-                fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")" />
+                fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")" 
+                @onclick="(() => OnNodeClick(nodePosition.node))"/>
 
         <!-- Sử dụng RenderFragment để in giá trị -->
         @((RenderFragment)((builder) =>
@@ -99,6 +99,8 @@
 
     private int newNodeValue;
     private int nodeToDeleteValue;
+    private int editedNodeValue;
+    private NodeService? selectedNode;
     private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
     new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
@@ -227,5 +229,35 @@
         }
 
         UpdateTreeDrawing(); // Cập nhật lại giao diện sau khi xóa
+    }
+
+    //Hàm để lưu thông tin node được chọn nhằm chỉnh sửa giá trị
+    private void OnNodeClick(NodeService node)
+    {
+        selectedNode = node; // Lưu nút được chọn
+        editedNodeValue = node.Value; // Cập nhật giá trị vào input chỉnh sửa
+    }
+
+    private async Task EditNode()
+    {
+        if (selectedNode != null)
+        {
+            // Lưu ID của nút cũ để xóa
+            var oldNodeID = selectedNode.NodeID;
+
+            // Xóa nút cũ
+            treeService.DeleteNode(selectedNode.Value);
+
+            // Thêm nút mới với giá trị đã chỉnh sửa
+            var newNodeID = treeService.AddNode(editedNodeValue);
+
+            UpdateTreeDrawing();
+
+            HighlightNodeAndLine(newNodeID);
+            await Task.Delay(2000);
+
+            RemoveHighlighting();
+            UpdateTreeDrawing();
+        }
     }
 }

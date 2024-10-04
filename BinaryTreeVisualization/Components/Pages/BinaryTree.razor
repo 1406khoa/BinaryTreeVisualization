@@ -17,8 +17,8 @@
         <button class="button">Edit Node</button>
     </div>
     <div class="delete-node">
-        <input type="number" @bind="newNodeValue" />
-        <button class="button">Delete Node</button>
+        <input type="number" @bind="nodeToDeleteValue" />
+        <button class="button" @onclick="DeleteNode">Delete Node</button>
     </div>
     <div class="find">
         <input type="number" @bind="newNodeValue" />
@@ -50,7 +50,6 @@
         <option value="post-order">Post-order (LRN)</option>
         <option value="reverse-in-order">Reverse In-order (RNL)</option>
     </select>
-    <button class="button" @onclick="UpdateTreeDrawing">Update Tree</button>
 </div>
 
 <!-- Thông báo trạng thái -->
@@ -99,6 +98,7 @@
     @using BinaryTreeVisualization.Components.Services
 
     private int newNodeValue;
+    private int nodeToDeleteValue;
     private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
     new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
@@ -179,7 +179,6 @@
 
     private void UpdateTreeDrawing()
     {
-
         var nodesInTraversalOrder = treeService.TraverseTree(treeService.Root, selectedTraversalMethod);
 
         if (treeService.Root != null)
@@ -214,9 +213,19 @@
         StateHasChanged();
     }
 
-    // private void DeleteNode()
-    // {
-    //     treeService.DeleteNode(newNodeValue);
-    //     UpdateTreeDrawing();
-    // }
+    private void DeleteNode()
+    {
+        bool isDeleted = treeService.DeleteNode(nodeToDeleteValue);
+
+        if (isDeleted)
+        {
+            statusMessage = $"Node {nodeToDeleteValue} has been deleted.";
+        }
+        else
+        {
+            statusMessage = $"Node {nodeToDeleteValue} could not be found.";
+        }
+
+        UpdateTreeDrawing(); // Cập nhật lại giao diện sau khi xóa
+    }
 }

@@ -1,17 +1,13 @@
 ﻿using BinaryTreeVisualization.Components.Services;
-using System;
-using System.Collections.Generic;
+
 public class TreeService
 {
-    
     public NodeService? Root { get; private set; }
     private const double RootX = 800; // Xác định vị trí cố định cho node gốc
     private const double RootY = 50;  // Y cố định cho node gốc
 
     public double GetRootX() => RootX;
     public double GetRootY() => RootY;
-
-
 
     // Danh sách để lưu trữ giá trị của các node đã thêm vào cây
     private List<int> nodeValues = new List<int>();
@@ -141,8 +137,6 @@ public class TreeService
         return positions;
     }
 
-    
-
     // Tìm node nhỏ nhất trong cây con
     private NodeService FindMin(NodeService node)
     {
@@ -181,13 +175,11 @@ public class TreeService
         }
     }
 
-
     // Cập nhật phương thức TraverseTree để duyệt cây theo kiểu hiện tại mà không thay đổi cấu trúc cây
     public List<NodeService> TraverseTree(NodeService? node)
     {
         return TraverseTree(node, CurrentTraversalType);
     }
-
 
     // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
     public List<NodeService> TraverseTree(NodeService? node, string traversalType)
@@ -218,13 +210,10 @@ public class TreeService
         }
         return result;
     }
-
     public void SetTraversalType(string traversalType)
     {
         CurrentTraversalType = traversalType;
     }
-
-
 
     // Hàm thu thập đường nối giữa các node cha - con
     public List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()
@@ -266,7 +255,6 @@ public class TreeService
         ReverseInOrderTraversal(node.LeftChild, action);  // Duyệt trái sau
     }
 
-
     private void CollectLines(NodeService? node, List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines)
     {
         if (node == null) return;
@@ -302,7 +290,6 @@ public class TreeService
         return values;
     }
 
-
     // Hàm tạo cây ngẫu nhiên
     public void BuildRandomTree(int nodeCount, int minValue, int maxValue, string treeType)
     {
@@ -333,50 +320,69 @@ public class TreeService
         Root = null; // Đặt lại root về null
     }
 
+    // Hàm xóa node theo giá trị
+    public bool DeleteNode(int value)
+    {
+        Root = DeleteNodeRecursive(Root, value);
 
+        // Sau khi xóa node, cập nhật lại vị trí của tất cả các node
+        if (Root != null)
+        {
+            AssignPositionsBasedOnTreeStructure(Root, RootX, RootY, 200);
+        }
 
-    //// Hàm xóa node theo giá trị
-    //public bool DeleteNode(int value)
-    //{
-    //    Root = DeleteNodeRecursive(Root, value);
+        return Root != null;
+    }
 
-    //    // Sau khi xóa node, cập nhật lại vị trí của tất cả các node
-    //    if (Root != null)
-    //    {
-    //        AssignPositionsBasedOnTreeStructure(Root, RootX, RootY, 200);
-    //    }
+    // Đệ quy xóa node khỏi cây nhị phân
+    private NodeService? DeleteNodeRecursive(NodeService? node, int value)
+    {
+        if (node == null) return null;
 
-    //    return Root != null;
-    //}
+        if (value < node.Value)
+        {
+            node.LeftChild = DeleteNodeRecursive(node.LeftChild, value);
+        }
+        else if (value > node.Value)
+        {
+            node.RightChild = DeleteNodeRecursive(node.RightChild, value);
+        }
+        else
+        {
+            // Node cần xóa được tìm thấy
 
-    //// Đệ quy xóa node khỏi cây nhị phân
-    //private NodeService? DeleteNodeRecursive(NodeService? node, int value)
-    //{
-    //    if (node == null) return null;
+            // Trường hợp 1: Node không có con hoặc chỉ có 1 con
+            if (node.LeftChild == null) return node.RightChild;
+            if (node.RightChild == null) return node.LeftChild;
 
-    //    if (value < node.Value)
-    //    {
-    //        node.LeftChild = DeleteNodeRecursive(node.LeftChild, value);
-    //    }
-    //    else if (value > node.Value)
-    //    {
-    //        node.RightChild = DeleteNodeRecursive(node.RightChild, value);
-    //    }
-    //    else
-    //    {
-    //        // Node cần xóa được tìm thấy
+            // Trường hợp 2: Node có 2 con
+            // Tìm node nhỏ nhất trong nhánh phải
+            var minLargerNode = FindMin(node.RightChild);
+            node.Value = minLargerNode.Value; // Thay thế giá trị node hiện tại bằng giá trị node nhỏ nhất nhánh phải
+            node.RightChild = DeleteNodeRecursive(node.RightChild, minLargerNode.Value); // Xóa node nhỏ nhất nhánh phải
+        }
 
-    //        // Trường hợp 1: Node không có con hoặc chỉ có 1 con
-    //        if (node.LeftChild == null) return node.RightChild;
-    //        if (node.RightChild == null) return node.LeftChild;
+        return node;
+    }
 
-    //        // Trường hợp 2: Node có 2 con
-    //        // Tìm node nhỏ nhất trong nhánh phải
-    //        var minLargerNode = FindMin(node.RightChild);
-    //        node.Value = minLargerNode.Value; // Thay thế giá trị node hiện tại bằng giá trị node nhỏ nhất nhánh phải
-    //        node.RightChild = DeleteNodeRecursive(node.RightChild, minLargerNode.Value); // Xóa node nhỏ nhất nhánh phải
-    //    }
-
-    //    return node;
-    //}
+    // Hàm tìm kiếm nút
+    public NodeService? SearchNode(NodeService? currentNode, int value)
+    {
+        if (currentNode == null)
+        {
+            return null;
+        }
+        if (currentNode.Value == value)
+        {
+            return currentNode;
+        }
+        else if (value < currentNode.Value)
+        {
+            return SearchNode(currentNode.LeftChild, value);
+        }
+        else
+        {
+            return SearchNode(currentNode.RightChild, value);
+        }
+    }
 }

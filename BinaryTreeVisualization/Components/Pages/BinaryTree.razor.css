@@ -72,3 +72,15 @@ input {
 select {
     border-radius: 5px;
 }
+
+.node-circle {
+    cursor: pointer;
+}
+
+.node-circle:hover {
+    fill: #e0e0e0;
+}
+
+.node-circle:active {
+    fill: #cfcfcf;
+}

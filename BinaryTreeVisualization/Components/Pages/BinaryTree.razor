@@ -1,7 +1,6 @@
 ﻿@page "/binarytree"
 @rendermode InteractiveServer
 @inject TreeService treeService
-@inject IJSRuntime JSRuntime
 
 <PageTitle>Binary Tree</PageTitle>
 
@@ -101,12 +100,12 @@
 
     private int newNodeValue;
     private int nodeToDeleteValue;
-    private int editedNodeValue;
     private int searchNodeValue;
+    private int editedNodeValue;
     private NodeService? selectedNode;
     private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
-    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
-    new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
+    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> 
+        lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
     private string selectedTraversalMethod = "in-order"; // Kiểu duyệt cây mặc định là In-order
 
     // Dãy số theo thứ tự duyệt cây

@@ -1,10 +1,157 @@
 ﻿@page "/avltree"
 @rendermode InteractiveServer
+@inject AVLTreeService avlTreeService
 
 <PageTitle>AVL Tree</PageTitle>
 
-<h3>AVL Tree</h3>
+<h4>Basic Operation</h4>
+<div class="basic-operation">
+    <div class="add">
+        <input class="first-input" type="number" @bind="newNodeValue" />
+        <button class="button" @onclick="AddNode">Add Node</button>
+    </div>
+</div>
+
+<!-- Khối SVG -->
+<svg width="100%" height="100vh" style="overflow: visible;">
+    @foreach (var line in lines)
+    {
+            <!-- Đường nối giữa các node -->
+            <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
+                  stroke="@((line.IsHighlighted) ? "yellow" : "black")" stroke-width="2" />
+    }
+
+    @foreach (var nodePosition in nodePositions)
+    {
+            <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
+            <circle class="node-circle"
+                    cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
+                    fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")" 
+                    @onclick="(() => OnNodeClick(nodePosition.node))"/>
+
+            <!-- Sử dụng RenderFragment để in giá trị -->
+        @((RenderFragment)((builder) =>
+                {
+                    builder.OpenElement(0, "text");
+                    builder.AddAttribute(1, "x", nodePosition.x);
+                    builder.AddAttribute(2, "y", nodePosition.y);
+                    builder.AddAttribute(3, "text-anchor", "middle");
+                    builder.AddAttribute(4, "dominant-baseline", "middle");
+                    builder.AddAttribute(5, "dy", "0.35em"); // Điều chỉnh vị trí văn bản
+                    builder.AddAttribute(6, "font-size", "12");
+                    builder.AddAttribute(7, "font-weight", "bold");
+                    builder.AddAttribute(8, "fill", "black");
+                    builder.AddAttribute(9, "cursor", "pointer");
+                    builder.AddContent(10, nodePosition.node.Value.ToString());
+                    builder.CloseElement();
+                }))
+    }
+</svg>
 
 @code {
 	@using BinaryTreeVisualization.Components.Services;
+
+    private int newNodeValue;
+    private int editedNodeValue;
+    private NodeService? selectedNode;
+
+    private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
+    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>
+        lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
+    private string selectedTraversalMethod = "in-order"; // Kiểu duyệt cây mặc định là In-order
+
+    private string traversalOrderDisplay = "";
+
+    // Biến để chứa thông báo trạng thái
+    private string statusMessage = "Tree initialized."; // Thông báo trạng thái ban đầu
+
+    private async Task AddNode()
+    {
+        var newNodeID = avlTreeService.AddNode(newNodeValue); // Lấy NodeID của node vừa được thêm
+        UpdateTreeDrawing();
+
+        // Thực hiện tô màu node và đường line trong 2 giây
+        HighlightNodeAndLine(newNodeID);
+        await Task.Delay(2000);
+
+        // Khôi phục lại màu mặc định sau khi tô màu
+        RemoveHighlighting();
+        UpdateTreeDrawing();  // Cập nhật lại giao diện
+    }
+
+    private void OnTraversalMethodChange(ChangeEventArgs e)
+    {
+        selectedTraversalMethod = e.Value?.ToString() ?? "in-order"; // Lấy kiểu duyệt từ select box
+        statusMessage = $"Traversal method changed to {selectedTraversalMethod}."; // Cập nhật thông báo
+
+        // Chỉ cần thay đổi kiểu duyệt mà không tái cấu trúc lại cây
+        avlTreeService.SetTraversalType(selectedTraversalMethod);
+        UpdateTreeDrawing(); // Vẽ lại cây theo kiểu duyệt mới
+    }
+
+    private void RemoveHighlighting()
+    {
+        foreach (var node in nodePositions)
+        {
+            node.node.IsHighlighted = false;
+        }
+
+        for (int i = 0; i < lines.Count; i++)
+        {
+            lines[i] = (lines[i].x1, lines[i].y1, lines[i].x2, lines[i].y2, IsHighlighted: false, lines[i].LineID);
+        }
+    }
+
+    private void HighlightNodeAndLine(Guid newNodeID)
+    {
+        var newNode = nodePositions.FirstOrDefault(np => np.node.NodeID == newNodeID);
+        if (newNode.node == null) return;
+
+        newNode.node.IsHighlighted = true;
+
+        var parentLine = avlTreeService.GetParentLine(newNode.node);
+        if (parentLine != null)
+        {
+            var lineToHighlight = lines.FirstOrDefault(line =>
+                line.x1 == parentLine.Value.x1 && line.y1 == parentLine.Value.y1 &&
+                line.x2 == parentLine.Value.x2 && line.y2 == parentLine.Value.y2);
+
+            if (lineToHighlight != default)
+            {
+                int index = lines.IndexOf(lineToHighlight);
+                if (index != -1)
+                {
+                    lines[index] = (lines[index].x1, lines[index].y1, lines[index].x2, lines[index].y2, IsHighlighted: true, lines[index].LineID);
+                }
+            }
+        }
+    }
+
+    private void UpdateTreeDrawing()
+    {
+        var nodesInTraversalOrder = avlTreeService.TraverseTree(avlTreeService.Root, selectedTraversalMethod);
+
+        if (avlTreeService.Root != null)
+        {
+            avlTreeService.AssignPositionsBasedOnTreeStructure(avlTreeService.Root, avlTreeService.GetRootX(), avlTreeService.GetRootY(), 200);
+        }
+
+        nodePositions = avlTreeService.GetNodePositions(avlTreeService.Root, selectedTraversalMethod);
+
+        lines = avlTreeService.GetLines()
+                           .Select(line => (
+                               line.x1, line.y1, line.x2, line.y2,
+                               IsHighlighted: false,
+                               LineID: Guid.NewGuid()
+                           )).ToList();
+        // Cập nhật dãy số duyệt cây
+        traversalOrderDisplay = string.Join(" -> ", nodesInTraversalOrder.Select(n => n.Value));
+        StateHasChanged();
+    }
+
+    private void OnNodeClick(NodeService node)
+    {
+        selectedNode = node; // Lưu nút được chọn
+        editedNodeValue = node.Value; // Cập nhật giá trị vào input chỉnh sửa
+    }
 }

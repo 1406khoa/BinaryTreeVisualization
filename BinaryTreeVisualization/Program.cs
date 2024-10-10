@@ -12,6 +12,7 @@ namespace BinaryTreeVisualization
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
             builder.Services.AddScoped<TreeService>();
+            builder.Services.AddScoped<AVLTreeService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

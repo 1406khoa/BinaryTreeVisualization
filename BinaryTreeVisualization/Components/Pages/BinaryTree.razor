@@ -1,7 +1,6 @@
 ﻿@page "/binarytree"
 @rendermode InteractiveServer
 @inject TreeService treeService
-@inject IJSRuntime JSRuntime
 
 <PageTitle>Binary Tree</PageTitle>
 
@@ -72,7 +71,8 @@
     @foreach (var nodePosition in nodePositions)
     {
         <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
-        <circle cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
+        <circle class="node-circle"
+                cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
                 fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")" 
                 @onclick="(() => OnNodeClick(nodePosition.node))"/>
 
@@ -88,7 +88,8 @@
                 builder.AddAttribute(6, "font-size", "12");
                 builder.AddAttribute(7, "font-weight", "bold");
                 builder.AddAttribute(8, "fill", "black");
-                builder.AddContent(9, nodePosition.node.Value.ToString());
+                builder.AddAttribute(9, "cursor", "pointer");
+                builder.AddContent(10, nodePosition.node.Value.ToString());
                 builder.CloseElement();
             }))
     }
@@ -99,12 +100,12 @@
 
     private int newNodeValue;
     private int nodeToDeleteValue;
-    private int editedNodeValue;
     private int searchNodeValue;
+    private int editedNodeValue;
     private NodeService? selectedNode;
     private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
-    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
-    new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
+    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> 
+        lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
     private string selectedTraversalMethod = "in-order"; // Kiểu duyệt cây mặc định là In-order
 
     // Dãy số theo thứ tự duyệt cây

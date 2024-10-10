@@ -3,7 +3,7 @@
 public class TreeService
 {
     public NodeService? Root { get; private set; }
-    private const double RootX = 800; // Xác định vị trí cố định cho node gốc
+    private const double RootX = 800; // Xác định vị trí X cố định cho node gốc
     private const double RootY = 50;  // Y cố định cho node gốc
 
     public double GetRootX() => RootX;
@@ -16,7 +16,7 @@ public class TreeService
     private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
 
     // Hàm thêm node vào cây nhị phân
-    public Guid AddNode(int value)
+    public virtual Guid AddNode(int value)
     {
         NodeService newNode = new NodeService(value);
         if (Root == null)
@@ -76,30 +76,6 @@ public class TreeService
         return (parent.PositionX, parent.PositionY, node.PositionX, node.PositionY, Guid.NewGuid());
     }
 
-    // Hàm kiểm tra tính cân bằng của cây AVL dựa trên thuộc tính Height
-    public bool IsBalanced(NodeService? node)
-    {
-        if (node == null) return true;
-
-        // Tính chiều cao của nhánh trái và nhánh phải
-        int leftHeight = node.LeftChild?.Height ?? 0;
-        int rightHeight = node.RightChild?.Height ?? 0;
-
-        // Kiểm tra sự chênh lệch chiều cao giữa nhánh trái và nhánh phải
-        bool isBalanced = Math.Abs(leftHeight - rightHeight) <= 1;
-
-        // Đệ quy kiểm tra cân bằng cho các node con
-        return isBalanced && IsBalanced(node.LeftChild) && IsBalanced(node.RightChild);
-    }
-
-    // Hàm tính độ cao của cây
-    private int GetHeight(NodeService? node)
-    {
-        if (node == null) return 0;
-        return 1 + Math.Max(GetHeight(node.LeftChild), GetHeight(node.RightChild));
-    }
-
-
     // Hàm thiết lập vị trí cho các nút, giữ nguyên vị trí node gốc
     private void SetNodePosition(NodeService node, double x, double y)
     {
@@ -146,6 +122,7 @@ public class TreeService
         }
         return node;
     }
+
     public void AssignPositionsBasedOnTreeStructure(NodeService node, double x, double y, double offsetX)
     {
         double minOffset = 50;
@@ -173,12 +150,6 @@ public class TreeService
             double rightY = y + 100;
             AssignPositionsBasedOnTreeStructure(node.RightChild, rightX, rightY, offsetX);
         }
-    }
-
-    // Cập nhật phương thức TraverseTree để duyệt cây theo kiểu hiện tại mà không thay đổi cấu trúc cây
-    public List<NodeService> TraverseTree(NodeService? node)
-    {
-        return TraverseTree(node, CurrentTraversalType);
     }
 
     // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
@@ -384,5 +355,10 @@ public class TreeService
         {
             return SearchNode(currentNode.RightChild, value);
         }
+    }
+
+    public void UpdateRoot(NodeService newRoot)
+    {
+        Root = newRoot; // Cập nhật giá trị Root từ lớp con hoặc bên ngoài
     }
 }

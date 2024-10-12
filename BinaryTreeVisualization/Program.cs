@@ -11,7 +11,7 @@ namespace BinaryTreeVisualization
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
-            builder.Services.AddScoped<TreeService>();
+            builder.Services.AddScoped<BSTService>();
             builder.Services.AddScoped<AVLTreeService>();
             var app = builder.Build();
 

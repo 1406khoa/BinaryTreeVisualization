@@ -1,6 +1,6 @@
 ﻿using BinaryTreeVisualization.Components.Services;
 
-public class AVLTreeService : TreeService 
+public class AVLTreeService : BSTService 
 {
     // Phương thức thêm nút vào cây AVL
     public override Guid AddNode(int value)

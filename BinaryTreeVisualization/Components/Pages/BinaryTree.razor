@@ -1,6 +1,6 @@
 ﻿@page "/binarytree"
 @rendermode InteractiveServer
-@inject TreeService treeService
+@inject BSTService bstService
 
 <PageTitle>Binary Tree</PageTitle>
 
@@ -36,7 +36,7 @@
         <input type="number" @bind="minValue" />
         <label>Max Value:</label>
         <input type="number" @bind="maxValue" />
-        <button class="create-random-button" @onclick="CreateRandomBinaryTree">Create Random Binary Tree</button>
+        <button class="create-random-button" @onclick="CreateRandomTree">Create Random Tree</button>
     </div>
 </div>
 
@@ -71,7 +71,7 @@
     @foreach (var nodePosition in nodePositions)
     {
         <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
-        <circle class="node-circle"
+        <circle class="node-circle @((nodePosition.node == selectedNode) ? "is-selected" : "")"
                 cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
                 fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")" 
                 @onclick="(() => OnNodeClick(nodePosition.node))"/>
@@ -121,7 +121,7 @@
 
     private async Task AddNode()
     {
-        var newNodeID = treeService.AddNode(newNodeValue); // Lấy NodeID của node vừa được thêm
+        var newNodeID = bstService.AddNode(newNodeValue); // Lấy NodeID của node vừa được thêm
         UpdateTreeDrawing();
 
         // Thực hiện tô màu node và đường line trong 2 giây
@@ -139,7 +139,7 @@
         statusMessage = $"Traversal method changed to {selectedTraversalMethod}."; // Cập nhật thông báo
 
         // Chỉ cần thay đổi kiểu duyệt mà không tái cấu trúc lại cây
-        treeService.SetTraversalType(selectedTraversalMethod);
+        bstService.SetTraversalType(selectedTraversalMethod);
         UpdateTreeDrawing(); // Vẽ lại cây theo kiểu duyệt mới
     }
 
@@ -163,7 +163,7 @@
 
         newNode.node.IsHighlighted = true;
 
-        var parentLine = treeService.GetParentLine(newNode.node);
+        var parentLine = bstService.GetParentLine(newNode.node);
         if (parentLine != null)
         {
             var lineToHighlight = lines.FirstOrDefault(line =>
@@ -183,16 +183,16 @@
 
     private void UpdateTreeDrawing()
     {
-        var nodesInTraversalOrder = treeService.TraverseTree(treeService.Root, selectedTraversalMethod);
+        var nodesInTraversalOrder = bstService.TraverseTree(bstService.Root, selectedTraversalMethod);
 
-        if (treeService.Root != null)
+        if (bstService.Root != null)
         {
-            treeService.AssignPositionsBasedOnTreeStructure(treeService.Root, treeService.GetRootX(), treeService.GetRootY(), 200);
+            bstService.AssignPositionsBasedOnTreeStructure(bstService.Root, bstService.GetRootX(), bstService.GetRootY(), 200);
         }
 
-        nodePositions = treeService.GetNodePositions(treeService.Root, selectedTraversalMethod);
+        nodePositions = bstService.GetNodePositions(bstService.Root, selectedTraversalMethod);
 
-        lines = treeService.GetLines()
+        lines = bstService.GetLines()
                            .Select(line => (
                                line.x1, line.y1, line.x2, line.y2,
                                IsHighlighted: false,
@@ -203,32 +203,43 @@
         StateHasChanged();
     }
 
-    private void CreateRandomBinaryTree()
+    private void CreateRandomTree()
     {
-        treeService.ResetTree();
-        treeService.BuildRandomTree(nodeCount, minValue, maxValue, "BinaryTree");
+        bstService.ResetTree();
+        bstService.BuildRandomTree(nodeCount, minValue, maxValue, "BinarySearchTree");
         UpdateTreeDrawing();
     }
 
     private void DeleteTree()
     {
-        treeService.ResetTree();
+        bstService.ResetTree();
         UpdateTreeDrawing();
         StateHasChanged();
     }
 
     private void DeleteNode()
     {
-        bool isDeleted = treeService.DeleteNode(nodeToDeleteValue);
+        bool isDeleted = bstService.DeleteNode(nodeToDeleteValue);
 
         UpdateTreeDrawing(); // Cập nhật lại giao diện sau khi xóa
     }
 
-    //Hàm để lưu thông tin node được chọn nhằm chỉnh sửa giá trị
+    //Hàm để lưu thông tin và tô màu node được chọn
     private void OnNodeClick(NodeService node)
     {
-        selectedNode = node; // Lưu nút được chọn
-        editedNodeValue = node.Value; // Cập nhật giá trị vào input chỉnh sửa
+        // Nếu nút đã được chọn, hủy chọn
+        if (selectedNode == node)
+        {
+            selectedNode = null; // Gỡ chọn node
+            statusMessage = "Node deselected.";
+        }
+        else
+        {
+            selectedNode = node; // Gán node mới được chọn
+            statusMessage = $"Selected node: {node.Value}";
+        }
+
+        UpdateTreeDrawing();
     }
 
     private async Task EditNode()
@@ -239,10 +250,10 @@
             var oldNodeID = selectedNode.NodeID;
 
             // Xóa nút cũ
-            treeService.DeleteNode(selectedNode.Value);
+            bstService.DeleteNode(selectedNode.Value);
 
             // Thêm nút mới với giá trị đã chỉnh sửa
-            var newNodeID = treeService.AddNode(editedNodeValue);
+            var newNodeID = bstService.AddNode(editedNodeValue);
 
             UpdateTreeDrawing();
 
@@ -257,11 +268,11 @@
     private async Task FindNode()
     {
         RemoveHighlighting(); // Đặt lại trạng thái trước khi tìm kiếm
-        var foundNode = treeService.SearchNode(treeService.Root, searchNodeValue);
+        var foundNode = bstService.SearchNode(bstService.Root, searchNodeValue);
         if (foundNode != null)
         {
             // Tô màu cho các nút trên đường đi
-            await HighlightPathToNode(treeService.Root, searchNodeValue);
+            await HighlightPathToNode(bstService.Root, searchNodeValue);
 
             // Tô màu cho nút đã tìm thấy
             foundNode.IsHighlighted = true;

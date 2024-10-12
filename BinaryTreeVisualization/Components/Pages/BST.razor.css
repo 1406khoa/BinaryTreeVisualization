@@ -21,11 +21,11 @@
     margin-top: 20px;
 }
 
-.random-tree > div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
+    .random-tree > div {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
 
 .first-input {
     margin-left: 0px !important;
@@ -58,12 +58,12 @@ input {
     width: 15%;
 }
 
-.button:hover,
-.create-random-button:hover {
-    background-color: #6a4cba;
-    transition: 0.3s;
-    color: white;
-}
+    .button:hover,
+    .create-random-button:hover {
+        background-color: #6a4cba;
+        transition: 0.3s;
+        color: white;
+    }
 
 .browse-tree {
     margin-top: 20px;
@@ -78,9 +78,9 @@ select {
     transition: fill 0.3s ease;
 }
 
-.node-circle:hover {
-    fill: #dddddd;
-}
+    .node-circle:hover {
+        fill: #dddddd;
+    }
 
 .is-selected {
     fill: #4cff00;

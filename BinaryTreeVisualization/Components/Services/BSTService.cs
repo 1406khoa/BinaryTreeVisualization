@@ -15,7 +15,7 @@ public class BSTService
     // Thay đổi: Không cần khôi phục lại node gốc nữa vì root sẽ không thay đổi khi duyệt cây.
     private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
 
-    // Hàm thêm node vào cây nhị phân
+    // Hàm thêm node vào cây nhị phân tìm kiếm
     public virtual Guid AddNode(int value)
     {
         NodeService newNode = new NodeService(value);

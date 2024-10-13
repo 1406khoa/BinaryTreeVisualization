@@ -135,3 +135,7 @@ select {
     transition: 0.3s;
     color: white;
 }
+
+.custom-slider {
+    width: 300px; /* Điều chỉnh kích thước slider */
+}

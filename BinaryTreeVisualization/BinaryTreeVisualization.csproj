@@ -10,4 +10,8 @@
     <Folder Include="wwwroot\Images\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MatBlazor" Version="2.10.0" />
+  </ItemGroup>
+
 </Project>

@@ -1,7 +1,20 @@
 ﻿@page "/"
-
+@rendermode InteractiveServer
 <PageTitle>Home</PageTitle>
+<MatSlider @bind-Value="@Val"></MatSlider>
 
-<h1>Hello, world!</h1>
+@code
+{
 
-Welcome to your new app.
+    public decimal Val
+    {
+        get => _val;
+        set
+        {
+            _val = value;
+            this.StateHasChanged();
+        }
+    }
+
+    private decimal _val = 0;
+        }

@@ -1,9 +1,7 @@
 ﻿@page "/binarytree"
 @rendermode InteractiveServer
 @inject BinaryTreeService binaryTreeService
-
 <PageTitle>Binary Tree</PageTitle>
-
 <h4>Basic Operation</h4>
 <div class="basic-operation">
     <div class="add">
@@ -58,6 +56,14 @@
 <div style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
     <p>@traversalOrderDisplay</p>
 </div>
+
+
+    You can choose your speed here.
+
+<div class="custom-slider">
+    <MatSlider @bind-Value="@Val3" Discrete="true" Pin="true" TValue="int" ValueMin="1" ValueMax="3"></MatSlider>
+</div>
+<p>Speed Multiplier: @Val3</p>
 
 <!-- Khối SVG -->
 <svg width="100%" height="100vh" style="overflow: visible;">
@@ -152,6 +158,18 @@
     // Biến liên quan đến animation
     private bool showController = false;
     private Vector2 controllerPosition = new Vector2(0, 0);  // Vị trí kiểm soát viên
+    public int Val3
+    {
+        get => _val3;
+        set
+        {
+            _val3 = value;
+            this.StateHasChanged();
+        }
+    }
+
+    private int _val3 = 1; // Giá trị mặc định là 1, tương ứng với tốc độ ban đầu.
+
 
     private async Task AddNode()
     {
@@ -457,19 +475,30 @@
 
     private async Task MoveControllerToPosition(Vector2 destination)
     {
-        const float movementSpeed = 2f; // Đặt tốc độ di chuyển cố định
-        while ((destination - controllerPosition).Length() > 1.0f)
+        float baseSpeed = 2f; // Tốc độ cơ bản ban đầu
+        float movementSpeed = baseSpeed * Val3; // Điều chỉnh tốc độ theo hệ số nhân từ slider
+
+        while ((destination - controllerPosition).Length() > movementSpeed) // Điều chỉnh điều kiện kiểm tra
         {
+            // Tính toán hướng di chuyển
             Vector2 direction = Vector2.Normalize(destination - controllerPosition);
-            controllerPosition += direction * movementSpeed; // Điều chỉnh tốc độ di chuyển
+
+            // Điều chỉnh tốc độ dựa trên hệ số Val3
+            controllerPosition += direction * movementSpeed;
+
+            // Cập nhật giao diện sau mỗi bước di chuyển
             StateHasChanged();
-            await Task.Delay(16);  // 60fps với độ trễ cố định
+
+            // Điều chỉnh thời gian delay cho chuyển động mượt
+            await Task.Delay(16); // Giữ tốc độ 60fps
         }
 
-        // Đảm bảo vị trí cuối cùng của kiểm soát viên là vị trí node cần tìm
+        // Đảm bảo controller không vượt quá vị trí đích
         controllerPosition = destination;
         StateHasChanged();
     }
+
+
 
     private bool isMoving = false;
 

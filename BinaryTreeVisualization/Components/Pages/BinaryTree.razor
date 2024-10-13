@@ -51,7 +51,7 @@
 </div>
 
 <!-- Thông báo trạng thái -->
-<p style="color: green">@statusMessage</p> <!-- Thêm thông báo trạng thái tại đây -->
+<p style="color: green">@statusMessage</p>
 
 <!-- Phần hiển thị dãy số khi duyệt cây -->
 <h4>Traversal Order</h4>
@@ -76,22 +76,8 @@
                 fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")"
                 @onclick="(() => OnNodeClick(nodePosition.node))"
                 @oncontextmenu:preventDefault="true"
-                @oncontextmenu="((e) => ShowAddNodeDialog(e, nodePosition.node))" />
-
-        <!-- Menu -->
-        @if (isAddNodeDialogVisible)
-        {
-            <div class="add-node-dialog" 
-                style="position:absolute; top:@dialogY; left:@dialogX;">
-                <input type="number" @bind="newNodeValue" placeholder="Type node value" />
-                <button @onclick="AddLeftNode" 
-                    disabled="@(selectedNode?.LeftChild != null)">Add to Left</button>
-                <button @onclick="AddRightNode"
-                    disabled="@(selectedNode?.RightChild != null)">Add to Right</button>
-                <button @onclick="HideAddNodeDialog">Close</button>
-            </div>
-        }
-
+                @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
+        
         <!-- Sử dụng RenderFragment để in giá trị -->
         @((RenderFragment)((builder) =>
             {
@@ -108,6 +94,22 @@
                 builder.AddContent(10, nodePosition.node.Value.ToString());
                 builder.CloseElement();
             }))
+
+        <!-- Dropdown menu -->
+        @if (showDropdown)
+        {
+            <foreignObject x="@dropdownX" y="@dropdownY" width="180" height="180"
+                           xmlns:xhtml="http://www.w3.org/1999/xhtml">
+                <xhtml:div class="dropdown-menu">
+                    <xhtml:button class="dropdown-button" 
+                        @onclick="() => AddNodeToDirection(true)">Add Left Child</xhtml:button>
+                    <xhtml:button class="dropdown-button"
+                        @onclick="() => AddNodeToDirection(false)">Add Right Child</xhtml:button>
+                    <xhtml:button class="dropdown-button"
+                        @onclick="HideDropdown">Close</xhtml:button>
+                </xhtml:div>
+            </foreignObject>
+        }
     }
 </svg>
 
@@ -135,10 +137,10 @@
     // Biến để chứa thông báo trạng thái
     private string statusMessage = "Tree initialized."; // Thông báo trạng thái ban đầu
 
-    //Các biến dùng cho chức năng hiện menu thêm node khi chuột phải vào node
-    private bool isAddNodeDialogVisible = false;
-    private double dialogX; // Vị trí X của hộp thoại
-    private double dialogY; // Vị trí Y của hộp thoại
+    // Biến liên quan dropdown menu
+    private bool showDropdown = false;
+    private double dropdownX;
+    private double dropdownY;
 
     private async Task AddNode()
     {
@@ -163,34 +165,35 @@
         UpdateTreeDrawing();  
     }
 
-    private void ShowAddNodeDialog(MouseEventArgs e, NodeService node)
+    private void ShowDropdown(NodeService node)
     {
         selectedNode = node;
-        dialogX = e.ClientX; // Lưu vị trí chuột
-        dialogY = e.ClientY; // Lưu vị trí chuột
-        isAddNodeDialogVisible = true;
+
+        dropdownX = node.PositionX;
+        dropdownY = node.PositionY + 30; // Dịch xuống một chút để không che khuất node
+        showDropdown = true;
     }
 
-    private void HideAddNodeDialog()
+    private void HideDropdown()
     {
-        isAddNodeDialogVisible = false;
+        showDropdown = false;
+        StateHasChanged();
     }
 
-    private void AddLeftNode()
+    private async Task AddNodeToDirection(bool selectedLeftChild)
     {
-        if (selectedNode != null && selectedNode.LeftChild == null)
+        Guid newNodeID;
+        if (selectedNode != null)
         {
-            binaryTreeService.AddNodeToBinaryTree(newNodeValue, selectedNode);
-            HideAddNodeDialog();
-        }
-    }
+            newNodeID = binaryTreeService.AddNodeToBinaryTree(newNodeValue, selectedNode, selectedLeftChild);
+            UpdateTreeDrawing();
 
-    private void AddRightNode()
-    {
-        if (selectedNode != null && selectedNode.RightChild == null)
-        {
-            binaryTreeService.AddNodeToBinaryTree(newNodeValue, selectedNode);
-            HideAddNodeDialog();
+            HighlightNodeAndLine(newNodeID);
+            HideDropdown();
+            await Task.Delay(2000);
+
+            RemoveHighlighting();
+            UpdateTreeDrawing();
         }
     }
 

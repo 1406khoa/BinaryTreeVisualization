@@ -16,38 +16,69 @@ public class BinaryTreeService
     private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
 
     // Hàm thêm node cây nhị phân tổng quát
-    public Guid AddNodeToBinaryTree(int value, NodeService? parentNode)
+    public Guid AddNodeToBinaryTree(int value, NodeService? parentNode, bool? selectedLeftChild = null)
     {
         NodeService newNode = new NodeService(value);
+
         if (parentNode == null)
         {
             // Nếu không có nút cha, thêm nút gốc
             if (Root == null)
             {
                 Root = newNode;
-                Root.IsRoot = true; // Đánh dấu đây là node gốc
-                SetNodePosition(Root, RootX, RootY); // Cố định vị trí của node gốc
+                Root.IsRoot = true;
+                SetNodePosition(Root, RootX, RootY);
             }
         }
         else
         {
-            // Nếu có nút cha, thêm nút vào vị trí con trái hoặc phải
-            if (parentNode.LeftChild == null)
+            // ** Chế độ Dropdown Menu **
+            // Nếu selectedLeftChild có giá trị (true hoặc false)
+            // Nghĩa là user đã bấm chọn thêm trái hoặc phải ở menu
+            if (selectedLeftChild.HasValue)
             {
-                parentNode.LeftChild = newNode;
-                SetNodePosition(newNode, parentNode.PositionX - 100, parentNode.PositionY + 100); // Cố định vị trí cho con trái
-                newNode.Parent = parentNode; // Liên kết cha
+                // Nếu selectedLeftChild = true nghĩa là user chọn thêm trái
+                if (selectedLeftChild.Value) 
+                {
+                    if (parentNode.LeftChild == null) // Có chỗ trống thì mới thêm con vào
+                    {
+                        parentNode.LeftChild = newNode;
+                        SetNodePosition(newNode, parentNode.PositionX - 100, parentNode.PositionY + 100); // Cố định vị trí cho con trái
+                        newNode.Parent = parentNode;
+                    }
+                }
+                else
+                {
+                    if (parentNode.RightChild == null)
+                    {
+                        parentNode.RightChild = newNode;
+                        SetNodePosition(newNode, parentNode.PositionX + 100, parentNode.PositionY + 100); // Cố định vị trí cho con phải
+                        newNode.Parent = parentNode;
+                    }
+                }
             }
-            else if (parentNode.RightChild == null)
-            {
-                parentNode.RightChild = newNode;
-                SetNodePosition(newNode, parentNode.PositionX + 100, parentNode.PositionY + 100); // Cố định vị trí cho con phải
-                newNode.Parent = parentNode; // Liên kết cha
-            }
+            // ** Chế độ mặc định: thêm trái trước phải sau **
+            // Nếu selectedLeftChild không có giá trị (null)
+            // Nghĩa là user không mở menu chọn trái phải => vào chế độ mặc định
             else
             {
-                // Nếu node cha đã có đủ 2 con, không làm gì cả
-                return Guid.Empty;
+                if (parentNode.LeftChild == null)
+                {
+                    parentNode.LeftChild = newNode;
+                    SetNodePosition(newNode, parentNode.PositionX - 100, parentNode.PositionY + 100);
+                    newNode.Parent = parentNode;
+                }
+                else if (parentNode.RightChild == null)
+                {
+                    parentNode.RightChild = newNode;
+                    SetNodePosition(newNode, parentNode.PositionX + 100, parentNode.PositionY + 100);
+                    newNode.Parent = parentNode;
+                }
+                // Nếu đã có cả hai con, không làm gì cả
+                else
+                {
+                    return Guid.Empty;
+                }
             }
         }
 

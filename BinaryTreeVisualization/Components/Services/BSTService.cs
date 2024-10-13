@@ -1,6 +1,6 @@
 ﻿using BinaryTreeVisualization.Components.Services;
 
-public class TreeService
+public class BSTService
 {
     public NodeService? Root { get; private set; }
     private const double RootX = 800; // Xác định vị trí X cố định cho node gốc
@@ -15,7 +15,7 @@ public class TreeService
     // Thay đổi: Không cần khôi phục lại node gốc nữa vì root sẽ không thay đổi khi duyệt cây.
     private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
 
-    // Hàm thêm node vào cây nhị phân
+    // Hàm thêm node vào cây nhị phân tìm kiếm
     public virtual Guid AddNode(int value)
     {
         NodeService newNode = new NodeService(value);
@@ -270,17 +270,13 @@ public class TreeService
         {
             switch (treeType)
             {
-                case "BinaryTree":
-                    AddNode(value);  // Thêm node vào cây Binary Tree
+                case "BinarySearchTree":
+                    AddNode(value);
                     break;
-
-                    //case "BinarySearchTree":
-                    //    AddNodeToBST(value);  // Cần viết hàm riêng cho BST
-                    //    break;
-
-                    //case "AVLTree":
-                    //    AddNodeToAVLTree(value);  // Cần viết hàm riêng cho AVL Tree
-                    //    break;
+                
+                //case "AVLTree":
+                //    AddNodeToAVLTree(value);
+                //    break;
             }
         }
     }

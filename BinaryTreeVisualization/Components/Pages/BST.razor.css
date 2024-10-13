@@ -21,11 +21,11 @@
     margin-top: 20px;
 }
 
-.random-tree > div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
+    .random-tree > div {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
 
 .first-input {
     margin-left: 0px !important;
@@ -48,7 +48,6 @@ input {
     border-radius: 5px;
     border: none;
     margin-left: 5px;
-    cursor: pointer;
 }
 
 .button {
@@ -85,34 +84,4 @@ select {
 
 .is-selected {
     fill: #4cff00;
-}
-
-.dropdown-menu {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border: 1px solid black;
-    border-radius: 5px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Thêm bóng đổ */
-}
-
-.dropdown-button {
-    background-color: #9375e2;
-    color: white;
-    height: 30px;
-    width: 80%;
-    font-size: 12px;
-    border-radius: 5px;
-    border: none;
-    margin: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-}
-
-.dropdown-button:hover {
-    background-color: #6a4cba;
-    transition: 0.3s;
-    color: white;
 }

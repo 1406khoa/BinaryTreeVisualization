@@ -45,6 +45,10 @@ public class BinaryTreeService
                         parentNode.LeftChild = newNode;
                         SetNodePosition(newNode, parentNode.PositionX - 100, parentNode.PositionY + 100); // Cố định vị trí cho con trái
                         newNode.Parent = parentNode;
+
+                        // Lưu đường nối (LineID) giữa node cha và node con trái
+                        var lineID = Guid.NewGuid();
+                        lines.Add((parentNode.PositionX, parentNode.PositionY, newNode.PositionX, newNode.PositionY, IsHighlighted: false, lineID));
                     }
                 }
                 else
@@ -54,6 +58,10 @@ public class BinaryTreeService
                         parentNode.RightChild = newNode;
                         SetNodePosition(newNode, parentNode.PositionX + 100, parentNode.PositionY + 100); // Cố định vị trí cho con phải
                         newNode.Parent = parentNode;
+
+                        // Lưu đường nối (LineID) giữa node cha và node con phải
+                        var lineID = Guid.NewGuid();
+                        lines.Add((parentNode.PositionX, parentNode.PositionY, newNode.PositionX, newNode.PositionY, IsHighlighted: false, lineID));
                     }
                 }
             }
@@ -85,6 +93,10 @@ public class BinaryTreeService
         nodeValues.Add(value); // Lưu lại giá trị của node đã thêm
         return newNode.NodeID;
     }
+
+    // Danh sách lưu các đường nối (lines) giữa các node để dễ thao tác animation
+    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
+        new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
     // Hàm thêm node vào cây nhị phân tìm kiếm
     public virtual Guid AddNode(int value)
@@ -147,6 +159,8 @@ public class BinaryTreeService
         return (parent.PositionX, parent.PositionY, node.PositionX, node.PositionY, Guid.NewGuid());
     }
 
+    private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();// danh sách tọa độ các node
+
     // Hàm thiết lập vị trí cho các nút, giữ nguyên vị trí node gốc
     private void SetNodePosition(NodeService node, double x, double y)
     {
@@ -160,6 +174,8 @@ public class BinaryTreeService
             node.PositionX = x;
             node.PositionY = y;
         }
+        // lưu tọa độ vào danh sách
+        nodePositions.Add((node, node.PositionX, node.PositionY));
     }
 
     // Phương thức này trả về danh sách vị trí của các node trong cây
@@ -297,6 +313,7 @@ public class BinaryTreeService
         ReverseInOrderTraversal(node.LeftChild, action);  // Duyệt trái sau
     }
 
+    
     private void CollectLines(NodeService? node, List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines)
     {
         if (node == null) return;
@@ -403,26 +420,22 @@ public class BinaryTreeService
         return node;
     }
 
-    // Hàm tìm kiếm nút
+    // Tìm kiếm theo DFS (Depth-)
     public NodeService? SearchNode(NodeService? currentNode, int value)
     {
-        if (currentNode == null)
-        {
-            return null;
-        }
-        if (currentNode.Value == value)
-        {
-            return currentNode;
-        }
-        else if (value < currentNode.Value)
-        {
-            return SearchNode(currentNode.LeftChild, value);
-        }
-        else
-        {
-            return SearchNode(currentNode.RightChild, value);
-        }
+        if (currentNode == null) return null;
+
+        // Nếu giá trị của node hiện tại khớp với giá trị cần tìm
+        if (currentNode.Value == value) return currentNode;
+
+        // Duyệt con trái
+        var leftSearch = SearchNode(currentNode.LeftChild, value);
+        if (leftSearch != null) return leftSearch; // Nếu tìm thấy trong con trái, trả về node đó
+
+        // Duyệt con phải
+        return SearchNode(currentNode.RightChild, value); // Nếu không tìm thấy trong con trái, tiếp tục tìm ở con phải
     }
+
 
     public void UpdateRoot(NodeService newRoot)
     {

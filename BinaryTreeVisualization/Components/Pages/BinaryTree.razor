@@ -20,7 +20,7 @@
     </div>
     <div class="find">
         <input type="number" @bind="searchNodeValue" />
-        <button class="button" @onclick="FindNode">Find Node</button>
+        <button class="button" @onclick="StartFindNodeAnimation">Find Node</button>
     </div>
     <div class="delete-tree">
         <button class="button" @onclick="DeleteTree">Delete Tree</button>
@@ -111,10 +111,17 @@
             </foreignObject>
         }
     }
+
+    <!-- Hình tròn kiểm soát viên -->
+    @if (showController)
+    {
+        <circle cx="@controllerPosition.X" cy="@controllerPosition.Y" r="15" stroke="green" stroke-width="3" fill="none" />
+    }
 </svg>
 
 @code {
     @using BinaryTreeVisualization.Components.Services
+    @using System.Numerics
 
     private int newNodeValue;
     private int nodeToDeleteValue;
@@ -141,6 +148,10 @@
     private bool showDropdown = false;
     private double dropdownX;
     private double dropdownY;
+
+    // Biến liên quan đến animation
+    private bool showController = false;
+    private Vector2 controllerPosition = new Vector2(0, 0);  // Vị trí kiểm soát viên
 
     private async Task AddNode()
     {
@@ -328,37 +339,250 @@
             UpdateTreeDrawing();
         }
     }
+    // --------------------- FIND NODE ANIMATION HERE ---------------------
 
-    private async Task FindNode()
+    protected override void OnInitialized()
     {
-        RemoveHighlighting(); // Đặt lại trạng thái trước khi tìm kiếm
-        var foundNode = binaryTreeService.SearchNode(binaryTreeService.Root, searchNodeValue);
-        if (foundNode != null)
+        // Cài đặt vị trí kiểm soát viên ở node gốc
+        if (binaryTreeService.Root != null)
         {
-            // Tô màu cho các nút trên đường đi
-            await HighlightPathToNode(binaryTreeService.Root, searchNodeValue);
-
-            // Tô màu cho nút đã tìm thấy
-            foundNode.IsHighlighted = true;
-            UpdateTreeDrawing();
+            controllerPosition = new Vector2((float)binaryTreeService.Root.PositionX, (float)binaryTreeService.Root.PositionY);
+        }
+        else
+        {
+            controllerPosition = new Vector2(800, 50); // Nếu chưa có node gốc, đặt vị trí mặc định
         }
 
-        await Task.Delay(2000);
-        RemoveHighlighting();
-        UpdateTreeDrawing();
+        showController = false; // Kiểm soát viên ẩn
     }
 
+    private async Task StartFindNodeAnimation()
+    {
+        // Gọi hàm SearchNodeInternalAsync để tìm node và xử lý animation
+        bool result = await SearchNodeInternalAsync(searchNodeValue);
+
+        // Kiểm tra kết quả từ SearchNodeInternalAsync
+        if (!result)
+        {
+            statusMessage = $"Node {searchNodeValue} does not exist.";
+        }
+        else
+        {
+            statusMessage = $"Node {searchNodeValue} found successfully.";
+        }
+
+        UpdateTreeDrawing(); // Cập nhật lại hiển thị cây sau khi tìm kiếm hoàn thành
+    }
+
+
+    // Hàm tìm kiếm node và di chuyển kiểm soát viên dọc theo đường đi với độ trễ
+    private async Task<bool> SearchNodeInternalAsync(int targetValue)
+    {
+        // Tìm node cần tìm bằng DFS
+        var foundNode = DFSFindNode(binaryTreeService.Root, targetValue);
+
+        if (foundNode == null)
+        {
+            statusMessage = $"Node {targetValue} does not exist."; // Thông báo nếu không tìm thấy
+            return false;
+        }
+
+        // Nếu tìm thấy node cần tìm và nó là node gốc
+        if (foundNode == binaryTreeService.Root)
+        {
+            foundNode.IsHighlighted = true; // Tô sáng node gốc
+            UpdateTreeDrawing();
+            statusMessage = $"Found root node {targetValue}.";
+            await Task.Delay(2000); // Dừng lại 2 giây
+            foundNode.IsHighlighted = false; // Tắt sáng node gốc sau 2 giây
+            UpdateTreeDrawing();
+            return true; // Kết thúc tìm kiếm
+        }
+
+        // Thu thập danh sách các LineID từ root đến node cần tìm
+        var path = CollectLinesToNode(foundNode);
+
+        if (path.Count == 0)
+        {
+            statusMessage = "No path found.";
+            return false;
+        }
+
+        // Hiển thị kiểm soát viên
+        showController = true;
+
+        // Di chuyển kiểm soát viên dọc theo các line với độ trễ để giảm hiện tượng nảy
+        foreach (var line in path)
+        {
+            Vector2 destination = new Vector2((float)line.x2, (float)line.y2);
+            await MoveControllerToPosition(destination);
+            await Task.Delay(50); // Thêm độ trễ ngắn giữa mỗi bước di chuyển để tránh nảy
+        }
+
+        // Tô sáng node cần tìm
+        foundNode.IsHighlighted = true;
+        UpdateTreeDrawing();
+
+        // Dừng lại 2 giây tại node cần tìm
+        await Task.Delay(2000);
+
+        // Ẩn kiểm soát viên và đưa nó về node gốc
+        foundNode.IsHighlighted = false;
+        showController = false;
+        if (binaryTreeService.Root != null)
+        {
+            controllerPosition = new Vector2((float)binaryTreeService.Root.PositionX, (float)binaryTreeService.Root.PositionY);
+        }
+        else
+        {
+            // Xử lý khi Root là null, đặt vị trí mặc định hoặc báo lỗi
+            controllerPosition = new Vector2(800, 50); // Đặt vị trí mặc định nếu node gốc không tồn tại
+        }
+        UpdateTreeDrawing();
+
+        return true;
+    }
+
+
+    // Hàm di chuyển kiểm soát viên dọc theo các đường line
+    private async Task MoveControllerAlongPath(List<(double x1, double y1, double x2, double y2)> path)
+    {
+        foreach (var line in path)
+        {
+            // Tạo điểm đến dựa trên tọa độ x2, y2 của mỗi line
+            Vector2 destination = new Vector2((float)line.x2, (float)line.y2);
+            await MoveControllerToPosition(destination);
+        }
+    }
+
+    private async Task MoveControllerToPosition(Vector2 destination)
+    {
+        const float movementSpeed = 2f; // Đặt tốc độ di chuyển cố định
+        while ((destination - controllerPosition).Length() > 1.0f)
+        {
+            Vector2 direction = Vector2.Normalize(destination - controllerPosition);
+            controllerPosition += direction * movementSpeed; // Điều chỉnh tốc độ di chuyển
+            StateHasChanged();
+            await Task.Delay(16);  // 60fps với độ trễ cố định
+        }
+
+        // Đảm bảo vị trí cuối cùng của kiểm soát viên là vị trí node cần tìm
+        controllerPosition = destination;
+        StateHasChanged();
+    }
+
+    private bool isMoving = false;
+
+    private async Task MoveControllerSafely(Vector2 destination)
+    {
+        if (isMoving)
+        {
+            return; // Kiểm soát viên đang di chuyển, không thực hiện di chuyển mới
+        }
+
+        isMoving = true;
+        await MoveControllerToPosition(destination);
+        isMoving = false; // Đặt trạng thái lại sau khi hoàn thành di chuyển
+    }
+
+
+    private async Task OnControllerArrivedAtNode()
+    {
+        var foundNode = DFSFindNode(binaryTreeService.Root, searchNodeValue);
+        if (foundNode != null)
+        {
+            // Di chuyển kiểm soát viên tới vị trí của node cần tìm
+            Vector2 destination = new Vector2((float)foundNode.PositionX, (float)foundNode.PositionY);
+            await MoveControllerSafely(destination);
+
+            // Sau khi kiểm soát viên đã đến vị trí node, mới tô sáng node cần tìm
+            foundNode.IsHighlighted = true;
+            UpdateTreeDrawing();  // Cập nhật lại cây với node được tô sáng
+
+            // Tắt sáng node sau 2 giây
+            await Task.Delay(2000);
+            foundNode.IsHighlighted = false;
+            UpdateTreeDrawing(); // Cập nhật lại cây sau khi tắt sáng
+        }
+    }
+
+
+
+
+    // Hàm DFS tìm node và thu thập danh sách LineID
+    private NodeService? DFSFindNode(NodeService? currentNode, int targetValue)
+    {
+        if (currentNode == null) return null;
+
+        // Nếu tìm thấy node, trả về node đó
+        if (currentNode.Value == targetValue)
+        {
+            return currentNode;
+        }
+
+        // Duyệt con trái
+        if (currentNode.LeftChild != null)
+        {
+            var foundInLeft = DFSFindNode(currentNode.LeftChild, targetValue);
+            if (foundInLeft != null) return foundInLeft;
+        }
+
+        // Duyệt con phải
+        if (currentNode.RightChild != null)
+        {
+            var foundInRight = DFSFindNode(currentNode.RightChild, targetValue);
+            if (foundInRight != null) return foundInRight;
+        }
+
+        return null;
+    }
+
+    // Thu thập các đường nối từ node root đến node cần tìm (sử dụng LineID)
+    private List<(double x1, double y1, double x2, double y2)> CollectLinesToNode(NodeService targetNode)
+    {
+        var path = new List<(double x1, double y1, double x2, double y2)>();
+        var currentNode = targetNode;
+
+        while (currentNode.Parent != null)
+        {
+            // Tìm line nối từ parent đến node hiện tại
+            var line = binaryTreeService.GetLines().FirstOrDefault(l =>
+                l.x1 == currentNode.Parent.PositionX &&
+                l.y1 == currentNode.Parent.PositionY &&
+                l.x2 == currentNode.PositionX &&
+                l.y2 == currentNode.PositionY);
+
+            if (line != default)
+            {
+                // Chỉ lấy các giá trị tọa độ x1, y1, x2, y2
+                path.Insert(0, (line.x1, line.y1, line.x2, line.y2));
+            }
+
+            currentNode = currentNode.Parent;
+        }
+
+        return path;
+    }
+
+
+    
     private async Task HighlightPathToNode(NodeService? currentNode, int targetValue)
     {
         if (currentNode == null) return;
 
+        // Kiểm tra nếu node hiện tại là node cần tìm
+        if (currentNode.Value == targetValue)
+        {
+            currentNode.IsHighlighted = true; // Tô màu cho node được tìm thấy
+            UpdateTreeDrawing(); // Cập nhật lại giao diện
+            return;
+        }
+
+        // Tìm kiếm tiếp tục nếu node không phải là node gốc
         currentNode.IsHighlighted = true;
         UpdateTreeDrawing();
 
         await Task.Delay(1000);
-
-        // Nếu tìm thấy giá trị, dừng lại
-        if (currentNode.Value == targetValue) return;
 
         // Nhỏ hơn tìm bên trái, lớn hơn tìm bên phải
         if (targetValue < currentNode.Value)
@@ -370,4 +594,5 @@
             await HighlightPathToNode(currentNode.RightChild, targetValue);
         }
     }
+
 }

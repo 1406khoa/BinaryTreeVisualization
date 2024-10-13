@@ -60,7 +60,14 @@ input {
 
 .button:hover,
 .create-random-button:hover {
-    background-color: #6a4cba;
+    background-color: #a080f6;
+    transition: 0.3s;
+    color: white;
+}
+
+.button:active,
+.create-random-button:active {
+    background-color: #8569d0;
     transition: 0.3s;
     color: white;
 }

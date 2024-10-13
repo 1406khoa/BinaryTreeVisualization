@@ -61,7 +61,14 @@ input {
 
 .button:hover,
 .create-random-button:hover {
-    background-color: #6a4cba;
+    background-color: #a080f6;
+    transition: 0.3s;
+    color: white;
+}
+
+.button:active,
+.create-random-button:active {
+    background-color: #8569d0;
     transition: 0.3s;
     color: white;
 }
@@ -88,23 +95,35 @@ select {
 }
 
 .dropdown-menu {
+    position: relative;
+    margin-top: 30px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    border: 1px solid black;
     border-radius: 5px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Thêm bóng đổ */
+    background-color: #9375e2;
+}
+
+.dropdown-menu::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 20px;
+    border-width: 7px;
+    border-style: solid;
+    border-color: transparent transparent #9375e2 transparent;
+    margin-left: -6px;
 }
 
 .dropdown-button {
     background-color: #9375e2;
     color: white;
     height: 30px;
-    width: 80%;
-    font-size: 12px;
+    width: 90%;
+    font-size: 13px;
     border-radius: 5px;
     border: none;
-    margin: 10px;
+    margin: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -112,7 +131,7 @@ select {
 }
 
 .dropdown-button:hover {
-    background-color: #6a4cba;
+    background-color: rgba(255,255,255,0.37);
     transition: 0.3s;
     color: white;
 }

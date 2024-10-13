@@ -98,7 +98,7 @@
         <!-- Dropdown menu -->
         @if (showDropdown)
         {
-            <foreignObject x="@dropdownX" y="@dropdownY" width="180" height="180"
+            <foreignObject x="@dropdownX" y="@dropdownY" width="160" height="180"
                            xmlns:xhtml="http://www.w3.org/1999/xhtml">
                 <xhtml:div class="dropdown-menu">
                     <xhtml:button class="dropdown-button" 
@@ -168,9 +168,9 @@
     private void ShowDropdown(NodeService node)
     {
         selectedNode = node;
-
-        dropdownX = node.PositionX;
-        dropdownY = node.PositionY + 30; // Dịch xuống một chút để không che khuất node
+        
+        dropdownX = node.PositionX - 20;
+        dropdownY = node.PositionY;
         showDropdown = true;
     }
 

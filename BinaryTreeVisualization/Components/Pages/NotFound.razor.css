@@ -46,7 +46,13 @@
 }
 
 .button:hover {
-    background-color: #8d72d5;
+    background-color: #a080f6;
+    transition: 0.3s;
+    color: white;
+}
+
+.button:active {
+    background-color: #8569d0;
     transition: 0.3s;
     color: white;
 }

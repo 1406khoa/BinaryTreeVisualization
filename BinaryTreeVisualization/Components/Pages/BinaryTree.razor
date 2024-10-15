@@ -48,6 +48,10 @@
     </select>
 </div>
 
+<!-- Nút Duyệt để bắt đầu duyệt cây -->
+<button class="button" @onclick="StartTraversal" disabled="@isTraversing">Duyệt</button>
+
+
 <!-- Thông báo trạng thái -->
 <p style="color: green">@statusMessage</p>
 
@@ -141,6 +145,7 @@
 
     // Dãy số theo thứ tự duyệt cây
     private string traversalOrderDisplay = "";
+    private bool isTraversing = false; // Biến để kiểm tra trạng thái duyệt cây
 
     //Phần khai báo để sử dụng cho hàm random
     private int nodeCount;
@@ -197,7 +202,7 @@
     private void ShowDropdown(NodeService node)
     {
         selectedNode = node;
-        
+
         dropdownX = node.PositionX - 20;
         dropdownY = node.PositionY;
         showDropdown = true;
@@ -228,13 +233,63 @@
 
     private void OnTraversalMethodChange(ChangeEventArgs e)
     {
-        selectedTraversalMethod = e.Value?.ToString() ?? "in-order"; // Lấy kiểu duyệt từ select box
-        statusMessage = $"Traversal method changed to {selectedTraversalMethod}."; // Cập nhật thông báo
+        // Cập nhật kiểu duyệt cây
+        selectedTraversalMethod = e.Value?.ToString() ?? "in-order";
 
-        // Chỉ cần thay đổi kiểu duyệt mà không tái cấu trúc lại cây
-        binaryTreeService.SetTraversalType(selectedTraversalMethod);
-        UpdateTreeDrawing(); // Vẽ lại cây theo kiểu duyệt mới
+        // Lấy danh sách các node theo thứ tự duyệt dựa trên kiểu được chọn
+        var traversalOrderNodes = binaryTreeService.TraverseTree(binaryTreeService.Root, selectedTraversalMethod);
+
+        // Cập nhật dãy số hiển thị
+        traversalOrderDisplay = string.Join(" -> ", traversalOrderNodes.Select(node => node.Value));
+
     }
+
+    // Hàm khởi động quá trình duyệt
+    private async Task StartTraversal()
+    {
+        if (isTraversing)
+            return; // Nếu đang duyệt, không thực hiện thêm
+
+        isTraversing = true; // Đặt trạng thái đang duyệt
+        StateHasChanged();   // Cập nhật giao diện để disable nút
+
+        // Lấy danh sách các node theo kiểu duyệt
+        var traversalOrderNodes = binaryTreeService.TraverseTree(binaryTreeService.Root, selectedTraversalMethod);
+
+        // Gọi hàm để duyệt cây với hoạt ảnh
+        await StartTraversalAnimation(traversalOrderNodes);
+
+        isTraversing = false; // Kích hoạt lại nút sau khi hoàn thành
+        StateHasChanged();    // Cập nhật giao diện để enable nút
+    }
+
+    private async Task StartTraversalAnimation(List<NodeService> traversalOrderNodes)
+    {
+        // Hiển thị kiểm soát viên
+        showController = true;
+
+        foreach (var node in traversalOrderNodes)
+        {
+            // Di chuyển kiểm soát viên tới vị trí của node hiện tại
+            await MoveControllerToPosition(new Vector2((float)node.PositionX, (float)node.PositionY));
+
+            // Tô sáng node khi kiểm soát viên đến vị trí node
+            node.IsHighlighted = true;
+            UpdateTreeDrawing();
+
+            // Dừng lại một khoảng thời gian dựa trên tốc độ từ slider
+            await Task.Delay((int)(1000 / Val3));
+
+            // Bỏ tô sáng node sau khi di chuyển qua
+            node.IsHighlighted = false;
+            UpdateTreeDrawing();
+        }
+
+        // Ẩn kiểm soát viên khi hoàn thành duyệt
+        showController = false;
+        OnInitialized();
+    }
+
 
     private void RemoveHighlighting()
     {
@@ -409,10 +464,12 @@
         if (foundNode == binaryTreeService.Root)
         {
             foundNode.IsHighlighted = true; // Tô sáng node gốc
+            showController = true;
             UpdateTreeDrawing();
             statusMessage = $"Found root node {targetValue}.";
             await Task.Delay(2000); // Dừng lại 2 giây
             foundNode.IsHighlighted = false; // Tắt sáng node gốc sau 2 giây
+            showController = false;
             UpdateTreeDrawing();
             return true; // Kết thúc tìm kiếm
         }

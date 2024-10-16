@@ -1,7 +1,9 @@
 ﻿@page "/binarytree"
 @rendermode InteractiveServer
 @inject BinaryTreeService binaryTreeService
+
 <PageTitle>Binary Tree</PageTitle>
+
 <h4>Basic Operation</h4>
 <div class="basic-operation">
     <div class="add">
@@ -10,7 +12,7 @@
     </div>
     <div class="edit">
         <input type="number" @bind="editedNodeValue" />
-        <button class="button" @onclick="EditNode">Edit Node</button>
+        <button class="button" @onclick="EditNodeInBT">Edit Node</button>
     </div>
     <div class="delete-node">
         <input type="number" @bind="nodeToDeleteValue" />
@@ -125,7 +127,7 @@
     <!-- Hình tròn kiểm soát viên -->
     @if (showController)
     {
-        <circle cx="@controllerPosition.X" cy="@controllerPosition.Y" r="15" stroke="green" stroke-width="3" fill="none" />
+        <circle cx="@controllerPosition.X" cy="@controllerPosition.Y" r="20" stroke="green" stroke-width="3" fill="none" />
     }
 </svg>
 
@@ -518,7 +520,6 @@
         return true;
     }
 
-
     // Hàm di chuyển kiểm soát viên dọc theo các đường line
     private async Task MoveControllerAlongPath(List<(double x1, double y1, double x2, double y2)> path)
     {
@@ -555,8 +556,6 @@
         StateHasChanged();
     }
 
-
-
     private bool isMoving = false;
 
     private async Task MoveControllerSafely(Vector2 destination)
@@ -591,9 +590,6 @@
             UpdateTreeDrawing(); // Cập nhật lại cây sau khi tắt sáng
         }
     }
-
-
-
 
     // Hàm DFS tìm node và thu thập danh sách LineID
     private NodeService? DFSFindNode(NodeService? currentNode, int targetValue)
@@ -649,9 +645,7 @@
 
         return path;
     }
-
-
-    
+            
     private async Task HighlightPathToNode(NodeService? currentNode, int targetValue)
     {
         if (currentNode == null) return;
@@ -681,4 +675,13 @@
         }
     }
 
+    private void EditNodeInBT()
+    {
+        if (selectedNode != null)
+        {
+            selectedNode.Value = editedNodeValue;
+            statusMessage = $"Node value updated to: {editedNodeValue}";
+            UpdateTreeDrawing();
+        }
+    }
 }

@@ -18,19 +18,15 @@ public class BinaryTreeService
     // Hàm thêm node cây nhị phân tổng quát
     public Guid AddNodeToBinaryTree(int value, NodeService? parentNode, bool? selectedLeftChild = null)
     {
-        NodeService newNode = new NodeService(value);
-
-        if (parentNode == null)
+        NodeService newNode = new NodeService(value);              
+        // Nếu không có nút cha, thêm nút gốc
+        if (Root == null)
         {
-            // Nếu không có nút cha, thêm nút gốc
-            if (Root == null)
-            {
-                Root = newNode;
-                Root.IsRoot = true;
-                SetNodePosition(Root, RootX, RootY);
-            }
+            Root = newNode;
+            Root.IsRoot = true;
+            SetNodePosition(Root, RootX, RootY);
         }
-        else
+        if (parentNode != null)
         {
             // ** Chế độ Dropdown Menu **
             // Nếu selectedLeftChild có giá trị (true hoặc false)
@@ -420,7 +416,7 @@ public class BinaryTreeService
         return node;
     }
 
-    // Tìm kiếm theo DFS (Depth-)
+    // Tìm kiếm theo DFS (Depth-First Search)
     public NodeService? SearchNode(NodeService? currentNode, int value)
     {
         if (currentNode == null) return null;

@@ -1,6 +1,7 @@
 ﻿@page "/binarytree"
 @rendermode InteractiveServer
 @inject BinaryTreeService binaryTreeService
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Binary Tree</PageTitle>
 
@@ -8,7 +9,7 @@
     <div class="basic-operation">
         <p class="title">Basic Operations</p>
         <div>
-            <input class="first-input" type="number" @bind="newNodeValue" />
+            <input class="basic-op-input" type="number" @bind="newNodeValue" />
 
             <button class="button" @onclick="AddNode">Add</button>
             <button class="button" @onclick="EditNodeInBT">Edit</button>
@@ -73,7 +74,7 @@
     @foreach (var nodePosition in nodePositions)
     {
         <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
-        <circle class="node-circle"
+        <circle class="node-circle @((nodePosition.node == selectedNode) ? "selected-node" : "")"
                 cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
                 fill="@GetNodeFillColor(nodePosition.node)"
                 @onclick="(() => OnNodeClick(nodePosition.node))"
@@ -105,14 +106,14 @@
             <foreignObject x="@dropdownX" y="@dropdownY" width="160" height="220"
                            xmlns:xhtml="http://www.w3.org/1999/xhtml">
                 <xhtml:div class="dropdown-menu">
-                    <xhtml:button class="dropdown-button" 
-                        @onclick="() => AddNodeToDirection(true)">Add Left Child</xhtml:button>
                     <xhtml:button class="dropdown-button"
-                        @onclick="() => AddNodeToDirection(false)">Add Right Child</xhtml:button>
+                                  @onclick="() => AddNodeToDirection(true)">Add Left Child</xhtml:button>
                     <xhtml:button class="dropdown-button"
-                        @onclick="() => SwitchChild()">Switch Child</xhtml:button>
+                                  @onclick="() => AddNodeToDirection(false)">Add Right Child</xhtml:button>
                     <xhtml:button class="dropdown-button"
-                        @onclick="HideDropdown">Close</xhtml:button>
+                                  @onclick="() => SwitchChild()">Switch Child</xhtml:button>
+                    <xhtml:button class="dropdown-button"
+                                  @onclick="HideDropdown">Close</xhtml:button>
                 </xhtml:div>
             </foreignObject>
         }
@@ -179,9 +180,7 @@
         return "white"; // Màu mặc định cho các node khác
     }
 
-
     private int _val3 = 1; // Giá trị mặc định là 1, tương ứng với tốc độ ban đầu.
-
 
     private async Task AddNode()
     {
@@ -206,16 +205,24 @@
         UpdateTreeDrawing();  
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("addOutsideClickListener", DotNetObjectReference.Create(this));
+        }
+    }
+
     private void ShowDropdown(NodeService node)
     {
         selectedNode = node;
-
         dropdownX = node.PositionX - 20;
         dropdownY = node.PositionY;
         showDropdown = true;
     }
 
-    private void HideDropdown()
+    [JSInvokable]
+    public void HideDropdown()
     {
         showDropdown = false;
         StateHasChanged();
@@ -271,6 +278,7 @@
             }
 
             // Cập nhật lại giao diện
+            HideDropdown();
             UpdateTreeDrawing();
         }
     }
@@ -428,9 +436,7 @@
     {
         if (selectedNode == node)
         {
-            selectedNode = null; // Gỡ chọn node
-            newNodeValue = 0; // Xóa giá trị hiện tại khi không có node nào được chọn
-            statusMessage = "Node deselected.";
+            DeselectNode();
         }
         else
         {
@@ -440,6 +446,15 @@
         }
 
         UpdateTreeDrawing();
+    }
+
+    [JSInvokable]
+    public void DeselectNode()
+    {
+        selectedNode = null; // Hủy chọn node
+        newNodeValue = 0; // Xóa giá trị hiện tại nếu cần
+        statusMessage = "Node deselected.";
+        StateHasChanged();
     }
 
     private void EditNodeInBT()

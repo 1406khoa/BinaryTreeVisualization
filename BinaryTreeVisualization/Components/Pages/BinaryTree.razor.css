@@ -77,7 +77,7 @@ select {
     font-weight: 600;
 }
 
-.first-input {
+.basic-op-input {
     margin-left: 0px !important;
 }
 
@@ -126,10 +126,6 @@ input {
 .node-circle {
     cursor: pointer;
     transition: fill 0.3s ease;
-}
-
-.is-selected {
-    fill: #4cff00;
 }
 
 .dropdown-menu {

@@ -3,22 +3,66 @@
     height: 100%;
 }
 
-.basic-operation {
+.first-line {
     display: flex;
     flex-direction: row;
     align-items: center;
-    width: 100%
+    width: 100%;
+    margin-bottom: 10px;
 }
 
-.add, .edit, .delete-node, .find, .delete-tree {
-    width: 18%;
+.title {
+    font-weight: 600;
+    height: 15px;
+}
+
+.title-speed {
+    height: 0px;
+}
+
+.basic-operation,
+.browse-tree,
+.speed-control {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.basic-operation {
+    width: 40%;
+    margin-right: 20px;
+}
+
+.browse-tree, 
+.speed-control {
+    width: 30%;
+}
+
+.speed-control {
+    margin-top: 15px;
+}
+
+.basic-operation > div,
+.browse-tree > div
+.speed-control > div {
     display: flex;
     flex-direction: row;
     align-items: center;
+}
+
+select {
+    border-radius: 5px;
+    height: 30px;
+    font-size: 12px;
+    width: 200px;
+}
+
+.custom-slider {
+    width: 300px;
 }
 
 .random-tree {
-    margin-top: 20px;
+    margin-bottom: 10px;
 }
 
 .random-tree > div {
@@ -27,12 +71,18 @@
     align-items: center;
 }
 
+.status {
+    color: green;
+    margin-top: 10px;
+    font-weight: 600;
+}
+
 .first-input {
     margin-left: 0px !important;
 }
 
 input {
-    width: 80px;
+    width: 100px;
     border-radius: 5px;
     padding: 0 5px;
     margin: 0 5px;
@@ -52,7 +102,7 @@ input {
 }
 
 .button {
-    width: 38%;
+    width: 70px;
 }
 
 .create-random-button {
@@ -73,21 +123,9 @@ input {
     color: white;
 }
 
-.browse-tree {
-    margin-top: 20px;
-}
-
-select {
-    border-radius: 5px;
-}
-
 .node-circle {
     cursor: pointer;
     transition: fill 0.3s ease;
-}
-
-.node-circle:hover {
-    fill: #dddddd;
 }
 
 .is-selected {
@@ -134,8 +172,4 @@ select {
     background-color: rgba(255,255,255,0.37);
     transition: 0.3s;
     color: white;
-}
-
-.custom-slider {
-    width: 300px; /* Điều chỉnh kích thước slider */
 }

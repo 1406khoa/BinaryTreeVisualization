@@ -358,9 +358,9 @@ public class BinaryTreeService
                     AddNode(value);
                     break;
 
-                    //case "AVLTree":
-                    //    AddNodeToAVLTree(value);
-                    //    break;
+                //case "AVLTree":
+                //    AddNodeToAVLTree(value);
+                //    break;
             }
         }
     }
@@ -371,49 +371,35 @@ public class BinaryTreeService
         Root = null; // Đặt lại root về null
     }
 
-    // Hàm xóa node theo giá trị
-    public bool DeleteNode(int value)
+    // Hàm xóa node
+    public void DeleteNode(NodeService? nodeToDelete)
     {
-        Root = DeleteNodeRecursive(Root, value);
+        if (nodeToDelete == null) return;
 
-        // Sau khi xóa node, cập nhật lại vị trí của tất cả các node
-        if (Root != null)
+        // Đệ quy xóa tất cả các node con trước
+        DeleteNode(nodeToDelete.LeftChild);
+        DeleteNode(nodeToDelete.RightChild);
+
+        // Nếu xóa node gốc, cập nhật lại root = null
+        if (nodeToDelete == Root)
         {
-            AssignPositionsBasedOnTreeStructure(Root, RootX, RootY, 200);
-        }
-
-        return Root != null;
-    }
-
-    // Đệ quy xóa node khỏi cây nhị phân
-    private NodeService? DeleteNodeRecursive(NodeService? node, int value)
-    {
-        if (node == null) return null;
-
-        if (value < node.Value)
-        {
-            node.LeftChild = DeleteNodeRecursive(node.LeftChild, value);
-        }
-        else if (value > node.Value)
-        {
-            node.RightChild = DeleteNodeRecursive(node.RightChild, value);
+            Root = null;
         }
         else
         {
-            // Node cần xóa được tìm thấy
-
-            // Trường hợp 1: Node không có con hoặc chỉ có 1 con
-            if (node.LeftChild == null) return node.RightChild;
-            if (node.RightChild == null) return node.LeftChild;
-
-            // Trường hợp 2: Node có 2 con
-            // Tìm node nhỏ nhất trong nhánh phải
-            var minLargerNode = FindMin(node.RightChild);
-            node.Value = minLargerNode.Value; // Thay thế giá trị node hiện tại bằng giá trị node nhỏ nhất nhánh phải
-            node.RightChild = DeleteNodeRecursive(node.RightChild, minLargerNode.Value); // Xóa node nhỏ nhất nhánh phải
+            // Cập nhật parent để xóa node
+            if (nodeToDelete.Parent != null)
+            {
+                if (nodeToDelete.Parent.LeftChild == nodeToDelete)
+                {
+                    nodeToDelete.Parent.LeftChild = null;
+                }
+                else if (nodeToDelete.Parent.RightChild == nodeToDelete)
+                {
+                    nodeToDelete.Parent.RightChild = null;
+                }
+            }
         }
-
-        return node;
     }
 
     // Tìm kiếm theo DFS (Depth-First Search)
@@ -430,11 +416,5 @@ public class BinaryTreeService
 
         // Duyệt con phải
         return SearchNode(currentNode.RightChild, value); // Nếu không tìm thấy trong con trái, tiếp tục tìm ở con phải
-    }
-
-
-    public void UpdateRoot(NodeService newRoot)
-    {
-        Root = newRoot; // Cập nhật giá trị Root từ lớp con hoặc bên ngoài
     }
 }

@@ -4,72 +4,62 @@
 
 <PageTitle>Binary Tree</PageTitle>
 
-<h4>Basic Operation</h4>
-<div class="basic-operation">
-    <div class="add">
-        <input class="first-input" type="number" @bind="newNodeValue" />
-        <button class="button" @onclick="AddNode">Add Node</button>
+<div class="first-line">
+    <div class="basic-operation">
+        <p class="title">Basic Operations</p>
+        <div>
+            <input class="first-input" type="number" @bind="newNodeValue" />
+
+            <button class="button" @onclick="AddNode">Add</button>
+            <button class="button" @onclick="EditNodeInBT">Edit</button>
+            <button class="button" @onclick="DeleteNode">Delete</button>
+            <button class="button" @onclick="StartFindNodeAnimation">Find</button>
+            <button class="button" @onclick="DeleteTree">Clear</button>
+        </div>
     </div>
-    <div class="edit">
-        <input type="number" @bind="editedNodeValue" />
-        <button class="button" @onclick="EditNodeInBT">Edit Node</button>
+
+    <div class="browse-tree">
+        <p class="title">Selected Traversal Method</p>
+        <div>
+            <select @onchange="OnTraversalMethodChange">
+                <option value="pre-order">Pre-order (NLR)</option>
+                <option value="in-order" selected>In-order (LNR)</option>
+                <option value="post-order">Post-order (LRN)</option>
+                <option value="reverse-in-order">Reverse In-order (RNL)</option>
+            </select>
+            <button class="button" @onclick="StartTraversal" disabled="@isTraversing">Browse</button>
+        </div>
     </div>
-    <div class="delete-node">
-        <input type="number" @bind="nodeToDeleteValue" />
-        <button class="button" @onclick="DeleteNode">Delete Node</button>
-    </div>
-    <div class="find">
-        <input type="number" @bind="searchNodeValue" />
-        <button class="button" @onclick="StartFindNodeAnimation">Find Node</button>
-    </div>
-    <div class="delete-tree">
-        <button class="button" @onclick="DeleteTree">Delete Tree</button>
+
+    <div class="speed-control">
+        <p class="title-speed">@($"Animation Speed: x{Val3}")</p>
+        <div class="custom-slider">
+            <MatSlider @bind-Value="@Val3" Discrete="true" Pin="true" TValue="int" ValueMin="1" ValueMax="3"></MatSlider>
+        </div>
     </div>
 </div>
 
 <div class="random-tree">
-    <h4>Create Random Tree</h4>
+    <p class="title">Create Random Tree</p>
     <div>
-        <label>Number of Nodes:</label>
+        <label>Number of nodes:</label>
         <input type="number" @bind="nodeCount" />
-        <label>Min Value:</label>
+        <label style="margin-left: 5px">Min:</label>
         <input type="number" @bind="minValue" />
-        <label>Max Value:</label>
+        <label style="margin-left: 5px">Max:</label>
         <input type="number" @bind="maxValue" />
         <button class="create-random-button" @onclick="CreateRandomTree">Create Random Tree</button>
     </div>
 </div>
 
-<div class="browse-tree">
-    <label>Select Traversal Method</label>
-    <select @onchange="OnTraversalMethodChange">
-        <option value="pre-order">Pre-order (NLR)</option>
-        <option value="in-order" selected>In-order (LNR)</option>
-        <option value="post-order">Post-order (LRN)</option>
-        <option value="reverse-in-order">Reverse In-order (RNL)</option>
-    </select>
-</div>
-
-<!-- Nút Duyệt để bắt đầu duyệt cây -->
-<button class="button" @onclick="StartTraversal" disabled="@isTraversing">Duyệt</button>
-
-
-<!-- Thông báo trạng thái -->
-<p style="color: green">@statusMessage</p>
-
 <!-- Phần hiển thị dãy số khi duyệt cây -->
-<h4>Traversal Order</h4>
+<p class="title">Traversal Order</p>
 <div style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
     <p>@traversalOrderDisplay</p>
 </div>
 
-
-    You can choose your speed here.
-
-<div class="custom-slider">
-    <MatSlider @bind-Value="@Val3" Discrete="true" Pin="true" TValue="int" ValueMin="1" ValueMax="3"></MatSlider>
-</div>
-<p>Speed Multiplier: @Val3</p>
+<!-- Thông báo trạng thái -->
+<p class="status">@($"Status: {statusMessage}")</p>
 
 <!-- Khối SVG -->
 <svg width="100%" height="100vh" style="overflow: visible;">
@@ -103,7 +93,9 @@
                 builder.AddAttribute(7, "font-weight", "bold");
                 builder.AddAttribute(8, "fill", "black");
                 builder.AddAttribute(9, "cursor", "pointer");
-                builder.AddContent(10, nodePosition.node.Value.ToString());
+                builder.AddAttribute(10, "onclick", EventCallback.Factory
+                    .Create(this, () => OnNodeClick(nodePosition.node)));
+                builder.AddContent(11, nodePosition.node.Value.ToString());
                 builder.CloseElement();
             }))
 
@@ -136,9 +128,6 @@
     @using System.Numerics
 
     private int newNodeValue;
-    private int nodeToDeleteValue;
-    private int searchNodeValue;
-    private int editedNodeValue;
     private NodeService? selectedNode;
     private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> 
@@ -155,7 +144,7 @@
     private int maxValue;
 
     // Biến để chứa thông báo trạng thái
-    private string statusMessage = "Tree initialized."; // Thông báo trạng thái ban đầu
+    private string statusMessage = ""; // Thông báo trạng thái ban đầu
 
     // Biến liên quan dropdown menu
     private bool showDropdown = false;
@@ -369,7 +358,7 @@
 
     private void DeleteNode()
     {
-        bool isDeleted = binaryTreeService.DeleteNode(nodeToDeleteValue);
+        bool isDeleted = binaryTreeService.DeleteNode(newNodeValue);
 
         UpdateTreeDrawing(); // Cập nhật lại giao diện sau khi xóa
     }
@@ -377,43 +366,32 @@
     //Hàm để lưu thông tin và tô màu node được chọn
     private void OnNodeClick(NodeService node)
     {
-        // Nếu nút đã được chọn, hủy chọn
         if (selectedNode == node)
         {
             selectedNode = null; // Gỡ chọn node
+            newNodeValue = 0; // Xóa giá trị hiện tại khi không có node nào được chọn
             statusMessage = "Node deselected.";
         }
         else
         {
             selectedNode = node; // Gán node mới được chọn
-            statusMessage = $"Selected node: {node.Value}";
+            newNodeValue = selectedNode.Value; // Hiển thị giá trị của node trong input
+            statusMessage = $"Node {node.Value} is selected";
         }
 
         UpdateTreeDrawing();
     }
 
-    private async Task EditNode()
+    private void EditNodeInBT()
     {
-        if (selectedNode != null) //Kiểm tra xem đã chọn node để chỉnh sửa chưa
+        if (selectedNode != null)
         {
-            // Lưu ID của nút cũ để xóa
-            var oldNodeID = selectedNode.NodeID;
-
-            // Xóa nút cũ
-            binaryTreeService.DeleteNode(selectedNode.Value);
-
-            // Thêm nút mới với giá trị đã chỉnh sửa
-            var newNodeID = binaryTreeService.AddNode(editedNodeValue);
-
-            UpdateTreeDrawing();
-
-            HighlightNodeAndLine(newNodeID);
-            await Task.Delay(2000);
-
-            RemoveHighlighting();
+            selectedNode.Value = newNodeValue;
+            statusMessage = $"Node value updated to {newNodeValue}";
             UpdateTreeDrawing();
         }
     }
+
     // --------------------- FIND NODE ANIMATION HERE ---------------------
 
     protected override void OnInitialized()
@@ -434,16 +412,16 @@
     private async Task StartFindNodeAnimation()
     {
         // Gọi hàm SearchNodeInternalAsync để tìm node và xử lý animation
-        bool result = await SearchNodeInternalAsync(searchNodeValue);
+        bool result = await SearchNodeInternalAsync(newNodeValue);
 
         // Kiểm tra kết quả từ SearchNodeInternalAsync
         if (!result)
         {
-            statusMessage = $"Node {searchNodeValue} does not exist.";
+            statusMessage = $"Node {newNodeValue} does not exist.";
         }
         else
         {
-            statusMessage = $"Node {searchNodeValue} found successfully.";
+            statusMessage = $"Node {newNodeValue} found successfully.";
         }
 
         UpdateTreeDrawing(); // Cập nhật lại hiển thị cây sau khi tìm kiếm hoàn thành
@@ -573,7 +551,7 @@
 
     private async Task OnControllerArrivedAtNode()
     {
-        var foundNode = DFSFindNode(binaryTreeService.Root, searchNodeValue);
+        var foundNode = DFSFindNode(binaryTreeService.Root, newNodeValue);
         if (foundNode != null)
         {
             // Di chuyển kiểm soát viên tới vị trí của node cần tìm
@@ -644,44 +622,5 @@
         }
 
         return path;
-    }
-            
-    private async Task HighlightPathToNode(NodeService? currentNode, int targetValue)
-    {
-        if (currentNode == null) return;
-
-        // Kiểm tra nếu node hiện tại là node cần tìm
-        if (currentNode.Value == targetValue)
-        {
-            currentNode.IsHighlighted = true; // Tô màu cho node được tìm thấy
-            UpdateTreeDrawing(); // Cập nhật lại giao diện
-            return;
-        }
-
-        // Tìm kiếm tiếp tục nếu node không phải là node gốc
-        currentNode.IsHighlighted = true;
-        UpdateTreeDrawing();
-
-        await Task.Delay(1000);
-
-        // Nhỏ hơn tìm bên trái, lớn hơn tìm bên phải
-        if (targetValue < currentNode.Value)
-        {
-            await HighlightPathToNode(currentNode.LeftChild, targetValue);
-        }
-        else
-        {
-            await HighlightPathToNode(currentNode.RightChild, targetValue);
-        }
-    }
-
-    private void EditNodeInBT()
-    {
-        if (selectedNode != null)
-        {
-            selectedNode.Value = editedNodeValue;
-            statusMessage = $"Node value updated to: {editedNodeValue}";
-            UpdateTreeDrawing();
-        }
     }
 }

@@ -73,9 +73,9 @@
     @foreach (var nodePosition in nodePositions)
     {
         <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
-        <circle class="node-circle @((nodePosition.node == selectedNode) ? "is-selected" : "")"
+        <circle class="node-circle"
                 cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
-                fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")"
+                fill="@GetNodeFillColor(nodePosition.node)"
                 @onclick="(() => OnNodeClick(nodePosition.node))"
                 @oncontextmenu:preventDefault="true"
                 @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
@@ -164,6 +164,20 @@
         }
     }
 
+    private string GetNodeFillColor(NodeService node)
+    {
+        if (node.IsHighlighted) // Ưu tiên màu vàng nếu node đang được tìm kiếm
+        {
+            return "yellow";
+        }
+        else if (node == selectedNode) // Nếu node được chọn, tô màu xanh lá
+        {
+            return "lightgreen";
+        }
+        return "white"; // Màu mặc định cho các node khác
+    }
+
+
     private int _val3 = 1; // Giá trị mặc định là 1, tương ứng với tốc độ ban đầu.
 
 
@@ -242,6 +256,7 @@
             return; // Nếu đang duyệt, không thực hiện thêm
 
         isTraversing = true; // Đặt trạng thái đang duyệt
+        traversalOrderDisplay = ""; // Xóa kết quả cũ
         StateHasChanged();   // Cập nhật giao diện để disable nút
 
         // Lấy danh sách các node theo kiểu duyệt
@@ -256,15 +271,28 @@
 
     private async Task StartTraversalAnimation(List<NodeService> traversalOrderNodes)
     {
-        // Hiển thị kiểm soát viên
-        showController = true;
+        showController = true; // Hiển thị kiểm soát viên
+
+        traversalOrderDisplay = "";
+        StateHasChanged(); // Cập nhật giao diện
 
         foreach (var node in traversalOrderNodes)
         {
-            // Di chuyển kiểm soát viên tới vị trí của node hiện tại
+            // Di chuyển kiểm soát viên tới node hiện tại
             await MoveControllerToPosition(new Vector2((float)node.PositionX, (float)node.PositionY));
 
-            // Tô sáng node khi kiểm soát viên đến vị trí node
+            // Cập nhật dãy Traversal Order từng bước
+            if (string.IsNullOrEmpty(traversalOrderDisplay))
+            {
+                traversalOrderDisplay = $"{node.Value}"; // Node đầu tiên
+            }
+            else
+            {
+                traversalOrderDisplay += $" -> {node.Value}"; // Các node tiếp theo
+            }
+            StateHasChanged(); // Cập nhật giao diện để hiển thị kết quả
+
+            // Tô sáng node khi kiểm soát viên đến vị trí
             node.IsHighlighted = true;
             UpdateTreeDrawing();
 
@@ -278,6 +306,7 @@
 
         // Ẩn kiểm soát viên khi hoàn thành duyệt
         showController = false;
+        StateHasChanged(); // Cập nhật giao diện lần cuối
         OnInitialized();
     }
 

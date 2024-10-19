@@ -12,7 +12,7 @@
 
             <button class="button" @onclick="AddNode">Add</button>
             <button class="button" @onclick="EditNodeInBT">Edit</button>
-            <button class="button" @onclick="DeleteNode">Delete</button>
+            <button class="button" @onclick="DeleteNodeAnimation">Delete</button>
             <button class="button" @onclick="StartFindNodeAnimation">Find</button>
             <button class="button" @onclick="DeleteTree">Clear</button>
         </div>
@@ -102,13 +102,15 @@
         <!-- Dropdown menu -->
         @if (showDropdown)
         {
-            <foreignObject x="@dropdownX" y="@dropdownY" width="160" height="180"
+            <foreignObject x="@dropdownX" y="@dropdownY" width="160" height="220"
                            xmlns:xhtml="http://www.w3.org/1999/xhtml">
                 <xhtml:div class="dropdown-menu">
                     <xhtml:button class="dropdown-button" 
                         @onclick="() => AddNodeToDirection(true)">Add Left Child</xhtml:button>
                     <xhtml:button class="dropdown-button"
                         @onclick="() => AddNodeToDirection(false)">Add Right Child</xhtml:button>
+                    <xhtml:button class="dropdown-button"
+                        @onclick="() => SwitchChild()">Switch Child</xhtml:button>
                     <xhtml:button class="dropdown-button"
                         @onclick="HideDropdown">Close</xhtml:button>
                 </xhtml:div>
@@ -222,6 +224,43 @@
         }
     }
 
+    private void SwitchChild()
+    {
+        if (selectedNode != null)
+        {
+            var leftChild = selectedNode.LeftChild;
+            var rightChild = selectedNode.RightChild;
+
+            // Nếu không có child nào
+            if (leftChild == null && rightChild == null)
+            {
+                return;
+            }
+
+            // Nếu cả hai child đều tồn tại, hoán đổi vị trí
+            if (leftChild != null && rightChild != null)
+            {
+                selectedNode.LeftChild = rightChild;
+                selectedNode.RightChild = leftChild;
+            }
+            // Nếu chỉ có child trái
+            else if (leftChild != null)
+            {
+                selectedNode.RightChild = leftChild;
+                selectedNode.LeftChild = null; // Xóa child trái
+            }
+            // Nếu chỉ có child phải
+            else if (rightChild != null)
+            {
+                selectedNode.LeftChild = rightChild;
+                selectedNode.RightChild = null; // Xóa child phải
+            }
+
+            // Cập nhật lại giao diện
+            UpdateTreeDrawing();
+        }
+    }
+
     private void OnTraversalMethodChange(ChangeEventArgs e)
     {
         // Cập nhật kiểu duyệt cây
@@ -280,7 +319,6 @@
         showController = false;
         OnInitialized();
     }
-
 
     private void RemoveHighlighting()
     {
@@ -356,13 +394,6 @@
         StateHasChanged();
     }
 
-    private void DeleteNode()
-    {
-        bool isDeleted = binaryTreeService.DeleteNode(newNodeValue);
-
-        UpdateTreeDrawing(); // Cập nhật lại giao diện sau khi xóa
-    }
-
     //Hàm để lưu thông tin và tô màu node được chọn
     private void OnNodeClick(NodeService node)
     {
@@ -390,6 +421,33 @@
             statusMessage = $"Node value updated to {newNodeValue}";
             UpdateTreeDrawing();
         }
+    }
+
+    private async Task DeleteNodeAnimation()
+    {
+        // Gọi hàm tìm kiếm và thực hiện animation trước
+        bool result = await SearchNodeInternalAsync(newNodeValue);
+
+        // Nếu tìm thấy node thì thực hiện xóa
+        if (result)
+        {
+            var nodeToDelete = DFSFindNode(binaryTreeService.Root, newNodeValue);
+            if (nodeToDelete != null)
+            {
+                binaryTreeService.DeleteNode(nodeToDelete); // Gọi hàm xóa node và các con của nó
+                statusMessage = $"Node {newNodeValue} and its children have been deleted.";
+            }
+            else
+            {
+                statusMessage = $"Node {newNodeValue} does not exist.";
+            }
+        }
+        else
+        {
+            statusMessage = $"Node {newNodeValue} không tồn tại.";
+        }
+
+        UpdateTreeDrawing(); // Cập nhật lại hiển thị cây sau khi xóa
     }
 
     // --------------------- FIND NODE ANIMATION HERE ---------------------
@@ -426,7 +484,6 @@
 
         UpdateTreeDrawing(); // Cập nhật lại hiển thị cây sau khi tìm kiếm hoàn thành
     }
-
 
     // Hàm tìm kiếm node và di chuyển kiểm soát viên dọc theo đường đi với độ trễ
     private async Task<bool> SearchNodeInternalAsync(int targetValue)
@@ -547,7 +604,6 @@
         await MoveControllerToPosition(destination);
         isMoving = false; // Đặt trạng thái lại sau khi hoàn thành di chuyển
     }
-
 
     private async Task OnControllerArrivedAtNode()
     {

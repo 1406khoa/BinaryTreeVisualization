@@ -15,9 +15,50 @@
 
 <body>
     <Routes />
+    
+    <script>
+        window.addOutsideClickListener = (dotNetHelper) => {
+            document.addEventListener('click', function (event) {
+                const dropdown = document.querySelector('.dropdown-menu');
+                const selectedNodeElement = document.querySelector('.selected-node');
+                const inputFields = document.querySelectorAll('.basic-op-input');
+                const clickedOnNode = event.target.closest('.node-circle');
 
-    
-    
+                // Kiểm tra nếu click vào basic-op-input
+                let clickedOnInput = Array.from(inputFields).some(input => input.contains(event.target));
+
+                // Nếu click vào input, không thực hiện gì cả
+                if (clickedOnInput) {
+                    return;
+                }
+
+                // Nếu click vào một node, không thực hiện hủy chọn node
+                if (clickedOnNode) {
+                    if (dropdown) {
+                        dotNetHelper.invokeMethodAsync('HideDropdown'); // Đóng dropdown nếu đang mở
+                    }
+                    return;
+                }
+
+                // Nếu dropdown đang mở
+                if (dropdown) {
+                    // Nếu click bên ngoài dropdown và node đã chọn
+                    if (!dropdown.contains(event.target) && 
+                        (!selectedNodeElement || !selectedNodeElement.contains(event.target))) {
+                    
+                        dotNetHelper.invokeMethodAsync('HideDropdown'); // Đóng dropdown
+                        dotNetHelper.invokeMethodAsync('DeselectNode'); // Hủy chọn node
+                    }
+                } else {
+                    // Nếu dropdown không mở, chỉ cần kiểm tra node đã chọn
+                    if (selectedNodeElement && !selectedNodeElement.contains(event.target)) {
+                        dotNetHelper.invokeMethodAsync('DeselectNode'); // Hủy chọn node
+                    }
+                }
+            });
+        };
+    </script>
+
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/MatBlazor/dist/matBlazor.js"></script>
     <link href="_content/MatBlazor/dist/matBlazor.css" rel="stylesheet" />

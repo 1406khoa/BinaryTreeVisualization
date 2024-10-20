@@ -79,7 +79,7 @@
                 @onclick="(() => OnNodeClick(nodePosition.node))"
                 @oncontextmenu:preventDefault="true"
                 @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
-        
+
         <!-- Sử dụng RenderFragment để in giá trị -->
         @((RenderFragment)((builder) =>
             {
@@ -94,7 +94,7 @@
                 builder.AddAttribute(8, "fill", "black");
                 builder.AddAttribute(9, "cursor", "pointer");
                 builder.AddAttribute(10, "onclick", EventCallback.Factory
-                    .Create(this, () => OnNodeClick(nodePosition.node)));
+                .Create(this, () => OnNodeClick(nodePosition.node)));
                 builder.AddContent(11, nodePosition.node.Value.ToString());
                 builder.CloseElement();
             }))
@@ -105,14 +105,14 @@
             <foreignObject x="@dropdownX" y="@dropdownY" width="160" height="220"
                            xmlns:xhtml="http://www.w3.org/1999/xhtml">
                 <xhtml:div class="dropdown-menu">
-                    <xhtml:button class="dropdown-button" 
-                        @onclick="() => AddNodeToDirection(true)">Add Left Child</xhtml:button>
                     <xhtml:button class="dropdown-button"
-                        @onclick="() => AddNodeToDirection(false)">Add Right Child</xhtml:button>
+                                  @onclick="() => AddNodeToDirection(true)">Add Left Child</xhtml:button>
                     <xhtml:button class="dropdown-button"
-                        @onclick="() => SwitchChild()">Switch Child</xhtml:button>
+                                  @onclick="() => AddNodeToDirection(false)">Add Right Child</xhtml:button>
                     <xhtml:button class="dropdown-button"
-                        @onclick="HideDropdown">Close</xhtml:button>
+                                  @onclick="() => SwitchChild()">Switch Child</xhtml:button>
+                    <xhtml:button class="dropdown-button"
+                                  @onclick="HideDropdown">Close</xhtml:button>
                 </xhtml:div>
             </foreignObject>
         }
@@ -129,33 +129,28 @@
     @using BinaryTreeVisualization.Components.Services
     @using System.Numerics
 
+    // Cụm biến liên quan đến Node và Node Selection
     private int newNodeValue;
     private NodeService? selectedNode;
-    private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
-    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> 
-        lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
-    private string selectedTraversalMethod = "in-order"; // Kiểu duyệt cây mặc định là In-order
+    private List<(NodeService node, double x, double y)> nodePositions = new();
+    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines = new();
 
-    // Dãy số theo thứ tự duyệt cây
+    // Cụm biến liên quan đến Traversal và Duyệt cây
+    private string selectedTraversalMethod = "in-order";
     private string traversalOrderDisplay = "";
-    private bool isTraversing = false; // Biến để kiểm tra trạng thái duyệt cây
+    private bool isTraversing = false;
 
-    //Phần khai báo để sử dụng cho hàm random
-    private int nodeCount;
-    private int minValue;
-    private int maxValue;
+    // Cụm biến liên quan đến Random Tree Generation
+    private int nodeCount, minValue, maxValue;
 
-    // Biến để chứa thông báo trạng thái
-    private string statusMessage = ""; // Thông báo trạng thái ban đầu
-
-    // Biến liên quan dropdown menu
+    // Cụm biến liên quan đến Dropdown Menu
     private bool showDropdown = false;
-    private double dropdownX;
-    private double dropdownY;
+    private double dropdownX, dropdownY;
 
-    // Biến liên quan đến animation
+    // Cụm biến liên quan đến Animation và Controller
     private bool showController = false;
-    private Vector2 controllerPosition = new Vector2(0, 0);  // Vị trí kiểm soát viên
+    private Vector2 controllerPosition = new(0, 0);
+    private int _val3 = 1;
     public int Val3
     {
         get => _val3;
@@ -165,6 +160,9 @@
             this.StateHasChanged();
         }
     }
+
+    // Biến thông báo trạng thái
+    private string statusMessage = "";
 
     private string GetNodeFillColor(NodeService node)
     {
@@ -180,7 +178,6 @@
     }
 
 
-    private int _val3 = 1; // Giá trị mặc định là 1, tương ứng với tốc độ ban đầu.
 
 
     private async Task AddNode()
@@ -203,7 +200,7 @@
         await Task.Delay(2000);
 
         RemoveHighlighting();
-        UpdateTreeDrawing();  
+        UpdateTreeDrawing();
     }
 
     private void ShowDropdown(NodeService node)
@@ -584,16 +581,6 @@
         return true;
     }
 
-    // Hàm di chuyển kiểm soát viên dọc theo các đường line
-    private async Task MoveControllerAlongPath(List<(double x1, double y1, double x2, double y2)> path)
-    {
-        foreach (var line in path)
-        {
-            // Tạo điểm đến dựa trên tọa độ x2, y2 của mỗi line
-            Vector2 destination = new Vector2((float)line.x2, (float)line.y2);
-            await MoveControllerToPosition(destination);
-        }
-    }
 
     private async Task MoveControllerToPosition(Vector2 destination)
     {
@@ -620,39 +607,6 @@
         StateHasChanged();
     }
 
-    private bool isMoving = false;
-
-    private async Task MoveControllerSafely(Vector2 destination)
-    {
-        if (isMoving)
-        {
-            return; // Kiểm soát viên đang di chuyển, không thực hiện di chuyển mới
-        }
-
-        isMoving = true;
-        await MoveControllerToPosition(destination);
-        isMoving = false; // Đặt trạng thái lại sau khi hoàn thành di chuyển
-    }
-
-    private async Task OnControllerArrivedAtNode()
-    {
-        var foundNode = DFSFindNode(binaryTreeService.Root, newNodeValue);
-        if (foundNode != null)
-        {
-            // Di chuyển kiểm soát viên tới vị trí của node cần tìm
-            Vector2 destination = new Vector2((float)foundNode.PositionX, (float)foundNode.PositionY);
-            await MoveControllerSafely(destination);
-
-            // Sau khi kiểm soát viên đã đến vị trí node, mới tô sáng node cần tìm
-            foundNode.IsHighlighted = true;
-            UpdateTreeDrawing();  // Cập nhật lại cây với node được tô sáng
-
-            // Tắt sáng node sau 2 giây
-            await Task.Delay(2000);
-            foundNode.IsHighlighted = false;
-            UpdateTreeDrawing(); // Cập nhật lại cây sau khi tắt sáng
-        }
-    }
 
     // Hàm DFS tìm node và thu thập danh sách LineID
     private NodeService? DFSFindNode(NodeService? currentNode, int targetValue)

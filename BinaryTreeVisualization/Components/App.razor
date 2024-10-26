@@ -17,50 +17,25 @@
     <Routes />
     
     <script>
+        window.preventContextMenu = function() {
+            document.addEventListener('contextmenu', function(event) {
+                event.preventDefault();
+            });
+        };
+
         window.addOutsideClickListener = (dotNetHelper) => {
             document.addEventListener('click', function (event) {
-                const dropdown = document.querySelector('.dropdown-menu');
-                const selectedNodeElement = document.querySelector('.selected-node');
-                const inputFields = document.querySelectorAll('.basic-op-input');
-                const clickedOnNode = event.target.closest('.node-circle');
-                const buttonFields = document.querySelectorAll('.button');
-                const sliderFields = document.querySelectorAll('.slider');
+                const dropdownField = document.querySelectorAll('.dropdown-menu');
+                const inputField = document.querySelectorAll('.dropdown-input');
 
-                // Kiểm tra nếu click vào basic-op-input
-                let clickedOnInput = Array.from(inputFields).some(input => input.contains(event.target));
-                let clickedOnButton = Array.from(buttonFields).some(input => input.contains(event.target));
-
-                // Nếu click vào input, không thực hiện gì cả
-                if (clickedOnInput === true
-                    ||
-                    clickedOnButton === true)
-                {
+                let clickedOnInput = Array.from(inputField).some(input => input.contains(event.target));
+                let clickedOnDropdown = Array.from(dropdownField).some(dropdown => dropdown.contains(event.target));
+                
+                if (clickedOnInput || clickedOnDropdown) {
                     return;
                 }
 
-                // Nếu click vào một node, không thực hiện hủy chọn node
-                if (clickedOnNode) {
-                    if (dropdown) {
-                        dotNetHelper.invokeMethodAsync('HideDropdown'); // Đóng dropdown nếu đang mở
-                    }
-                    return;
-                }
-
-                // Nếu dropdown đang mở
-                if (dropdown) {
-                    // Nếu click bên ngoài dropdown và node đã chọn
-                    if (!dropdown.contains(event.target) && 
-                        (!selectedNodeElement || !selectedNodeElement.contains(event.target))) {
-                    
-                        dotNetHelper.invokeMethodAsync('HideDropdown'); // Đóng dropdown
-                        dotNetHelper.invokeMethodAsync('DeselectNode'); // Hủy chọn node
-                    }
-                } else {
-                    // Nếu dropdown không mở, chỉ cần kiểm tra node đã chọn
-                    if (selectedNodeElement && !selectedNodeElement.contains(event.target)) {
-                        dotNetHelper.invokeMethodAsync('DeselectNode'); // Hủy chọn node
-                    }
-                }
+                dotNetHelper.invokeMethodAsync('HideDropdown');
             });
         };
 
@@ -71,8 +46,6 @@
                 element.classList.add('visible');
             }
         };
-
-
     </script>
 
     <script src="_framework/blazor.web.js"></script>

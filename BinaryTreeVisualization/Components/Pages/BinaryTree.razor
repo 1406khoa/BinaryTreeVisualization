@@ -88,7 +88,7 @@
     {
         <!-- Đường nối giữa các node -->
         <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
-              stroke="@((line.IsHighlighted) ? "yellow" : "black")" stroke-width="2" />
+              stroke="@((line.IsHighlighted) ? "#FFC107" : "black")" stroke-width="2" />
     }
 
     @foreach (var nodePosition in nodePositions)
@@ -215,7 +215,7 @@
     {
         if (node.IsHighlighted) // Ưu tiên màu vàng nếu node đang được tìm kiếm
         {
-            return "yellow";
+            return "#FFC107"; //Vàng hổ phách nhạt (Amber)
         }
         else if (node == selectedNode) // Nếu node được chọn, tô màu xanh lá
         {
@@ -838,28 +838,37 @@
 
     private async Task MoveControllerToPosition(Vector2 destination)
     {
-        float baseSpeed = 2f; // Tốc độ cơ bản ban đầu
-        float movementSpeed = baseSpeed * Val3; // Điều chỉnh tốc độ theo hệ số nhân từ slider
+        float baseSpeed = 2f; // Tốc độ cơ bản
+        float movementSpeed = baseSpeed * Val3; // Điều chỉnh tốc độ dựa trên slider
 
-        while ((destination - controllerPosition).Length() > movementSpeed) // Điều chỉnh điều kiện kiểm tra
+        int delayTime = Math.Max(1, 16 / (int)Val3); // Giảm Task.Delay dựa trên Val3, tối thiểu là 1ms
+
+        while ((destination - controllerPosition).Length() > 0.1f) // Giảm ngưỡng để tránh nảy
         {
-            // Tính toán hướng di chuyển
+            // Tính toán hướng di chuyển, Vectoc2.Normalize là hàm chuẩn hóa vector có độ dài bằng 1 để chỉ ra hướng đi
             Vector2 direction = Vector2.Normalize(destination - controllerPosition);
 
-            // Điều chỉnh tốc độ dựa trên hệ số Val3
-            controllerPosition += direction * movementSpeed;
+            // Tính toán khoảng cách còn lại
+            float distanceRemaining = (destination - controllerPosition).Length();
+
+            // Giới hạn tốc độ để không vượt quá đích
+            float step = Math.Min(movementSpeed, distanceRemaining);
+
+            // Cập nhật vị trí của controller
+            controllerPosition += direction * step;
 
             // Cập nhật giao diện sau mỗi bước di chuyển
             StateHasChanged();
 
-            // Điều chỉnh thời gian delay cho chuyển động mượt
-            await Task.Delay(16); // Giữ tốc độ 60fps
+            // Điều chỉnh thời gian delay dựa trên Val3
+            await Task.Delay(delayTime);
         }
 
-        // Đảm bảo controller không vượt quá vị trí đích
+        // Đảm bảo controller ở đúng vị trí đích cuối cùng
         controllerPosition = destination;
         StateHasChanged();
     }
+
 
 
     // Hàm DFS tìm node và thu thập danh sách LineID

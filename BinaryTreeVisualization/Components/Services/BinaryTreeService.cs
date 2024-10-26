@@ -90,7 +90,7 @@ public class BinaryTreeService
         return newNode.NodeID;
     }
 
-    // Danh sách lưu các đường nối (lines) giữa các node để dễ thao tác animation
+    // Danh sách lưu các đường nối (lines) giữa các node để dễ vẽ và tô màu
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
         new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
@@ -196,16 +196,7 @@ public class BinaryTreeService
         return positions;
     }
 
-    // Tìm node nhỏ nhất trong cây con
-    private NodeService FindMin(NodeService node)
-    {
-        while (node.LeftChild != null)
-        {
-            node = node.LeftChild;
-        }
-        return node;
-    }
-
+    // hàm này dùng để gán vị trí cho các node dựa trên cấu trúc cây
     public void AssignPositionsBasedOnTreeStructure(NodeService node, double x, double y, double offsetX)
     {
         double minOffset = 50;
@@ -400,21 +391,5 @@ public class BinaryTreeService
                 }
             }
         }
-    }
-
-    // Tìm kiếm theo DFS (Depth-First Search)
-    public NodeService? SearchNode(NodeService? currentNode, int value)
-    {
-        if (currentNode == null) return null;
-
-        // Nếu giá trị của node hiện tại khớp với giá trị cần tìm
-        if (currentNode.Value == value) return currentNode;
-
-        // Duyệt con trái
-        var leftSearch = SearchNode(currentNode.LeftChild, value);
-        if (leftSearch != null) return leftSearch; // Nếu tìm thấy trong con trái, trả về node đó
-
-        // Duyệt con phải
-        return SearchNode(currentNode.RightChild, value); // Nếu không tìm thấy trong con trái, tiếp tục tìm ở con phải
     }
 }

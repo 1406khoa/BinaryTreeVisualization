@@ -1,4 +1,4 @@
-﻿ @page "/binarytree"
+﻿@page "/binarytree"
 @rendermode InteractiveServer
 @inject BinaryTreeService binaryTreeService
 @inject IJSRuntime JSRuntime
@@ -50,6 +50,7 @@
         <label style="margin-left: 5px">Max:</label>
         <input type="number" @bind="maxValue" />
         <button class="create-random-button" @onclick="CreateRandomTree">Create Random Tree</button>
+        <button class="button" @onclick="DeleteTree">Clear Tree</button>
     </div>
 </div>
 
@@ -62,74 +63,79 @@
 <p class="status">@($"Status: {statusMessage}")</p>
 
 <!-- Khối SVG -->
-<svg width="100%" height="100vh" style="overflow: visible;">
-    @foreach (var line in lines)
-    {
-        <!-- Đường nối giữa các node -->
-        <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
-              stroke="@((line.IsHighlighted) ? "yellow" : "black")" stroke-width="2" />
-    }
-
-    @foreach (var nodePosition in nodePositions)
-    {
-        <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
-        <circle class="node-circle @((nodePosition.node == selectedNode) ? "selected-node" : "")"
-                cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
-                fill="@GetNodeFillColor(nodePosition.node)"
-                @onclick="(() => OnNodeClick(nodePosition.node))"
-                @oncontextmenu:preventDefault="true"
-                @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
-
-        <!-- Sử dụng RenderFragment để in giá trị -->
-        @((RenderFragment)((builder) =>
-            {
-                builder.OpenElement(0, "text");
-                builder.AddAttribute(1, "x", nodePosition.x);
-                builder.AddAttribute(2, "y", nodePosition.y);
-                builder.AddAttribute(3, "text-anchor", "middle");
-                builder.AddAttribute(4, "dominant-baseline", "middle");
-                builder.AddAttribute(5, "dy", "0.35em"); // Điều chỉnh vị trí văn bản
-                builder.AddAttribute(6, "font-size", "12");
-                builder.AddAttribute(7, "font-weight", "bold");
-                builder.AddAttribute(8, "fill", "black");
-                builder.AddAttribute(9, "cursor", "pointer");
-                builder.AddAttribute(10, "onclick", EventCallback.Factory
-                    .Create(this, () => OnNodeClick(nodePosition.node)));
-                builder.AddAttribute(11, "oncontextmenu", EventCallback.Factory
-                    .Create(this, () => ShowDropdown(nodePosition.node)));
-                builder.AddContent(12, nodePosition.node.Value.ToString());
-                builder.CloseElement();
-            }))
-
-        <!-- Dropdown menu -->
-        @if (showDropdown)
+<div style="height: 100vh; width: 100%; overflow: auto;">
+    <svg width="120%" height="120%" style="overflow: visible;">
+        @foreach (var line in lines)
         {
-            <foreignObject x="@dropdownX" y="@dropdownY" width="180" height="380"
-                           xmlns:xhtml="http://www.w3.org/1999/xhtml">
-                <xhtml:div class="dropdown-menu">
-                    <input class="dropdown-input" type="number" @bind="newNodeValue" />
-
-                    <xhtml:button class="dropdown-button" @onclick="AddNode">Add</xhtml:button>
-                    <xhtml:button class="dropdown-button" @onclick="EditNodeInBT">Edit</xhtml:button>
-                    <xhtml:button class="dropdown-button" @onclick="DeleteNodeAnimation">Delete</xhtml:button>
-                    <xhtml:button class="dropdown-button" @onclick="DeleteTree">Clear</xhtml:button>
-                    <xhtml:button class="dropdown-button"
-                                  @onclick="() => AddNodeToDirection(true)">Add Left Child</xhtml:button>
-                    <xhtml:button class="dropdown-button"
-                                  @onclick="() => AddNodeToDirection(false)">Add Right Child</xhtml:button>
-                    <xhtml:button class="dropdown-button"
-                                  @onclick="() => SwitchChild()">Switch Child</xhtml:button>
-                </xhtml:div>
-            </foreignObject>
+            <!-- Đường nối giữa các node -->
+            <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
+                  stroke="@((line.IsHighlighted) ? "#FFC107" : "black")" stroke-width="2" />
         }
-    }
 
-    <!-- Hình tròn kiểm soát viên -->
-    @if (showController)
-    {
-        <circle cx="@controllerPosition.X" cy="@controllerPosition.Y" r="20" stroke="green" stroke-width="3" fill="none" />
-    }
-</svg>
+        @foreach (var nodePosition in nodePositions)
+        {
+            <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
+            <circle class="node-circle @((nodePosition.node == selectedNode) ? "selected-node" : "")"
+                    cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
+                    fill="@GetNodeFillColor(nodePosition.node)"
+                    @onclick="(() => OnNodeClick(nodePosition.node))"
+                    @oncontextmenu:preventDefault="true"
+                    @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
+
+            <!-- Sử dụng RenderFragment để in giá trị -->
+            @((RenderFragment)((builder) =>
+                {
+                    builder.OpenElement(0, "text");
+                    builder.AddAttribute(1, "x", nodePosition.x);
+                    builder.AddAttribute(2, "y", nodePosition.y);
+                    builder.AddAttribute(3, "text-anchor", "middle");
+                    builder.AddAttribute(4, "dominant-baseline", "middle");
+                    builder.AddAttribute(5, "dy", "0.35em"); // Điều chỉnh vị trí văn bản
+                    builder.AddAttribute(6, "font-size", "12");
+                    builder.AddAttribute(7, "font-weight", "bold");
+                    builder.AddAttribute(8, "fill", "black");
+                    builder.AddAttribute(9, "cursor", "pointer");
+                    builder.AddAttribute(10, "onclick", EventCallback.Factory
+                        .Create(this, () => OnNodeClick(nodePosition.node)));
+                    builder.AddAttribute(11, "oncontextmenu", EventCallback.Factory
+                        .Create(this, () => ShowDropdown(nodePosition.node)));
+                    builder.AddContent(12, nodePosition.node.Value.ToString());
+                    builder.CloseElement();
+                }))
+
+            <!-- Dropdown menu -->
+            @if (showDropdown)
+            {
+                <foreignObject x="@dropdownX" y="@dropdownY" width="200" height="200"
+                               xmlns:xhtml="http://www.w3.org/1999/xhtml">
+                    <xhtml:div class="dropdown-menu">
+                        <input class="dropdown-input" type="number" @bind="newNodeValue" />
+                        <xhtml:div class="dropdown-operation">
+                            <xhtml:button class="dropdown-button" @onclick="AddNode">Add</xhtml:button>
+                            <xhtml:button class="dropdown-button" @onclick="EditNodeInBT">Edit</xhtml:button>
+                            <xhtml:button class="dropdown-button" @onclick="DeleteNodeAnimation">Delete</xhtml:button>
+                        </xhtml:div>
+
+                        <xhtml:div class="dropdown-operation">
+                            <xhtml:button class="dropdown-button"
+                                      @onclick="() => AddNodeToDirection(true)">Left</xhtml:button>
+                            <xhtml:button class="dropdown-button"
+                                      @onclick="() => AddNodeToDirection(false)">Right</xhtml:button>
+                            <xhtml:button class="dropdown-button"
+                                      @onclick="() => SwitchChild()">Switch</xhtml:button>
+                        </xhtml:div>
+                    </xhtml:div>
+                </foreignObject>
+            }
+        }
+
+        <!-- Hình tròn kiểm soát viên -->
+        @if (showController)
+        {
+            <circle cx="@controllerPosition.X" cy="@controllerPosition.Y" r="20" stroke="green" stroke-width="3" fill="none" />
+        }
+    </svg>
+</div>
 
 @code {
     @using BinaryTreeVisualization.Components.Services
@@ -198,7 +204,7 @@
     {
         if (node.IsHighlighted) // Ưu tiên màu vàng nếu node đang được tìm kiếm
         {
-            return "yellow";
+            return "#FFC107"; //Vàng hổ phách nhạt (Amber)
         }
         else if (node == selectedNode) // Nếu node được chọn, tô màu xanh lá
         {
@@ -251,7 +257,7 @@
         newNodeValue = selectedNode.Value;
         statusMessage = $"Node {node.Value} is selected";
         dropdownX = node.PositionX + 15;
-        dropdownY = node.PositionY - 70;
+        dropdownY = node.PositionY - 67;
         showDropdown = true;
         UpdateTreeDrawing();
         StateHasChanged();
@@ -808,25 +814,33 @@
 
     private async Task MoveControllerToPosition(Vector2 destination)
     {
-        float baseSpeed = 2f; // Tốc độ cơ bản ban đầu
-        float movementSpeed = baseSpeed * Val3; // Điều chỉnh tốc độ theo hệ số nhân từ slider
+        float baseSpeed = 2f; // Tốc độ cơ bản
+        float movementSpeed = baseSpeed * Val3; // Điều chỉnh tốc độ dựa trên slider
 
-        while ((destination - controllerPosition).Length() > movementSpeed) // Điều chỉnh điều kiện kiểm tra
+        int delayTime = Math.Max(1, 16 / (int)Val3); // Giảm Task.Delay dựa trên Val3, tối thiểu là 1ms
+
+        while ((destination - controllerPosition).Length() > 0.1f) // Giảm ngưỡng để tránh nảy
         {
-            // Tính toán hướng di chuyển
+            // Tính toán hướng di chuyển, Vectoc2.Normalize là hàm chuẩn hóa vector có độ dài bằng 1 để chỉ ra hướng đi
             Vector2 direction = Vector2.Normalize(destination - controllerPosition);
 
-            // Điều chỉnh tốc độ dựa trên hệ số Val3
-            controllerPosition += direction * movementSpeed; // quãng đường controller có thể đi trong 0.05ms
+            // Tính toán khoảng cách còn lại
+            float distanceRemaining = (destination - controllerPosition).Length();
+
+            // Giới hạn tốc độ để không vượt quá đích
+            float step = Math.Min(movementSpeed, distanceRemaining);
+
+            // Cập nhật vị trí của controller
+            controllerPosition += direction * step;
 
             // Cập nhật giao diện sau mỗi bước di chuyển
             StateHasChanged();
 
-            // Điều chỉnh thời gian delay cho chuyển động mượt
-            await Task.Delay(16); // Giữ tốc độ 60fps - vận tốc
+            // Điều chỉnh thời gian delay dựa trên Val3
+            await Task.Delay(delayTime);
         }
 
-        // Đảm bảo controller không vượt quá vị trí đích
+        // Đảm bảo controller ở đúng vị trí đích cuối cùng
         controllerPosition = destination;
         StateHasChanged();
     }

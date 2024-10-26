@@ -97,11 +97,12 @@ input {
 }
 
 .button {
-    width: 70px;
+    width: 75px;
 }
 
 .create-random-button {
     width: 12%;
+    margin-right: 5px;
 }
 
 .button:hover,
@@ -132,7 +133,7 @@ input {
     border-radius: 10px;
     background-color: #9375e2;
     border: none;
-    padding-top: 15px;
+    padding: 10px;
 }
 
 .dropdown-menu::before {
@@ -145,17 +146,24 @@ input {
     border-color: transparent #9375e2 transparent transparent;
 }
 
+.dropdown-operation {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
 .dropdown-input {
     width: 90%;
     border: none;
+    margin: 5px !important;
 }
 
 .dropdown-button {
     background-color: #9375e2;
     color: white;
     height: 30px;
-    width: 90%;
-    font-size: 13px;
+    width: 33%;
+    font-size: 12px;
     border-radius: 5px;
     border: none;
     margin: 5px;

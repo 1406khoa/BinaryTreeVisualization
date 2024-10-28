@@ -1,4 +1,5 @@
 ﻿using BinaryTreeVisualization.Components.Services;
+using System.Xml.Linq;
 
 public class BinaryTreeService
 {
@@ -14,6 +15,8 @@ public class BinaryTreeService
 
     // Thay đổi: Không cần khôi phục lại node gốc nữa vì root sẽ không thay đổi khi duyệt cây.
     private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
+
+    private Random random = new Random();
 
     // Hàm thêm node cây nhị phân tổng quát
     public Guid AddNodeToBinaryTree(int value, NodeService? parentNode, bool? selectedLeftChild = null)
@@ -94,54 +97,6 @@ public class BinaryTreeService
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
         new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
-    // Hàm thêm node vào cây nhị phân tìm kiếm
-    public virtual Guid AddNode(int value)
-    {
-        NodeService newNode = new NodeService(value);
-        if (Root == null)
-        {
-            Root = newNode;
-            Root.IsRoot = true; // Đánh dấu đây là node gốc
-            SetNodePosition(Root, RootX, RootY); // Cố định vị trí của node gốc
-        }
-        else
-        {
-            AddNodeRecursive(Root, newNode, RootX, 200);
-        }
-        nodeValues.Add(value); // Lưu lại giá trị của node đã thêm
-        return newNode.NodeID;
-    }
-
-    private void AddNodeRecursive(NodeService current, NodeService newNode, double x, double offsetX)
-    {
-        if (newNode.Value < current.Value)
-        {
-            if (current.LeftChild == null)
-            {
-                current.LeftChild = newNode;
-                SetNodePosition(current.LeftChild, x - offsetX, current.PositionY + 100);
-                current.LeftChild.Parent = current;  // Liên kết cha
-            }
-            else
-            {
-                AddNodeRecursive(current.LeftChild, newNode, x - offsetX, offsetX * 0.5);
-            }
-        }
-        else
-        {
-            if (current.RightChild == null)
-            {
-                current.RightChild = newNode;
-                SetNodePosition(current.RightChild, x + offsetX, current.PositionY + 100);
-                current.RightChild.Parent = current;  // Liên kết cha
-            }
-            else
-            {
-                AddNodeRecursive(current.RightChild, newNode, x + offsetX, offsetX * 0.5);
-            }
-        }
-    }
-
     // Hàm duyệt ngược để xác định đường line kết nối với node hiện tại
     public (double x1, double y1, double x2, double y2, Guid LineID)? GetParentLine(NodeService node)
     {
@@ -196,7 +151,7 @@ public class BinaryTreeService
         return positions;
     }
 
-    // hàm này dùng để gán vị trí cho các node dựa trên cấu trúc cây
+    // Hàm này dùng để gán vị trí cho các node dựa trên cấu trúc cây
     public void AssignPositionsBasedOnTreeStructure(NodeService node, double x, double y, double offsetX)
     {
         double minOffset = 50;
@@ -300,7 +255,6 @@ public class BinaryTreeService
         ReverseInOrderTraversal(node.LeftChild, action);  // Duyệt trái sau
     }
 
-    
     private void CollectLines(NodeService? node, List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines)
     {
         if (node == null) return;
@@ -322,38 +276,66 @@ public class BinaryTreeService
         }
     }
 
-    // Hàm tạo giá trị ngẫu nhiên để sử dụng cho hàm tạo cây ngẫu nhiên
-    private List<int> GenerateRandomValues(int count, int minValue, int maxValue)
+    // Random tree
+    public void GenerateRandomBinaryTree(int numNodes, int minValue, int maxValue)
     {
-        Random random = new Random();
-        List<int> values = new List<int>();
-
-        for (int i = 0; i < count; i++)
+        nodeValues.Clear(); // Xóa danh sách trước khi tạo cây mới
+        if (numNodes <= 0)
         {
-            values.Add(random.Next(minValue, maxValue + 1));
+            Root = null; // Nếu không có node, gán root là null
+            return;
         }
 
-        return values;
+        // Tạo node gốc
+        Root = new NodeService(RandomValue(minValue, maxValue));
+        nodeValues.Add(Root.Value); // Lưu giá trị của node gốc
+        numNodes--;
+
+        // Tạo cây con ngẫu nhiên
+        CreateSubtree(Root, numNodes, minValue, maxValue);
     }
 
-    // Hàm tạo cây ngẫu nhiên
-    public void BuildRandomTree(int nodeCount, int minValue, int maxValue, string treeType)
+    private void CreateSubtree(NodeService parent, int numNodes, int minValue, int maxValue)
     {
-        List<int> randomValues = GenerateRandomValues(nodeCount, minValue, maxValue);
+        if (numNodes <= 0) return;
 
-        foreach (var value in randomValues)
+        // Quyết định số lượng node cho con trái và con phải
+        int leftNodes = random.Next(0, numNodes + 1);
+        int rightNodes = numNodes - leftNodes;
+
+        // Thêm node con trái
+        if (leftNodes > 0)
         {
-            switch (treeType)
-            {
-                case "BinarySearchTree":
-                    AddNode(value);
-                    break;
+            var leftChild = new NodeService(RandomValue(minValue, maxValue));
+            parent.LeftChild = leftChild;
+            leftChild.Parent = parent; // Cập nhật parent
+            SetNodePosition(leftChild, parent.PositionX - 100, parent.PositionY + 100); // Cố định vị trí
+            lines.Add((parent.PositionX, parent.PositionY, leftChild.PositionX, leftChild.PositionY, IsHighlighted: false, Guid.NewGuid())); // Lưu đường nối
 
-                //case "AVLTree":
-                //    AddNodeToAVLTree(value);
-                //    break;
-            }
+            CreateSubtree(leftChild, leftNodes - 1, minValue, maxValue);
         }
+
+        // Thêm node con phải
+        if (rightNodes > 0)
+        {
+            var rightChild = new NodeService(RandomValue(minValue, maxValue));
+            parent.RightChild = rightChild;
+            rightChild.Parent = parent; // Cập nhật parent
+            SetNodePosition(rightChild, parent.PositionX + 100, parent.PositionY + 100); // Cố định vị trí
+            lines.Add((parent.PositionX, parent.PositionY, rightChild.PositionX, rightChild.PositionY, IsHighlighted: false, Guid.NewGuid())); // Lưu đường nối
+
+            CreateSubtree(rightChild, rightNodes - 1, minValue, maxValue);
+        }
+    }
+
+    private int RandomValue(int minValue, int maxValue)
+    {
+        return random.Next(minValue, maxValue + 1); // Giá trị ngẫu nhiên trong khoảng
+    }
+
+    private bool RandomBool()
+    {
+        return random.NextDouble() >= 0.5; // Trả về true hoặc false ngẫu nhiên
     }
 
     //Hàm xóa cây

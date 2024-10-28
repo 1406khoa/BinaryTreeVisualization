@@ -15,8 +15,8 @@
                 <option value="bfs">BFS</option>
             </select>
             <input class="find-input" type="number" @bind="newNodeValue" />
-            <button class="button" @onclick="AddNode">Add</button>
-            <button class="button" @onclick="StartFindNodeAnimation">Find</button>
+            <button class="button" @onclick="AddNode" disabled="@isTraversing">Add</button>
+            <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Find</button>
         </div>
     </div>
 
@@ -50,8 +50,8 @@
         <input type="number" @bind="minValue" />
         <label style="margin-left: 5px">Max:</label>
         <input type="number" @bind="maxValue" />
-        <button class="create-random-button" @onclick="CreateRandomTree">Create Random Tree</button>
-        <button class="button" @onclick="DeleteTree">Clear Tree</button>
+        <button class="create-random-button" @onclick="CreateRandomTree" disabled="@isTraversing">Create Random Tree</button>
+        <button class="button" @onclick="DeleteTree" disabled="@isTraversing">Clear Tree</button>
     </div>
 </div>
 
@@ -106,7 +106,7 @@
         <!-- Dropdown menu -->
         @if (showDropdown)
         {
-            <foreignObject x="@dropdownX" y="@dropdownY" width="200" height="200"
+            <foreignObject x="@dropdownX" y="@dropdownY" width="180" height="135"
                            xmlns:xhtml="http://www.w3.org/1999/xhtml">
                 <xhtml:div class="dropdown-menu">
                     <input class="dropdown-input" type="number" @bind="newNodeValue" />
@@ -117,12 +117,11 @@
                     </xhtml:div>
 
                     <xhtml:div class="dropdown-operation">
-                        <xhtml:button class="dropdown-button"
-                                      @onclick="() => AddNodeToDirection(true)">Left</xhtml:button>
-                        <xhtml:button class="dropdown-button"
-                                      @onclick="() => AddNodeToDirection(false)">Right</xhtml:button>
-                        <xhtml:button class="dropdown-button"
-                                      @onclick="() => SwitchChild()">Switch</xhtml:button>
+                        <xhtml:button class="dropdown-button" @onclick="() => AddNodeToDirection(true)"
+                                      disabled=@isLeftDisabled>Left</xhtml:button>
+                        <xhtml:button class="dropdown-button" @onclick="() => AddNodeToDirection(false)"
+                                      disabled=@isRightDisabled>Right</xhtml:button>
+                        <xhtml:button class="dropdown-button" @onclick="() => SwitchChild()">Switch</xhtml:button>
                     </xhtml:div>
                 </xhtml:div>
             </foreignObject>
@@ -198,6 +197,10 @@
 
     // Biến thông báo trạng thái
     private string statusMessage = "";
+
+    // Biến kiểm tra xem có con trái hoặc phải chưa để disable nút bấm
+    private bool isLeftDisabled => selectedNode?.LeftChild != null;
+    private bool isRightDisabled => selectedNode?.RightChild != null;
 
     private string GetNodeFillColor(NodeService node)
     {

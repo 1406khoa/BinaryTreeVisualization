@@ -178,3 +178,12 @@ input {
     transition: 0.3s;
     color: white;
 }
+
+.button[disabled],
+.create-random-button[disabled],
+.dropdown-button[disabled] {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    background-color: #ccc !important;
+    color: #666 !important;
+}

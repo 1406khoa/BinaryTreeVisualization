@@ -113,7 +113,6 @@
                         <xhtml:div class="dropdown-operation">
                             <xhtml:button class="dropdown-button" @onclick="AddNode">Add</xhtml:button>
                             <xhtml:button class="dropdown-button" @onclick="EditNodeInBT">Edit</xhtml:button>
-                            <xhtml:button class="dropdown-button" @onclick="DeleteNodeAnimation">Delete</xhtml:button>
                         </xhtml:div>
 
                         <xhtml:div class="dropdown-operation">
@@ -489,7 +488,7 @@
 
         // Cập nhật giao diện cây
         UpdateTreeDrawing();
-        traversalOrderFragment = builder => { };
+        // traversalOrderFragment = builder => { };
 
         // Lấy danh sách các node từ cây mới
         var nodes = binaryTreeService.TraverseTree(binaryTreeService.Root, selectedTraversalMethod);
@@ -548,33 +547,33 @@
         }
     }
 
-    private async Task DeleteNodeAnimation()
-    {
-        // Gọi hàm tìm kiếm và thực hiện animation trước
-        bool result = await ShortestPathVisualization(newNodeValue);
+    // private async Task DeleteNodeAnimation()
+    // {
+    //     Gọi hàm tìm kiếm và thực hiện animation trước
+    //     bool result = await ShortestPathVisualization(newNodeValue);
 
-        // Nếu tìm thấy node thì thực hiện xóa
-        if (result)
-        {
-            var nodeToDelete = DFSFindNode(binaryTreeService.Root, newNodeValue);
-            if (nodeToDelete != null)
-            {
-                binaryTreeService.DeleteNode(nodeToDelete);
-                statusMessage = $"Node {newNodeValue} and its children have been deleted.";
-            }
-            else
-            {
-                statusMessage = $"Node {newNodeValue} does not exist.";
-            }
-        }
-        else
-        {
-            statusMessage = $"Node {newNodeValue} không tồn tại.";
-        }
+    //     Nếu tìm thấy node thì thực hiện xóa
+    //     if (result)
+    //     {
+    //         var nodeToDelete = DFSFindNode(binaryTreeService.Root, newNodeValue);
+    //         if (nodeToDelete != null)
+    //         {
+    //             binaryTreeService.DeleteNode(nodeToDelete);
+    //             statusMessage = $"Node {newNodeValue} and its children have been deleted.";
+    //         }
+    //         else
+    //         {
+    //             statusMessage = $"Node {newNodeValue} does not exist.";
+    //         }
+    //     }
+    //     else
+    //     {
+    //         statusMessage = $"Node {newNodeValue} không tồn tại.";
+    //     }
 
-        DeselectNode();
-        UpdateTreeDrawing();
-    }
+    //     DeselectNode();
+    //     UpdateTreeDrawing();
+    // }
 
     protected override void OnInitialized() // đặt controller ở vị trí mặc định
     {
@@ -750,66 +749,7 @@
         return false;
     }
 
-    // Hàm tìm kiếm node và di chuyển kiểm soát viên dọc theo đường đi với độ trễ
-    private async Task<bool> ShortestPathVisualization(int targetValue)
-    {
-        // Tìm node cần tìm bằng DFS
-        var foundNode = DFSFindNode(binaryTreeService.Root, targetValue);
-
-        if (foundNode == null)
-        {
-            statusMessage = $"Node {targetValue} does not exist."; // Thông báo nếu không tìm thấy
-            return false;
-        }
-
-        // Nếu tìm thấy node cần tìm và nó là node gốc
-        if (foundNode == binaryTreeService.Root)
-        {
-            foundNode.IsHighlighted = true; // Tô sáng node gốc
-            showController = true;
-            UpdateTreeDrawing();
-            statusMessage = $"Found root node {targetValue}.";
-            await Task.Delay(2000); // Dừng lại 2 giây
-            foundNode.IsHighlighted = false; // Tắt sáng node gốc sau 2 giây
-            showController = false;
-            UpdateTreeDrawing();
-            return true; // Kết thúc tìm kiếm
-        }
-
-        // Thu thập danh sách các LineID từ root đến node cần tìm
-        var path = CollectLinesToNode(foundNode);
-
-        if (path.Count == 0)
-        {
-            statusMessage = "No path found.";
-            return false;
-        }
-
-        // Hiển thị kiểm soát viên
-        showController = true;
-
-        // Di chuyển kiểm soát viên dọc theo các line với độ trễ để giảm hiện tượng nảy
-        foreach (var line in path)
-        {
-            Vector2 destination = new Vector2((float)line.x2, (float)line.y2);
-            await MoveControllerToPosition(destination);
-            await Task.Delay(50); // Thêm độ trễ ngắn giữa mỗi bước di chuyển để tránh nảy
-        }
-
-        // Tô sáng node cần tìm
-        foundNode.IsHighlighted = true;
-        UpdateTreeDrawing();
-
-        // Dừng lại 2 giây tại node cần tìm
-        await Task.Delay(2000);
-
-        // Ẩn kiểm soát viên và đưa nó về node gốc
-        foundNode.IsHighlighted = false;
-        OnInitialized();
-        UpdateTreeDrawing();
-
-        return true;
-    }
+    
 
 
     private async Task MoveControllerToPosition(Vector2 destination)

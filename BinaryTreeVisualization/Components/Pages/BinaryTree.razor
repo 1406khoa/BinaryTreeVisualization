@@ -15,6 +15,7 @@
                 <option value="bfs">BFS</option>
             </select>
             <input class="find-input" type="number" @bind="newNodeValue" />
+            <button class="button" @onclick="AddNode">Add</button>
             <button class="button" @onclick="StartFindNodeAnimation">Find</button>
         </div>
     </div>
@@ -63,79 +64,77 @@
 <p class="status">@($"Status: {statusMessage}")</p>
 
 <!-- Khối SVG -->
-<div style="height: 100vh; width: 100%; overflow: auto;">
-    <svg width="120%" height="120%" style="overflow: visible;">
-        @foreach (var line in lines)
+<svg width="100%" height="100vh" style="overflow: visible;">
+    @foreach (var line in lines)
+    {
+        <!-- Đường nối giữa các node -->
+        <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
+              stroke="@((line.IsHighlighted) ? "#FFC107" : "black")" stroke-width="2" />
+    }
+
+    @foreach (var nodePosition in nodePositions)
+    {
+        <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
+        <circle class="node-circle @((nodePosition.node == selectedNode) ? "selected-node" : "")"
+                cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
+                fill="@GetNodeFillColor(nodePosition.node)"
+                @onclick="(() => OnNodeClick(nodePosition.node))"
+                @oncontextmenu:preventDefault="true"
+                @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
+
+        <!-- Sử dụng RenderFragment để in giá trị -->
+        @((RenderFragment)((builder) =>
         {
-            <!-- Đường nối giữa các node -->
-            <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
-                  stroke="@((line.IsHighlighted) ? "#FFC107" : "black")" stroke-width="2" />
-        }
+            builder.OpenElement(0, "text");
+            builder.AddAttribute(1, "x", nodePosition.x);
+            builder.AddAttribute(2, "y", nodePosition.y);
+            builder.AddAttribute(3, "text-anchor", "middle");
+            builder.AddAttribute(4, "dominant-baseline", "middle");
+            builder.AddAttribute(5, "dy", "0.35em"); // Điều chỉnh vị trí văn bản
+            builder.AddAttribute(6, "font-size", "12");
+            builder.AddAttribute(7, "font-weight", "bold");
+            builder.AddAttribute(8, "fill", "black");
+            builder.AddAttribute(9, "cursor", "pointer");
+            builder.AddAttribute(10, "onclick", EventCallback.Factory
+                .Create(this, () => OnNodeClick(nodePosition.node)));
+            builder.AddAttribute(11, "oncontextmenu", EventCallback.Factory
+                .Create(this, () => ShowDropdown(nodePosition.node)));
+            builder.AddContent(12, nodePosition.node.Value.ToString());
+            builder.CloseElement();
+        }))
 
-        @foreach (var nodePosition in nodePositions)
+        <!-- Dropdown menu -->
+        @if (showDropdown)
         {
-            <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
-            <circle class="node-circle @((nodePosition.node == selectedNode) ? "selected-node" : "")"
-                    cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
-                    fill="@GetNodeFillColor(nodePosition.node)"
-                    @onclick="(() => OnNodeClick(nodePosition.node))"
-                    @oncontextmenu:preventDefault="true"
-                    @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
-
-            <!-- Sử dụng RenderFragment để in giá trị -->
-            @((RenderFragment)((builder) =>
-                {
-                    builder.OpenElement(0, "text");
-                    builder.AddAttribute(1, "x", nodePosition.x);
-                    builder.AddAttribute(2, "y", nodePosition.y);
-                    builder.AddAttribute(3, "text-anchor", "middle");
-                    builder.AddAttribute(4, "dominant-baseline", "middle");
-                    builder.AddAttribute(5, "dy", "0.35em"); // Điều chỉnh vị trí văn bản
-                    builder.AddAttribute(6, "font-size", "12");
-                    builder.AddAttribute(7, "font-weight", "bold");
-                    builder.AddAttribute(8, "fill", "black");
-                    builder.AddAttribute(9, "cursor", "pointer");
-                    builder.AddAttribute(10, "onclick", EventCallback.Factory
-                        .Create(this, () => OnNodeClick(nodePosition.node)));
-                    builder.AddAttribute(11, "oncontextmenu", EventCallback.Factory
-                        .Create(this, () => ShowDropdown(nodePosition.node)));
-                    builder.AddContent(12, nodePosition.node.Value.ToString());
-                    builder.CloseElement();
-                }))
-
-            <!-- Dropdown menu -->
-            @if (showDropdown)
-            {
-                <foreignObject x="@dropdownX" y="@dropdownY" width="200" height="200"
-                               xmlns:xhtml="http://www.w3.org/1999/xhtml">
-                    <xhtml:div class="dropdown-menu">
-                        <input class="dropdown-input" type="number" @bind="newNodeValue" />
-                        <xhtml:div class="dropdown-operation">
-                            <xhtml:button class="dropdown-button" @onclick="AddNode">Add</xhtml:button>
-                            <xhtml:button class="dropdown-button" @onclick="EditNodeInBT">Edit</xhtml:button>
-                            <xhtml:button class="dropdown-button" @onclick="DeleteNodeAnimation">Delete</xhtml:button>
-                        </xhtml:div>
-
-                        <xhtml:div class="dropdown-operation">
-                            <xhtml:button class="dropdown-button"
-                                      @onclick="() => AddNodeToDirection(true)">Left</xhtml:button>
-                            <xhtml:button class="dropdown-button"
-                                      @onclick="() => AddNodeToDirection(false)">Right</xhtml:button>
-                            <xhtml:button class="dropdown-button"
-                                      @onclick="() => SwitchChild()">Switch</xhtml:button>
-                        </xhtml:div>
+            <foreignObject x="@dropdownX" y="@dropdownY" width="200" height="200"
+                          xmlns:xhtml="http://www.w3.org/1999/xhtml">
+                <xhtml:div class="dropdown-menu">
+                    <input class="dropdown-input" type="number" @bind="newNodeValue" />
+                    <xhtml:div class="dropdown-operation">
+                        <xhtml:button class="dropdown-button" @onclick="AddNode">Add</xhtml:button>
+                        <xhtml:button class="dropdown-button" @onclick="EditNodeInBT">Edit</xhtml:button>
+                        <xhtml:button class="dropdown-button" @onclick="DeleteNode">Delete</xhtml:button>
                     </xhtml:div>
-                </foreignObject>
-            }
-        }
 
-        <!-- Hình tròn kiểm soát viên -->
-        @if (showController)
-        {
-            <circle cx="@controllerPosition.X" cy="@controllerPosition.Y" r="20" stroke="green" stroke-width="3" fill="none" />
+                    <xhtml:div class="dropdown-operation">
+                        <xhtml:button class="dropdown-button"
+                                  @onclick="() => AddNodeToDirection(true)">Left</xhtml:button>
+                        <xhtml:button class="dropdown-button"
+                                  @onclick="() => AddNodeToDirection(false)">Right</xhtml:button>
+                        <xhtml:button class="dropdown-button"
+                                  @onclick="() => SwitchChild()">Switch</xhtml:button>
+                    </xhtml:div>
+                </xhtml:div>
+            </foreignObject>
         }
-    </svg>
-</div>
+    }
+
+    <!-- Hình tròn kiểm soát viên -->
+    @if (showController)
+    {
+        <circle cx="@controllerPosition.X" cy="@controllerPosition.Y" r="20" stroke="green" stroke-width="3" fill="none" />
+    }
+</svg>
 
 @code {
     @using BinaryTreeVisualization.Components.Services
@@ -485,7 +484,7 @@
     {
         // Đặt lại và tạo cây mới
         binaryTreeService.ResetTree();
-        binaryTreeService.BuildRandomTree(nodeCount, minValue, maxValue, "BinarySearchTree");
+        binaryTreeService.GenerateRandomBinaryTree(nodeCount, minValue, maxValue);
 
         // Cập nhật giao diện cây
         UpdateTreeDrawing();
@@ -548,31 +547,21 @@
         }
     }
 
-    private async Task DeleteNodeAnimation()
+    private void DeleteNode()
     {
-        // Gọi hàm tìm kiếm và thực hiện animation trước
-        bool result = await ShortestPathVisualization(newNodeValue);
-
         // Nếu tìm thấy node thì thực hiện xóa
-        if (result)
+        var nodeToDelete = DFSFindNode(binaryTreeService.Root, newNodeValue);
+        if (nodeToDelete != null)
         {
-            var nodeToDelete = DFSFindNode(binaryTreeService.Root, newNodeValue);
-            if (nodeToDelete != null)
-            {
-                binaryTreeService.DeleteNode(nodeToDelete);
-                statusMessage = $"Node {newNodeValue} and its children have been deleted.";
-            }
-            else
-            {
-                statusMessage = $"Node {newNodeValue} does not exist.";
-            }
+            binaryTreeService.DeleteNode(nodeToDelete);
+            statusMessage = $"Node {newNodeValue} and its children have been deleted.";
         }
         else
         {
-            statusMessage = $"Node {newNodeValue} không tồn tại.";
+            statusMessage = $"Node {newNodeValue} does not exist.";
         }
-
-        DeselectNode();
+        
+        HideDropdown();
         UpdateTreeDrawing();
     }
 
@@ -709,8 +698,6 @@
         var step = new TraversalStep(node);
         traversalSteps.Add(step);
 
-
-
         // Di chuyển controller tới node hiện tại
         showController = true;
         await MoveControllerToPosition(new Vector2((float)node.PositionX, (float)node.PositionY));
@@ -810,7 +797,6 @@
 
         return true;
     }
-
 
     private async Task MoveControllerToPosition(Vector2 destination)
     {

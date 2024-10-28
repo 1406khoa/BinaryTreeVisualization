@@ -15,6 +15,7 @@
                 <option value="bfs">BFS</option>
             </select>
             <input class="find-input" type="number" @bind="newNodeValue" />
+            <button class="button" @onclick="AddNode">Add</button>
             <button class="button" @onclick="StartFindNodeAnimation">Find</button>
         </div>
     </div>
@@ -63,78 +64,77 @@
 <p class="status">@($"Status: {statusMessage}")</p>
 
 <!-- Khối SVG -->
-<div style="height: 100vh; width: 100%; overflow: auto;">
-    <svg width="120%" height="120%" style="overflow: visible;">
-        @foreach (var line in lines)
-        {
-            <!-- Đường nối giữa các node -->
-            <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
-                  stroke="@((line.IsHighlighted) ? "#FFC107" : "black")" stroke-width="2" />
-        }
+<svg width="100%" height="100vh" style="overflow: visible;">
+    @foreach (var line in lines)
+    {
+        <!-- Đường nối giữa các node -->
+        <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
+              stroke="@((line.IsHighlighted) ? "#FFC107" : "black")" stroke-width="2" />
+    }
 
-        @foreach (var nodePosition in nodePositions)
-        {
-            <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
-            <circle class="node-circle @((nodePosition.node == selectedNode) ? "selected-node" : "")"
-                    cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
-                    fill="@GetNodeFillColor(nodePosition.node)"
-                    @onclick="(() => OnNodeClick(nodePosition.node))"
-                    @oncontextmenu:preventDefault="true"
-                    @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
+    @foreach (var nodePosition in nodePositions)
+    {
+        <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
+        <circle class="node-circle @((nodePosition.node == selectedNode) ? "selected-node" : "")"
+                cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
+                fill="@GetNodeFillColor(nodePosition.node)"
+                @onclick="(() => OnNodeClick(nodePosition.node))"
+                @oncontextmenu:preventDefault="true"
+                @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
 
-            <!-- Sử dụng RenderFragment để in giá trị -->
-            @((RenderFragment)((builder) =>
-                {
-                    builder.OpenElement(0, "text");
-                    builder.AddAttribute(1, "x", nodePosition.x);
-                    builder.AddAttribute(2, "y", nodePosition.y);
-                    builder.AddAttribute(3, "text-anchor", "middle");
-                    builder.AddAttribute(4, "dominant-baseline", "middle");
-                    builder.AddAttribute(5, "dy", "0.35em"); // Điều chỉnh vị trí văn bản
-                    builder.AddAttribute(6, "font-size", "12");
-                    builder.AddAttribute(7, "font-weight", "bold");
-                    builder.AddAttribute(8, "fill", "black");
-                    builder.AddAttribute(9, "cursor", "pointer");
-                    builder.AddAttribute(10, "onclick", EventCallback.Factory
-                        .Create(this, () => OnNodeClick(nodePosition.node)));
-                    builder.AddAttribute(11, "oncontextmenu", EventCallback.Factory
-                        .Create(this, () => ShowDropdown(nodePosition.node)));
-                    builder.AddContent(12, nodePosition.node.Value.ToString());
-                    builder.CloseElement();
-                }))
-
-            <!-- Dropdown menu -->
-            @if (showDropdown)
+        <!-- Sử dụng RenderFragment để in giá trị -->
+        @((RenderFragment)((builder) =>
             {
-                <foreignObject x="@dropdownX" y="@dropdownY" width="200" height="200"
-                               xmlns:xhtml="http://www.w3.org/1999/xhtml">
-                    <xhtml:div class="dropdown-menu">
-                        <input class="dropdown-input" type="number" @bind="newNodeValue" />
-                        <xhtml:div class="dropdown-operation">
-                            <xhtml:button class="dropdown-button" @onclick="AddNode">Add</xhtml:button>
-                            <xhtml:button class="dropdown-button" @onclick="EditNodeInBT">Edit</xhtml:button>
-                        </xhtml:div>
+                builder.OpenElement(0, "text");
+                builder.AddAttribute(1, "x", nodePosition.x);
+                builder.AddAttribute(2, "y", nodePosition.y);
+                builder.AddAttribute(3, "text-anchor", "middle");
+                builder.AddAttribute(4, "dominant-baseline", "middle");
+                builder.AddAttribute(5, "dy", "0.35em"); // Điều chỉnh vị trí văn bản
+                builder.AddAttribute(6, "font-size", "12");
+                builder.AddAttribute(7, "font-weight", "bold");
+                builder.AddAttribute(8, "fill", "black");
+                builder.AddAttribute(9, "cursor", "pointer");
+                builder.AddAttribute(10, "onclick", EventCallback.Factory
+                .Create(this, () => OnNodeClick(nodePosition.node)));
+                builder.AddAttribute(11, "oncontextmenu", EventCallback.Factory
+                .Create(this, () => ShowDropdown(nodePosition.node)));
+                builder.AddContent(12, nodePosition.node.Value.ToString());
+                builder.CloseElement();
+            }))
 
-                        <xhtml:div class="dropdown-operation">
-                            <xhtml:button class="dropdown-button"
-                                      @onclick="() => AddNodeToDirection(true)">Left</xhtml:button>
-                            <xhtml:button class="dropdown-button"
-                                      @onclick="() => AddNodeToDirection(false)">Right</xhtml:button>
-                            <xhtml:button class="dropdown-button"
-                                      @onclick="() => SwitchChild()">Switch</xhtml:button>
-                        </xhtml:div>
-                    </xhtml:div>
-                </foreignObject>
-            }
-        }
-
-        <!-- Hình tròn kiểm soát viên -->
-        @if (showController)
+        <!-- Dropdown menu -->
+        @if (showDropdown)
         {
-            <circle cx="@controllerPosition.X" cy="@controllerPosition.Y" r="20" stroke="green" stroke-width="3" fill="none" />
+            <foreignObject x="@dropdownX" y="@dropdownY" width="200" height="200"
+                           xmlns:xhtml="http://www.w3.org/1999/xhtml">
+                <xhtml:div class="dropdown-menu">
+                    <input class="dropdown-input" type="number" @bind="newNodeValue" />
+                    <xhtml:div class="dropdown-operation">
+                        <xhtml:button class="dropdown-button" @onclick="AddNode">Add</xhtml:button>
+                        <xhtml:button class="dropdown-button" @onclick="EditNodeInBT">Edit</xhtml:button>
+                        <xhtml:button class="dropdown-button" @onclick="DeleteNode">Delete</xhtml:button>
+                    </xhtml:div>
+
+                    <xhtml:div class="dropdown-operation">
+                        <xhtml:button class="dropdown-button"
+                                      @onclick="() => AddNodeToDirection(true)">Left</xhtml:button>
+                        <xhtml:button class="dropdown-button"
+                                      @onclick="() => AddNodeToDirection(false)">Right</xhtml:button>
+                        <xhtml:button class="dropdown-button"
+                                      @onclick="() => SwitchChild()">Switch</xhtml:button>
+                    </xhtml:div>
+                </xhtml:div>
+            </foreignObject>
         }
-    </svg>
-</div>
+    }
+
+    <!-- Hình tròn kiểm soát viên -->
+    @if (showController)
+    {
+        <circle cx="@controllerPosition.X" cy="@controllerPosition.Y" r="20" stroke="green" stroke-width="3" fill="none" />
+    }
+</svg>
 
 @code {
     @using BinaryTreeVisualization.Components.Services
@@ -168,7 +168,7 @@
     }
 
     private RenderFragment traversalOrderFragment = builder => { };
-    public List<int> traversalOrder = new(); // Lưu các giá trị đã duyệt 
+    public List<int> traversalOrder = new(); // Lưu các giá trị đã duyệt
 
     //Biến liên quan tới tìm node theo DFS hoặc BFS
     private string selectedSearchMethod = "shortest-path"; // Phương thức tìm kiếm được chọn
@@ -326,13 +326,23 @@
 
     private void UpdateTraversalOrderFragment(int index)
     {
-        if (index < 0 || index >= traversalSteps.Count)
+        // Kiểm tra nếu traversalSteps chưa được khởi tạo hoặc rỗng
+        if (traversalSteps == null || traversalSteps.Count == 0)
         {
-            // Log lỗi hoặc xử lý khi chỉ số không hợp lệ
-            statusMessage = "Invalid index in traversal order.";
+            statusMessage = "No traversal steps to display.";
+            StateHasChanged();
             return;
         }
 
+        // Kiểm tra chỉ số index hợp lệ
+        if (index < 0 || index >= traversalSteps.Count)
+        {
+            statusMessage = "Invalid traversal step index.";
+            StateHasChanged();
+            return;
+        }
+
+        // Khởi tạo RenderFragment để hiển thị các bước đã duyệt
         traversalOrderFragment = builder =>
         {
             for (int i = 0; i <= index; i++)
@@ -350,8 +360,10 @@
             }
         };
 
+        // Cập nhật giao diện sau khi tạo xong RenderFragment
         StateHasChanged();
-    }// hàm này dùng để in các số lần lượt trong quá trình duyệt cây
+    }
+
 
     private void OnTraversalMethodChange(ChangeEventArgs e)
     {
@@ -484,11 +496,11 @@
     {
         // Đặt lại và tạo cây mới
         binaryTreeService.ResetTree();
-        binaryTreeService.BuildRandomTree(nodeCount, minValue, maxValue, "BinarySearchTree");
+        binaryTreeService.GenerateRandomBinaryTree(nodeCount, minValue, maxValue);
 
         // Cập nhật giao diện cây
         UpdateTreeDrawing();
-        // traversalOrderFragment = builder => { };
+        traversalOrderFragment = builder => { };
 
         // Lấy danh sách các node từ cây mới
         var nodes = binaryTreeService.TraverseTree(binaryTreeService.Root, selectedTraversalMethod);
@@ -547,33 +559,23 @@
         }
     }
 
-    // private async Task DeleteNodeAnimation()
-    // {
-    //     Gọi hàm tìm kiếm và thực hiện animation trước
-    //     bool result = await ShortestPathVisualization(newNodeValue);
+    private void DeleteNode()
+    {
+        // Nếu tìm thấy node thì thực hiện xóa
+        var nodeToDelete = DFSFindNode(binaryTreeService.Root, newNodeValue);
+        if (nodeToDelete != null)
+        {
+            binaryTreeService.DeleteNode(nodeToDelete);
+            statusMessage = $"Node {newNodeValue} and its children have been deleted.";
+        }
+        else
+        {
+            statusMessage = $"Node {newNodeValue} does not exist.";
+        }
 
-    //     Nếu tìm thấy node thì thực hiện xóa
-    //     if (result)
-    //     {
-    //         var nodeToDelete = DFSFindNode(binaryTreeService.Root, newNodeValue);
-    //         if (nodeToDelete != null)
-    //         {
-    //             binaryTreeService.DeleteNode(nodeToDelete);
-    //             statusMessage = $"Node {newNodeValue} and its children have been deleted.";
-    //         }
-    //         else
-    //         {
-    //             statusMessage = $"Node {newNodeValue} does not exist.";
-    //         }
-    //     }
-    //     else
-    //     {
-    //         statusMessage = $"Node {newNodeValue} không tồn tại.";
-    //     }
-
-    //     DeselectNode();
-    //     UpdateTreeDrawing();
-    // }
+        HideDropdown();
+        UpdateTreeDrawing();
+    }
 
     protected override void OnInitialized() // đặt controller ở vị trí mặc định
     {
@@ -595,7 +597,8 @@
         if (isTraversing) return; // Nếu đang duyệt, không thực hiện thêm.
 
         isTraversing = true;
-        traversalSteps = new(); // Khởi tạo danh sách các bước đã duyệt
+        traversalSteps = new List<TraversalStep>(); // Khởi tạo lại danh sách trước mỗi lần tìm kiếm
+
 
         switch (selectedSearchMethod)
         {
@@ -616,10 +619,12 @@
                 break;
 
             case "shortest-path":
-                var shortestPathNodes = GetShortestPath(binaryTreeService.Root, newNodeValue);
-                traversalSteps = shortestPathNodes.Select(node => new TraversalStep(node)).ToList();
-                StateHasChanged();
-                await StartTraversalAnimation(shortestPathNodes);
+                bool shortestPathFound = await ShortestPathVisualization(binaryTreeService.Root, newNodeValue, traversalSteps);
+                // bool shortestPathFound = await ShortestPathVisualization(binaryTreeService.Root, newNodeValue);
+                if (!shortestPathFound)
+                {
+                    statusMessage = $"Node {newNodeValue} not found.";
+                }
                 break;
 
             default:
@@ -631,19 +636,83 @@
         StateHasChanged(); // Cập nhật giao diện
     }
 
-    private List<NodeService> GetShortestPath(NodeService? root, int targetValue) // lấy danh sách đường đi ngắn nhất từ root đến node cần tìm
+    private async Task<bool> ShortestPathVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {
-        var result = new List<NodeService>();
-        var node = DFSFindNode(root, targetValue); // Tìm node theo DFS
-
-        while (node != null)
+        if (root == null)
         {
-            result.Insert(0, node); // Thêm vào đầu danh sách để tạo đường đi từ root
-            node = node.Parent;
+            statusMessage = "Tree is empty.";
+            StateHasChanged();
+            return false;
         }
 
-        return result;
+        // Tìm kiếm node cần tìm bằng DFS
+        var targetNode = DFSFindNode(root, targetValue);
+
+        // Nếu không tìm thấy node, sử dụng DFSVisualization để duyệt toàn bộ cây
+        if (targetNode == null)
+        {
+            statusMessage = $"Node {targetValue} not found. Starting full tree traversal.";
+            StateHasChanged();
+
+            // Thực hiện duyệt cây bằng DFS với hoạt ảnh
+            await DFSVisualization(root, targetValue, traversalSteps);
+            return false;
+        }
+
+        // Nếu tìm thấy node, tạo đường đi từ root đến node
+        var path = new List<NodeService>();
+        while (targetNode != null)
+        {
+            path.Insert(0, targetNode); // Thêm vào đầu danh sách để giữ thứ tự từ root đến node
+            targetNode = targetNode.Parent;
+        }
+
+        // Cập nhật danh sách traversalSteps để theo dõi các bước duyệt
+        traversalSteps.Clear(); // Xóa danh sách trước khi thêm các bước mới
+        traversalSteps.AddRange(path.Select(node => new TraversalStep(node)));
+
+        // Hiển thị controller và di chuyển qua từng node trên đường đi
+        showController = true;
+        StateHasChanged();
+
+        for (int i = 0; i < path.Count; i++)
+        {
+            var node = path[i];
+
+            // Di chuyển controller đến node hiện tại
+            await MoveControllerToPosition(new Vector2((float)node.PositionX, (float)node.PositionY));
+
+            // Cập nhật bước duyệt trong giao diện
+            UpdateTraversalOrderFragment(i);
+
+            // Tô sáng node hiện tại
+            node.IsHighlighted = true;
+            UpdateTreeDrawing();
+
+            // Tạm dừng dựa trên tốc độ từ slider
+            await Task.Delay((int)(1000 / Val3));
+
+            // Bỏ tô sáng sau khi hoàn thành bước
+            node.IsHighlighted = false;
+            UpdateTreeDrawing();
+        }
+
+        // Ẩn controller sau khi hoàn thành
+        showController = false;
+        StateHasChanged();
+        OnInitialized();
+
+        statusMessage = $"Node {targetValue} found successfully.";
+        StateHasChanged();
+        return true;
     }
+
+
+
+
+
+
+ 
 
     private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {
@@ -708,8 +777,6 @@
         var step = new TraversalStep(node);
         traversalSteps.Add(step);
 
-
-
         // Di chuyển controller tới node hiện tại
         showController = true;
         await MoveControllerToPosition(new Vector2((float)node.PositionX, (float)node.PositionY));
@@ -749,8 +816,66 @@
         return false;
     }
 
-    
+    // Hàm tìm kiếm node và di chuyển kiểm soát viên dọc theo đường đi với độ trễ
+    private async Task<bool> ShortestPathVisualization(int targetValue)
+    {
+        // Tìm node cần tìm bằng DFS
+        var foundNode = DFSFindNode(binaryTreeService.Root, targetValue);
 
+        if (foundNode == null)
+        {
+            statusMessage = $"Node {targetValue} does not exist."; // Thông báo nếu không tìm thấy
+            return false;
+        }
+
+        // Nếu tìm thấy node cần tìm và nó là node gốc
+        if (foundNode == binaryTreeService.Root)
+        {
+            foundNode.IsHighlighted = true; // Tô sáng node gốc
+            showController = true;
+            UpdateTreeDrawing();
+            statusMessage = $"Found root node {targetValue}.";
+            await Task.Delay(2000); // Dừng lại 2 giây
+            foundNode.IsHighlighted = false; // Tắt sáng node gốc sau 2 giây
+            showController = false;
+            UpdateTreeDrawing();
+            return true; // Kết thúc tìm kiếm
+        }
+
+        // Thu thập danh sách các LineID từ root đến node cần tìm
+        var path = CollectLinesToNode(foundNode);
+
+        if (path.Count == 0)
+        {
+            statusMessage = "No path found.";
+            return false;
+        }
+
+        // Hiển thị kiểm soát viên
+        showController = true;
+
+        // Di chuyển kiểm soát viên dọc theo các line với độ trễ để giảm hiện tượng nảy
+        foreach (var line in path)
+        {
+            Vector2 destination = new Vector2((float)line.x2, (float)line.y2);
+            await MoveControllerToPosition(destination);
+            await Task.Delay(50); // Thêm độ trễ ngắn giữa mỗi bước di chuyển để tránh nảy
+        }
+
+        // Tô sáng node cần tìm
+        foundNode.IsHighlighted = true;
+        UpdateTreeDrawing();
+
+        // Dừng lại 2 giây tại node cần tìm
+        await Task.Delay(2000);
+
+        // Ẩn kiểm soát viên và đưa nó về node gốc
+        foundNode.IsHighlighted = false;
+        OnInitialized();
+        UpdateTreeDrawing();
+
+        return true;
+    }
 
     private async Task MoveControllerToPosition(Vector2 destination)
     {

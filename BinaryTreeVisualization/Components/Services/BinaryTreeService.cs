@@ -1,4 +1,5 @@
 ﻿using BinaryTreeVisualization.Components.Services;
+using System.Numerics;
 using System.Xml.Linq;
 
 public class BinaryTreeService
@@ -10,13 +11,15 @@ public class BinaryTreeService
     public double GetRootX() => RootX;
     public double GetRootY() => RootY;
 
-    // Danh sách để lưu trữ giá trị của các node đã thêm vào cây
-    private List<int> nodeValues = new List<int>();
+    private Random random = new Random(); // dùng để tạo giá trị ngẫu nhiên
 
-    // Thay đổi: Không cần khôi phục lại node gốc nữa vì root sẽ không thay đổi khi duyệt cây.
-    private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
+    // Danh sách lưu các đường nối (lines) giữa các node để dễ vẽ và tô màu
+    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
+        new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
-    private Random random = new Random();
+    // danh sách tọa độ các node
+    private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
+
 
     // Hàm thêm node cây nhị phân tổng quát
     public Guid AddNodeToBinaryTree(int value, NodeService? parentNode, bool? selectedLeftChild = null)
@@ -47,7 +50,6 @@ public class BinaryTreeService
 
                         // Lưu đường nối (LineID) giữa node cha và node con trái
                         var lineID = Guid.NewGuid();
-                        lines.Add((parentNode.PositionX, parentNode.PositionY, newNode.PositionX, newNode.PositionY, IsHighlighted: false, lineID));
                     }
                 }
                 else
@@ -60,7 +62,6 @@ public class BinaryTreeService
 
                         // Lưu đường nối (LineID) giữa node cha và node con phải
                         var lineID = Guid.NewGuid();
-                        lines.Add((parentNode.PositionX, parentNode.PositionY, newNode.PositionX, newNode.PositionY, IsHighlighted: false, lineID));
                     }
                 }
             }
@@ -89,28 +90,21 @@ public class BinaryTreeService
             }
         }
 
-        nodeValues.Add(value); // Lưu lại giá trị của node đã thêm
         return newNode.NodeID;
     }
 
-    // Danh sách lưu các đường nối (lines) giữa các node để dễ vẽ và tô màu
-    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
-        new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
-    // Hàm duyệt ngược để xác định đường line kết nối với node hiện tại
-    public (double x1, double y1, double x2, double y2, Guid LineID)? GetParentLine(NodeService node)
+    public (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? GetParentLine(NodeService node)
     {
-        if (node.Parent == null)
-        {
-            return null; // Nếu không có cha, tức là node gốc
-        }
-
-        var parent = node.Parent;
-        // Trả về tọa độ đường line kết nối cha - con cùng với LineID của nó
-        return (parent.PositionX, parent.PositionY, node.PositionX, node.PositionY, Guid.NewGuid());
+        return lines.FirstOrDefault(line =>
+            line.x1 == node.Parent?.PositionX &&
+            line.y1 == node.Parent?.PositionY &&
+            line.x2 == node.PositionX &&
+            line.y2 == node.PositionY);
     }
 
-    private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();// danh sách tọa độ các node
+
+
 
     // Hàm thiết lập vị trí cho các nút, giữ nguyên vị trí node gốc
     private void SetNodePosition(NodeService node, double x, double y)
@@ -151,35 +145,6 @@ public class BinaryTreeService
         return positions;
     }
 
-    // Hàm này dùng để gán vị trí cho các node dựa trên cấu trúc cây
-    public void AssignPositionsBasedOnTreeStructure(NodeService node, double x, double y, double offsetX)
-    {
-        double minOffset = 50;
-
-        // Thiết lập vị trí cho node hiện tại
-        SetNodePosition(node, x, y);
-
-        if (offsetX > minOffset)
-        {
-            offsetX *= 0.75; // Giảm dần offsetX cho các node tiếp theo
-        }
-
-        // Đặt vị trí cho node con trái (LeftChild)
-        if (node.LeftChild != null)
-        {
-            double leftX = x - offsetX;
-            double leftY = y + 100;
-            AssignPositionsBasedOnTreeStructure(node.LeftChild, leftX, leftY, offsetX);
-        }
-
-        // Đặt vị trí cho node con phải (RightChild)
-        if (node.RightChild != null)
-        {
-            double rightX = x + offsetX;
-            double rightY = y + 100;
-            AssignPositionsBasedOnTreeStructure(node.RightChild, rightX, rightY, offsetX);
-        }
-    }
 
     // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
     public List<NodeService> TraverseTree(NodeService? node, string traversalType)
@@ -210,12 +175,32 @@ public class BinaryTreeService
         }
         return result;
     }
-    public void SetTraversalType(string traversalType)
+
+    public void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
     {
-        CurrentTraversalType = traversalType;
+        double minOffset = Math.Max(50, offsetX / Math.Pow(2, depth)); // Giảm dần khoảng cách theo độ sâu
+
+        SetNodePosition(node, x, y);
+
+        if (node.LeftChild != null)
+        {
+            double leftX = x - minOffset;
+            double leftY = y + 100;
+            ArrangeNodePositions(node.LeftChild, leftX, leftY, offsetX, depth + 1);
+        }
+
+        if (node.RightChild != null)
+        {
+            double rightX = x + minOffset;
+            double rightY = y + 100;
+            ArrangeNodePositions(node.RightChild, rightX, rightY, offsetX, depth + 1);
+        }
     }
 
-    // Hàm thu thập đường nối giữa các node cha - con
+
+
+
+    // Hàm thu thập đường nối giữa các node cha - con. 
     public List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()
     {
         var lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
@@ -255,6 +240,7 @@ public class BinaryTreeService
         ReverseInOrderTraversal(node.LeftChild, action);  // Duyệt trái sau
     }
 
+    // Hàm đệ quy để thu thập các đường nối giữa các node
     private void CollectLines(NodeService? node, List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines)
     {
         if (node == null) return;
@@ -279,7 +265,6 @@ public class BinaryTreeService
     // Random tree
     public void GenerateRandomBinaryTree(int numNodes, int minValue, int maxValue)
     {
-        nodeValues.Clear(); // Xóa danh sách trước khi tạo cây mới
         if (numNodes <= 0)
         {
             Root = null; // Nếu không có node, gán root là null
@@ -288,7 +273,6 @@ public class BinaryTreeService
 
         // Tạo node gốc
         Root = new NodeService(RandomValue(minValue, maxValue));
-        nodeValues.Add(Root.Value); // Lưu giá trị của node gốc
         numNodes--;
 
         // Tạo cây con ngẫu nhiên
@@ -333,10 +317,6 @@ public class BinaryTreeService
         return random.Next(minValue, maxValue + 1); // Giá trị ngẫu nhiên trong khoảng
     }
 
-    private bool RandomBool()
-    {
-        return random.NextDouble() >= 0.5; // Trả về true hoặc false ngẫu nhiên
-    }
 
     //Hàm xóa cây
     public void ResetTree()
@@ -374,4 +354,30 @@ public class BinaryTreeService
             }
         }
     }
+
+    public async Task MoveControllerToPosition(
+    Vector2 currentPosition, Vector2 destination, int speed,
+    Action<Vector2> updatePositionCallback)
+    {
+        float baseSpeed = 2f;
+        float movementSpeed = baseSpeed * speed;
+
+        int delayTime = Math.Max(1, 16 / speed);
+
+        while ((destination - currentPosition).Length() > 0.1f)
+        {
+            Vector2 direction = Vector2.Normalize(destination - currentPosition);
+            float step = Math.Min(movementSpeed, (destination - currentPosition).Length());
+
+            currentPosition += direction * step;
+
+            // Gọi callback để cập nhật vị trí trong Razor Component
+            updatePositionCallback(currentPosition);
+
+            await Task.Delay(delayTime);
+        }
+
+        updatePositionCallback(destination); // Đảm bảo vị trí cuối cùng chính xác
+    }
+
 }

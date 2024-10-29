@@ -21,7 +21,6 @@
 
         public bool IsRoot { get; set; }  // Đánh dấu node gốc
 
-        public bool IsVisible { get; set; } // Thuộc tính mới
 
         // Constructor của NodeService
         public NodeService(int value)

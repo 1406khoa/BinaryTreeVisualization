@@ -156,13 +156,11 @@
         public int Value { get; set; }
         public NodeService Node { get; set; } // Thêm thuộc tính Node
 
-        public bool IsVisible { get; set; } // Thuộc tính hiển thị
 
         public TraversalStep(NodeService node)
         {
             Node = node;
             Value = node.Value;
-            node.IsVisible = false;
         }
     }
 
@@ -183,7 +181,7 @@
 
     // Cụm biến liên quan đến Animation và Controller
     private bool showController = false;
-    private Vector2 controllerPosition = new(0, 0);
+    private Vector2 controllerPosition = new Vector2(0, 0); // Vị trí mặc định của controller
     private int _val3 = 1;
     public int Val3
     {
@@ -201,6 +199,8 @@
     // Biến kiểm tra xem có con trái hoặc phải chưa để disable nút bấm
     private bool isLeftDisabled => selectedNode?.LeftChild != null;
     private bool isRightDisabled => selectedNode?.RightChild != null;
+
+
 
     private string GetNodeFillColor(NodeService node)
     {
@@ -413,7 +413,7 @@
             var node = traversalOrderNodes[i];
 
             // Di chuyển kiểm soát viên tới node hiện tại
-            await MoveControllerToPosition(new Vector2((float)node.PositionX, (float)node.PositionY));
+            await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
 
             // Cập nhật RenderFragment cho bước hiện tại
             UpdateTraversalOrderFragment(i);
@@ -479,7 +479,7 @@
 
         if (binaryTreeService.Root != null)
         {
-            binaryTreeService.AssignPositionsBasedOnTreeStructure(binaryTreeService.Root, binaryTreeService.GetRootX(), binaryTreeService.GetRootY(), 200);
+            binaryTreeService.ArrangeNodePositions(binaryTreeService.Root, binaryTreeService.GetRootX(), binaryTreeService.GetRootY(), 200);
         }
 
         nodePositions = binaryTreeService.GetNodePositions(binaryTreeService.Root, selectedTraversalMethod);
@@ -623,7 +623,6 @@
 
             case "shortest-path":
                 bool shortestPathFound = await ShortestPathVisualization(binaryTreeService.Root, newNodeValue, traversalSteps);
-                // bool shortestPathFound = await ShortestPathVisualization(binaryTreeService.Root, newNodeValue);
                 if (!shortestPathFound)
                 {
                     statusMessage = $"Node {newNodeValue} not found.";
@@ -683,7 +682,7 @@
             var node = path[i];
 
             // Di chuyển controller đến node hiện tại
-            await MoveControllerToPosition(new Vector2((float)node.PositionX, (float)node.PositionY));
+            await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
 
             // Cập nhật bước duyệt trong giao diện
             UpdateTraversalOrderFragment(i);
@@ -734,7 +733,7 @@
 
             // Di chuyển controller tới node hiện tại
             showController = true;
-            await MoveControllerToPosition(new Vector2((float)currentNode.PositionX, (float)currentNode.PositionY));
+            await StartControllerMovement(new Vector2((float)currentNode.PositionX, (float)currentNode.PositionY));
 
             // Cập nhật UI với node mới được thêm vào
             UpdateTraversalOrderFragment(traversalSteps.Count - 1);
@@ -782,7 +781,7 @@
 
         // Di chuyển controller tới node hiện tại
         showController = true;
-        await MoveControllerToPosition(new Vector2((float)node.PositionX, (float)node.PositionY));
+        await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
         // Cập nhật UI với node mới được thêm vào
         UpdateTraversalOrderFragment(traversalSteps.Count - 1);
 
@@ -819,99 +818,18 @@
         return false;
     }
 
-    // Hàm tìm kiếm node và di chuyển kiểm soát viên dọc theo đường đi với độ trễ
-    private async Task<bool> ShortestPathVisualization(int targetValue)
+
+    private async Task StartControllerMovement(Vector2 destination)
     {
-        // Tìm node cần tìm bằng DFS
-        var foundNode = DFSFindNode(binaryTreeService.Root, targetValue);
-
-        if (foundNode == null)
-        {
-            statusMessage = $"Node {targetValue} does not exist."; // Thông báo nếu không tìm thấy
-            return false;
-        }
-
-        // Nếu tìm thấy node cần tìm và nó là node gốc
-        if (foundNode == binaryTreeService.Root)
-        {
-            foundNode.IsHighlighted = true; // Tô sáng node gốc
-            showController = true;
-            UpdateTreeDrawing();
-            statusMessage = $"Found root node {targetValue}.";
-            await Task.Delay(2000); // Dừng lại 2 giây
-            foundNode.IsHighlighted = false; // Tắt sáng node gốc sau 2 giây
-            showController = false;
-            UpdateTreeDrawing();
-            return true; // Kết thúc tìm kiếm
-        }
-
-        // Thu thập danh sách các LineID từ root đến node cần tìm
-        var path = CollectLinesToNode(foundNode);
-
-        if (path.Count == 0)
-        {
-            statusMessage = "No path found.";
-            return false;
-        }
-
-        // Hiển thị kiểm soát viên
-        showController = true;
-
-        // Di chuyển kiểm soát viên dọc theo các line với độ trễ để giảm hiện tượng nảy
-        foreach (var line in path)
-        {
-            Vector2 destination = new Vector2((float)line.x2, (float)line.y2);
-            await MoveControllerToPosition(destination);
-            await Task.Delay(50); // Thêm độ trễ ngắn giữa mỗi bước di chuyển để tránh nảy
-        }
-
-        // Tô sáng node cần tìm
-        foundNode.IsHighlighted = true;
-        UpdateTreeDrawing();
-
-        // Dừng lại 2 giây tại node cần tìm
-        await Task.Delay(2000);
-
-        // Ẩn kiểm soát viên và đưa nó về node gốc
-        foundNode.IsHighlighted = false;
-        OnInitialized();
-        UpdateTreeDrawing();
-
-        return true;
+        await binaryTreeService.MoveControllerToPosition(
+            controllerPosition, destination, Val3,
+            (newPosition) =>
+            {
+                controllerPosition = newPosition; // Cập nhật vị trí kiểm soát viên
+                InvokeAsync(StateHasChanged); // Cập nhật giao diện
+            });
     }
 
-    private async Task MoveControllerToPosition(Vector2 destination)
-    {
-        float baseSpeed = 2f; // Tốc độ cơ bản
-        float movementSpeed = baseSpeed * Val3; // Điều chỉnh tốc độ dựa trên slider
-
-        int delayTime = Math.Max(1, 16 / (int)Val3); // Giảm Task.Delay dựa trên Val3, tối thiểu là 1ms
-
-        while ((destination - controllerPosition).Length() > 0.1f) // Giảm ngưỡng để tránh nảy
-        {
-            // Tính toán hướng di chuyển, Vectoc2.Normalize là hàm chuẩn hóa vector có độ dài bằng 1 để chỉ ra hướng đi
-            Vector2 direction = Vector2.Normalize(destination - controllerPosition);
-
-            // Tính toán khoảng cách còn lại
-            float distanceRemaining = (destination - controllerPosition).Length();
-
-            // Giới hạn tốc độ để không vượt quá đích
-            float step = Math.Min(movementSpeed, distanceRemaining);
-
-            // Cập nhật vị trí của controller
-            controllerPosition += direction * step;
-
-            // Cập nhật giao diện sau mỗi bước di chuyển
-            StateHasChanged();
-
-            // Điều chỉnh thời gian delay dựa trên Val3
-            await Task.Delay(delayTime);
-        }
-
-        // Đảm bảo controller ở đúng vị trí đích cuối cùng
-        controllerPosition = destination;
-        StateHasChanged();
-    }
 
     // Hàm DFS tìm node và thu thập danh sách LineID
     private NodeService? DFSFindNode(NodeService? currentNode, int targetValue)

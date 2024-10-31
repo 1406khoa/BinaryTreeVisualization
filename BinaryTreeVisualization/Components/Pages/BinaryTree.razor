@@ -24,8 +24,8 @@
         <p class="title">Selected Traversal Method</p>
         <div>
             <select @onchange="OnTraversalMethodChange">
-                <option value="pre-order">Pre-order (NLR)</option>
                 <option value="in-order" selected>In-order (LNR)</option>
+                <option value="pre-order">Pre-order (NLR)</option>
                 <option value="post-order">Post-order (LRN)</option>
                 <option value="reverse-in-order">Reverse In-order (RNL)</option>
             </select>
@@ -859,30 +859,15 @@
         return null;
     }
 
-    // Thu thập các đường nối từ node root đến node cần tìm (sử dụng LineID)
-    private List<(double x1, double y1, double x2, double y2)> CollectLinesToNode(NodeService targetNode)
+    private List<(double x1, double y1, double x2, double y2)> GetPathToNode(NodeService targetNode)
     {
-        var path = new List<(double x1, double y1, double x2, double y2)>();
-        var currentNode = targetNode;
+        // Lấy tất cả các đường nối từ BinaryTreeService
+        var allLines = binaryTreeService.GetLines()
+                         .Select(line => (line.x1, line.y1, line.x2, line.y2))
+                         .ToList();
 
-        while (currentNode.Parent != null)
-        {
-            // Tìm line nối từ parent đến node hiện tại
-            var line = binaryTreeService.GetLines().FirstOrDefault(l =>
-                l.x1 == currentNode.Parent.PositionX &&
-                l.y1 == currentNode.Parent.PositionY &&
-                l.x2 == currentNode.PositionX &&
-                l.y2 == currentNode.PositionY);
-
-            if (line != default)
-            {
-                // Chỉ lấy các giá trị tọa độ x1, y1, x2, y2
-                path.Insert(0, (line.x1, line.y1, line.x2, line.y2));
-            }
-
-            currentNode = currentNode.Parent;
-        }
-
-        return path;
+        // Gọi hàm CollectLinesToNode từ service
+        return binaryTreeService.CollectLinesToNode(targetNode, allLines);
     }
+
 }

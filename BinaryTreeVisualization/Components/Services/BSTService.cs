@@ -1,13 +1,18 @@
 ﻿using BinaryTreeVisualization.Components.Services;
+using System.Numerics;
 
-public class BSTService
+public class BSTService : BinaryTreeService
 {
-    public NodeService? Root { get; private set; }
+    public new NodeService? Root { get; private set; }
     private const double RootX = 800; // Xác định vị trí X cố định cho node gốc
     private const double RootY = 50;  // Y cố định cho node gốc
 
-    public double GetRootX() => RootX;
-    public double GetRootY() => RootY;
+    // Danh sách lưu các đường nối (lines) giữa các node để dễ vẽ và tô màu
+    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
+        new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
+
+    //public double GetRootX() => RootX;
+    //public double GetRootY() => RootY;
 
     // Danh sách để lưu trữ giá trị của các node đã thêm vào cây
     private List<int> nodeValues = new List<int>();
@@ -31,6 +36,30 @@ public class BSTService
         }
         nodeValues.Add(value); // Lưu lại giá trị của node đã thêm
         return newNode.NodeID;
+    }
+    // find parent node để thêm animation
+    public NodeService? FindParentNode(int value)
+    {
+        NodeService? currentNode = Root;
+        NodeService? parent = null;
+
+        while (currentNode != null)
+        {
+            parent = currentNode;
+
+            // Nếu giá trị cần thêm nhỏ hơn node hiện tại, đi về bên trái
+            if (value < currentNode.Value)
+            {
+                currentNode = currentNode.LeftChild;
+            }
+            // Nếu lớn hơn hoặc bằng, đi về bên phải
+            else
+            {
+                currentNode = currentNode.RightChild;
+            }
+        }
+
+        return parent;
     }
 
     private void AddNodeRecursive(NodeService current, NodeService newNode, double x, double offsetX)
@@ -63,17 +92,32 @@ public class BSTService
         }
     }
 
-    // Hàm duyệt ngược để xác định đường line kết nối với node hiện tại
-    public (double x1, double y1, double x2, double y2, Guid LineID)? GetParentLine(NodeService node)
+    // Tìm Id node để làm hiệu ứng
+    public NodeService? FindNodeByID(Guid nodeID)
     {
-        if (node.Parent == null)
-        {
-            return null; // Nếu không có cha, tức là node gốc
-        }
+        return FindNodeByIDRecursive(Root, nodeID);
+    }
 
-        var parent = node.Parent;
-        // Trả về tọa độ đường line kết nối cha - con cùng với LineID của nó
-        return (parent.PositionX, parent.PositionY, node.PositionX, node.PositionY, Guid.NewGuid());
+    private NodeService? FindNodeByIDRecursive(NodeService? currentNode, Guid nodeID)
+    {
+        if (currentNode == null) return null; // Nếu node rỗng, trả về null
+
+        if (currentNode.NodeID == nodeID) return currentNode; // Tìm thấy node khớp ID
+
+        // Duyệt đệ quy qua các node con
+        var leftSearch = FindNodeByIDRecursive(currentNode.LeftChild, nodeID);
+        if (leftSearch != null) return leftSearch;
+
+        return FindNodeByIDRecursive(currentNode.RightChild, nodeID); // Tìm tiếp ở nhánh phải
+    }
+
+    public override (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? GetParentLine(NodeService node)
+    {
+        return lines.FirstOrDefault(line =>
+            line.x1 == node.Parent?.PositionX &&
+            line.y1 == node.Parent?.PositionY &&
+            line.x2 == node.PositionX &&
+            line.y2 == node.PositionY);
     }
 
     // Hàm thiết lập vị trí cho các nút, giữ nguyên vị trí node gốc
@@ -92,7 +136,7 @@ public class BSTService
     }
 
     // Phương thức này trả về danh sách vị trí của các node trong cây
-    public List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
+    public override List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
     {
         var positions = new List<(NodeService node, double x, double y)>();
 
@@ -123,37 +167,75 @@ public class BSTService
         return node;
     }
 
-    public void AssignPositionsBasedOnTreeStructure(NodeService node, double x, double y, double offsetX)
+    public override void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
     {
-        double minOffset = 50;
+        double minOffset = Math.Max(60, offsetX / Math.Pow(2, depth)); // Khoảng cách tối thiểu giữa các node
 
-        // Thiết lập vị trí cho node hiện tại
+        // Đặt vị trí cho node hiện tại
         SetNodePosition(node, x, y);
 
-        if (offsetX > minOffset)
-        {
-            offsetX *= 0.75; // Giảm dần offsetX cho các node tiếp theo
-        }
-
-        // Đặt vị trí cho node con trái (LeftChild)
+        // Điều chỉnh vị trí nút con trái nếu tồn tại
         if (node.LeftChild != null)
         {
-            double leftX = x - offsetX;
+            double leftX = x - minOffset;
             double leftY = y + 100;
-            AssignPositionsBasedOnTreeStructure(node.LeftChild, leftX, leftY, offsetX);
+
+            // Đệ quy để đặt vị trí cho con trái
+            ArrangeNodePositions(node.LeftChild, leftX, leftY, offsetX, depth + 1);
+
+            // Kiểm tra và đẩy nút con nếu nó chồng lên nút cha hoặc anh em
+            if (IsOverlapping(node, node.LeftChild))
+            {
+                PushNodesApart(node.LeftChild, -minOffset);
+            }
         }
 
-        // Đặt vị trí cho node con phải (RightChild)
+        // Điều chỉnh vị trí nút con phải nếu tồn tại
         if (node.RightChild != null)
         {
-            double rightX = x + offsetX;
+            double rightX = x + minOffset;
             double rightY = y + 100;
-            AssignPositionsBasedOnTreeStructure(node.RightChild, rightX, rightY, offsetX);
+
+            // Đệ quy để đặt vị trí cho con phải
+            ArrangeNodePositions(node.RightChild, rightX, rightY, offsetX, depth + 1);
+
+            // Kiểm tra và đẩy nút con nếu nó chồng lên nút cha hoặc anh em
+            if (IsOverlapping(node, node.RightChild))
+            {
+                PushNodesApart(node.RightChild, minOffset);
+            }
+        }
+    }
+
+    // Kiểm tra xem hai nút có chồng lên nhau không
+    private bool IsOverlapping(NodeService node1, NodeService node2)
+    {
+        double distance = Math.Sqrt(
+            Math.Pow(node1.PositionX - node2.PositionX, 2) +
+            Math.Pow(node1.PositionY - node2.PositionY, 2));
+
+        return distance < 70; // Kiểm tra nếu khoảng cách giữa các node nhỏ hơn 40 đơn vị
+    }
+
+    // Đẩy các nút ra xa để tránh chồng lấn
+    private void PushNodesApart(NodeService node, double pushAmount)
+    {
+        node.PositionX += pushAmount;
+
+        // Nếu node có con, đẩy tất cả con theo hướng tương tự
+        if (node.LeftChild != null)
+        {
+            PushNodesApart(node.LeftChild, pushAmount);
+        }
+
+        if (node.RightChild != null)
+        {
+            PushNodesApart(node.RightChild, pushAmount);
         }
     }
 
     // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
-    public List<NodeService> TraverseTree(NodeService? node, string traversalType)
+    public override List<NodeService> TraverseTree(NodeService? node, string traversalType)
     {
         var result = new List<NodeService>();
         if (node == null) return result;
@@ -187,7 +269,7 @@ public class BSTService
     }
 
     // Hàm thu thập đường nối giữa các node cha - con
-    public List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()
+    public override List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()
     {
         var lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
         CollectLines(Root, lines);
@@ -282,7 +364,7 @@ public class BSTService
     }
 
     //Hàm xóa cây
-    public void ResetTree()
+    public override void ResetTree()
     {
         Root = null; // Đặt lại root về null
     }
@@ -295,7 +377,7 @@ public class BSTService
         // Sau khi xóa node, cập nhật lại vị trí của tất cả các node
         if (Root != null)
         {
-            AssignPositionsBasedOnTreeStructure(Root, RootX, RootY, 200);
+            ArrangeNodePositions(Root, RootX, RootY, 200);
         }
 
         return Root != null;
@@ -356,5 +438,55 @@ public class BSTService
     public void UpdateRoot(NodeService newRoot)
     {
         Root = newRoot; // Cập nhật giá trị Root từ lớp con hoặc bên ngoài
+    }
+
+    public override async Task MoveControllerToPosition(
+Vector2 currentPosition, Vector2 destination, int speed,
+Action<Vector2> updatePositionCallback)
+    {
+        float baseSpeed = 2f;
+        float movementSpeed = baseSpeed * speed;
+
+        int delayTime = Math.Max(1, 16 / speed);
+
+        while ((destination - currentPosition).Length() > 0.1f)
+        {
+            Vector2 direction = Vector2.Normalize(destination - currentPosition);
+            float step = Math.Min(movementSpeed, (destination - currentPosition).Length());
+
+            currentPosition += direction * step;
+
+            // Gọi callback để cập nhật vị trí trong Razor Component
+            updatePositionCallback(currentPosition);
+
+            await Task.Delay(delayTime);
+        }
+
+        updatePositionCallback(destination); // Đảm bảo vị trí cuối cùng chính xác
+    }
+
+    public override List<(double x1, double y1, double x2, double y2)> CollectLinesToNode(NodeService targetNode, List<(double x1, double y1, double x2, double y2)> allLines)
+    {
+        var path = new List<(double x1, double y1, double x2, double y2)>();
+        var currentNode = targetNode;
+
+        while (currentNode.Parent != null)
+        {
+            // Tìm đường nối giữa parent và node hiện tại từ danh sách đã có
+            var line = allLines.FirstOrDefault(l =>
+                l.x1 == currentNode.Parent.PositionX &&
+                l.y1 == currentNode.Parent.PositionY &&
+                l.x2 == currentNode.PositionX &&
+                l.y2 == currentNode.PositionY);
+
+            if (line != default)
+            {
+                path.Insert(0, line); // Thêm vào đầu danh sách để giữ đúng thứ tự từ gốc đến đích
+            }
+
+            currentNode = currentNode.Parent;
+        }
+
+        return path;
     }
 }

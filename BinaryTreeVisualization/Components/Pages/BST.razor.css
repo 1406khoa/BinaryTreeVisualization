@@ -92,3 +92,62 @@ select {
 .is-selected {
     fill: #4cff00;
 }
+
+@keyframes zoomHighlight {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.3);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInZoom {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.node-new {
+    animation: fadeInZoom 1s ease-in-out;
+    stroke: green;
+    stroke-width: 3px;
+    transition: fill 0.3s ease-in-out;
+}
+
+.node-highlight {
+    stroke: yellow;
+    stroke-width: 4px;
+}
+
+.status-bar {
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 0 20px;
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    border: solid black 1px
+}
+
+

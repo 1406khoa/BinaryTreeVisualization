@@ -368,7 +368,7 @@ public class BinaryTreeService
     //Hàm xóa cây
     public virtual void ResetTree()
     {
-        Root = null; // Đặt lại root về null
+        Root = null;
     }
 
     // Hàm xóa node

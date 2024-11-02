@@ -6,12 +6,75 @@
 
 <PageTitle>AVL Tree</PageTitle>
 
-<h4>Basic Operation</h4>
-<div class="basic-operation">
-    <div class="add">
-        <input class="first-input" type="number" @bind="newNodeValue" />
-        <button class="button" @onclick="AddNode">Add Node</button>
+<div class="first-component">
+    <div class="basic-operation">
+        <p class="title">Basic Operation</p>
+        <div>
+            <input class="basic-op-input" type="number" @bind="newNodeValue" />
+
+            <button class="button" @onclick="AddNode" disabled="@isTraversing">Add</button>
+            <button class="button" disabled="@isTraversing">Edit</button>
+            <button class="button" disabled="@isTraversing">Delete</button>
+        </div>
     </div>
+
+    <div class="find-operation">
+        <p class="title">Find Node</p>
+        <div>
+            <select>
+                <option value="shortest-path">Shortest Path</option>
+                <option value="dfs">DFS</option>
+                <option value="bfs">BFS</option>
+            </select>
+            <input class="find-input" type="number" @bind="newNodeValue" />
+            <button class="button" disabled="@isTraversing">Find</button>
+        </div>
+    </div>
+
+    <div class="traverse-tree">
+        <p class="title">Selected Traversal Method</p>
+        <div>
+            <select @onchange="OnTraversalMethodChange">
+                <option value="in-order" selected>In-order (LNR)</option>
+                <option value="pre-order">Pre-order (NLR)</option>
+                <option value="post-order">Post-order (LRN)</option>
+                <option value="reverse-in-order">Reverse In-order (RNL)</option>
+            </select>
+            <button class="button" disabled="@isTraversing">Traverse</button>
+        </div>
+    </div>
+
+    <div class="speed-control">
+        <p class="title-speed">@($"Animation Speed: x{Val3}")</p>
+        <div class="custom-slider">
+            <MatSlider class="slider" @bind-Value="@Val3" Discrete="true" Pin="true" TValue="int" ValueMin="1" ValueMax="3"></MatSlider>
+        </div>
+    </div>
+</div>
+
+<div class="random-tree">
+    <p class="title">Create Random Tree</p>
+    <div>
+        <label>Number of nodes:</label>
+        <input type="number" @bind="nodeCount" />
+        <label style="margin-left: 5px">Min:</label>
+        <input type="number" @bind="minValue" />
+        <label style="margin-left: 5px">Max:</label>
+        <input type="number" @bind="maxValue" />
+        <button class="create-random-button" @onclick="CreateRandomTree" disabled="@isTraversing">Create Random Tree</button>
+        <button class="button" @onclick="DeleteTree" disabled="@isTraversing">Clear</button>
+    </div>
+</div>
+
+<!-- Phần hiển thị dãy số khi duyệt cây -->
+<p class="title">Traversal Order</p>
+<div style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+    @traversalOrderFragment
+</div>
+
+<!-- Thông báo trạng thái -->
+<div class="status-bar">
+    <p class="status">@($"Status: {statusMessage}")</p>
 </div>
 
 <!-- Khối SVG -->
@@ -20,15 +83,15 @@
     {
         <!-- Đường nối giữa các node -->
         <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
-              stroke="@((line.IsHighlighted) ? "yellow" : "black")" stroke-width="2" />
+              stroke="@((line.IsHighlighted) ? "#FFC107" : "black")" stroke-width="2" />
     }
 
     @foreach (var nodePosition in nodePositions)
     {
         <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
-        <circle class="node-circle"
+        <circle class="node-circle @((nodePosition.node == selectedNode) ? "selected-node" : "")"
                 cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
-                fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")"
+                fill="@GetNodeFillColor(nodePosition.node)"
                 @onclick="(() => OnNodeClick(nodePosition.node))" />
 
         <!-- Sử dụng RenderFragment để in giá trị -->
@@ -44,41 +107,106 @@
                 builder.AddAttribute(7, "font-weight", "bold");
                 builder.AddAttribute(8, "fill", "black");
                 builder.AddAttribute(9, "cursor", "pointer");
-                builder.AddContent(10, nodePosition.node.Value.ToString());
+                builder.AddAttribute(10, "onclick", EventCallback.Factory
+                .Create(this, () => OnNodeClick(nodePosition.node)));
+                builder.AddContent(11, nodePosition.node.Value.ToString());
                 builder.CloseElement();
             }))
+    }
+
+    <!-- Hình tròn kiểm soát viên -->
+    @if (showController)
+    {
+        <circle cx="@controllerPosition.X" cy="@controllerPosition.Y" r="20" stroke="green" stroke-width="3" fill="none" />
     }
 </svg>
 
 @code {
-    @using BinaryTreeVisualization.Components.Services;
+	@using BinaryTreeVisualization.Components.Services;
+    @using System.Numerics
 
+    // Cụm biến liên quan đến Node và Node Selection
     private int newNodeValue;
-    private int editedNodeValue;
     private NodeService? selectedNode;
+    private List<(NodeService node, double x, double y)> nodePositions = new();
+    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines = new();
 
-    private List<(NodeService node, double x, double y)> nodePositions = new List<(NodeService node, double x, double y)>();
-    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>
-        lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
-    private string selectedTraversalMethod = "in-order"; // Kiểu duyệt cây mặc định là In-order
-
+    // Cụm biến liên quan đến Traversal và Duyệt cây
+    private string selectedTraversalMethod = "in-order";
     private string traversalOrderDisplay = "";
+    private bool isTraversing = false;
+    private List<TraversalStep> traversalSteps = new();
 
-    // Biến để chứa thông báo trạng thái
-    private string statusMessage = "Tree initialized."; // Thông báo trạng thái ban đầu
+    public class TraversalStep
+    {
+        public int Value { get; set; }
+        public NodeService Node { get; set; } // Thêm thuộc tính Node
+
+
+        public TraversalStep(NodeService node)
+        {
+            Node = node;
+            Value = node.Value;
+        }
+    }
+
+    private RenderFragment traversalOrderFragment = builder => { };
+    public List<int> traversalOrder = new(); // Lưu các giá trị đã duyệt
+
+    //Biến liên quan tới tìm node theo DFS hoặc BFS
+    private string selectedSearchMethod = "shortest-path"; // Phương thức tìm kiếm được chọn
+
+    // Cụm biến liên quan đến Random Tree Generation
+    private int nodeCount { get; set; } = 10;
+    private int minValue { get; set; } = 0;
+    private int maxValue { get; set; } = 100;
+
+    // Cụm biến liên quan đến Animation và Controller
+    private bool showController = false;
+    private Vector2 controllerPosition = new Vector2(0, 0); // Vị trí mặc định của controller
+    private int _val3 = 1;
+    public int Val3
+    {
+        get => _val3;
+        set
+        {
+            _val3 = value;
+            this.StateHasChanged();
+        }
+    }
+
+    // Biến thông báo trạng thái
+    private string statusMessage = "";
+
+    private string GetNodeFillColor(NodeService node)
+    {
+        if (node.IsHighlighted) // Ưu tiên màu vàng nếu node đang được tìm kiếm
+        {
+            return "#FFC107"; //Vàng hổ phách nhạt (Amber)
+        }
+        else if (node == selectedNode) // Nếu node được chọn, tô màu xanh lá
+        {
+            return "lightgreen";
+        }
+        return "white"; // Màu mặc định cho các node khác
+    }
 
     private async Task AddNode()
     {
-        var newNodeID = avlTreeService.AddNode(newNodeValue); // Lấy NodeID của node vừa được thêm
-        UpdateTreeDrawing();
+        var newNodeID = avlTreeService.AddNode(newNodeValue);
+        if (newNodeID == Guid.Empty)
+        {
+            statusMessage = $"Node {newNodeValue} already exists";
+        }
+        else
+        {
+            UpdateTreeDrawing();
+            HighlightNodeAndLine(newNodeID);
+            await Task.Delay(2000);
 
-        // Thực hiện tô màu node và đường line trong 2 giây
-        HighlightNodeAndLine(newNodeID);
-        await Task.Delay(2000);
-
-        // Khôi phục lại màu mặc định sau khi tô màu
-        RemoveHighlighting();
-        UpdateTreeDrawing();  // Cập nhật lại giao diện
+            RemoveHighlighting();
+            UpdateTreeDrawing();
+        }
     }
 
     private void OnTraversalMethodChange(ChangeEventArgs e)
@@ -151,9 +279,43 @@
         StateHasChanged();
     }
 
+    private void CreateRandomTree()
+    {
+        traversalOrderFragment = builder => { };
+        avlTreeService.ResetTree();
+        avlTreeService.BuildRandomTree(nodeCount, minValue, maxValue);
+        UpdateTreeDrawing();
+    }
+
+    private void DeleteTree()
+    {
+        avlTreeService.ResetTree();
+        UpdateTreeDrawing();
+        StateHasChanged();
+    }
+
+    //Hàm để lưu thông tin và tô màu node được chọn
     private void OnNodeClick(NodeService node)
     {
-        selectedNode = node; // Lưu nút được chọn
-        editedNodeValue = node.Value; // Cập nhật giá trị vào input chỉnh sửa
+        if (selectedNode == node)
+        {
+            DeselectNode();
+        }
+        else
+        {
+            selectedNode = node; // Gán node mới được chọn
+            newNodeValue = selectedNode.Value; // Hiển thị giá trị của node trong input
+            statusMessage = $"Node {node.Value} is selected";
+        }
+
+        UpdateTreeDrawing();
+    }
+
+    public void DeselectNode()
+    {
+        selectedNode = null; // Hủy chọn node
+        newNodeValue = 0; // Xóa giá trị hiện tại nếu cần
+        statusMessage = "Node deselected.";
+        StateHasChanged();
     }
 }

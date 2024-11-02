@@ -5,7 +5,7 @@
 
 <PageTitle>Binary Tree</PageTitle>
 
-<div class="first-line">
+<div class="first-component">
     <div class="find-operation">
         <p class="title">Find Node</p>
         <div>
@@ -15,12 +15,12 @@
                 <option value="bfs">BFS</option>
             </select>
             <input class="find-input" type="number" @bind="newNodeValue" />
-            <button class="button" @onclick="AddNode" disabled="@isTraversing">Add</button>
             <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Find</button>
+            <button class="button" @onclick="AddNode" disabled="@isTraversing">Add</button>
         </div>
     </div>
 
-    <div class="browse-tree">
+    <div class="traverse-tree">
         <p class="title">Selected Traversal Method</p>
         <div>
             <select @onchange="OnTraversalMethodChange">
@@ -29,7 +29,7 @@
                 <option value="post-order">Post-order (LRN)</option>
                 <option value="reverse-in-order">Reverse In-order (RNL)</option>
             </select>
-            <button class="button" @onclick="StartTraversal" disabled="@isTraversing">Browse</button>
+            <button class="button" @onclick="StartTraversal" disabled="@isTraversing">Traverse</button>
         </div>
     </div>
 
@@ -51,7 +51,7 @@
         <label style="margin-left: 5px">Max:</label>
         <input type="number" @bind="maxValue" />
         <button class="create-random-button" @onclick="CreateRandomTree" disabled="@isTraversing">Create Random Tree</button>
-        <button class="button" @onclick="DeleteTree" disabled="@isTraversing">Clear Tree</button>
+        <button class="button" @onclick="DeleteTree" disabled="@isTraversing">Clear</button>
     </div>
 </div>
 
@@ -61,7 +61,9 @@
 </div>
 
 <!-- Thông báo trạng thái -->
-<p class="status">@($"Status: {statusMessage}")</p>
+<div class="status-bar">
+    <p class="status">@($"Status: {statusMessage}")</p>
+</div>
 
 <!-- Khối SVG -->
 <svg width="100%" height="100vh" style="overflow: visible;">
@@ -111,8 +113,9 @@
                 <xhtml:div class="dropdown-menu">
                     <input class="dropdown-input" type="number" @bind="newNodeValue" />
                     <xhtml:div class="dropdown-operation">
-                        <xhtml:button class="dropdown-button" @onclick="AddNode">Add</xhtml:button>
-                        <xhtml:button class="dropdown-button" @onclick="EditNodeInBT">Edit</xhtml:button>
+                        <xhtml:button class="dropdown-button" @onclick="AddNode"
+                                      disabled=@isAddNodeDisabled>Add</xhtml:button>
+                        <xhtml:button class="dropdown-button" @onclick="EditNode">Edit</xhtml:button>
                         <xhtml:button class="dropdown-button" @onclick="DeleteNode">Delete</xhtml:button>
                     </xhtml:div>
 
@@ -199,8 +202,7 @@
     // Biến kiểm tra xem có con trái hoặc phải chưa để disable nút bấm
     private bool isLeftDisabled => selectedNode?.LeftChild != null;
     private bool isRightDisabled => selectedNode?.RightChild != null;
-
-
+    private bool isAddNodeDisabled => selectedNode?.LeftChild != null && selectedNode?.RightChild != null;
 
     private string GetNodeFillColor(NodeService node)
     {
@@ -543,7 +545,6 @@
         UpdateTreeDrawing();
     }
 
-    [JSInvokable]
     public void DeselectNode()
     {
         selectedNode = null; // Hủy chọn node
@@ -552,7 +553,7 @@
         StateHasChanged();
     }
 
-    private void EditNodeInBT()
+    private void EditNode()
     {
         if (selectedNode != null)
         {
@@ -601,7 +602,6 @@
 
         isTraversing = true;
         traversalSteps = new List<TraversalStep>(); // Khởi tạo lại danh sách trước mỗi lần tìm kiếm
-
 
         switch (selectedSearchMethod)
         {
@@ -708,14 +708,7 @@
         StateHasChanged();
         return true;
     }
-
-
-
-
-
-
- 
-
+        
     private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {
         if (root == null) return false;
@@ -869,5 +862,4 @@
         // Gọi hàm CollectLinesToNode từ service
         return binaryTreeService.CollectLinesToNode(targetNode, allLines);
     }
-
 }

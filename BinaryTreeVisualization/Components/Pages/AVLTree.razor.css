@@ -1,1 +1,162 @@
+<<<<<<< HEAD
+﻿body {
+    width: 100%;
+    height: 100%;
+}
+
+.first-component {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.title {
+    font-weight: 600;
+    height: 15px;
+}
+
+.title-speed {
+    height: 0px;
+}
+
+.basic-operation,
+.find-operation,
+.traverse-tree,
+.speed-control {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.basic-operation,
+.traverse-tree {
+    width: 25%;
+}
+
+.find-operation {
+    width: 30%
+}
+
+.speed-control {
+    width: 20%
+}
+
+.speed-control {
+    margin-top: 15px;
+}
+
+.basic-operation > div,
+.browse-tree > div
+.speed-control > div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+select {
+    border-radius: 5px;
+    height: 30px;
+    font-size: 12px;
+    width: 150px;
+}
+
+.custom-slider {
+    width: 300px;
+}
+
+.random-tree {
+    margin-bottom: 10px;
+}
+
+    .random-tree > div {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+.status {
+    color: green;
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+input {
+    width: 100px;
+    border-radius: 5px;
+    padding: 0 5px;
+    margin: 0 5px 0 10px;
+}
+
+.basic-op-input {
+    margin-left: 0px !important;
+}
+
+.button,
+.create-random-button {
+    background-color: #9375e2;
+    text-decoration: none;
+    color: white;
+    height: 28px;
+    font-size: 12px;
+    border-radius: 5px;
+    border: none;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.button {
+    width: 75px;
+}
+
+.create-random-button {
+    width: 12%;
+    margin-right: 5px;
+}
+
+    .button:hover,
+    .create-random-button:hover {
+        background-color: #a080f6;
+        transition: 0.3s;
+        color: white;
+    }
+
+    .button:active,
+    .create-random-button:active {
+        background-color: #8569d0;
+        transition: 0.3s;
+        color: white;
+    }
+
+.node-circle {
+    cursor: pointer;
+}
+
+.button[disabled],
+.create-random-button[disabled],
+.dropdown-button[disabled] {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    background-color: #ccc !important;
+    color: #666 !important;
+}
+
+.status-bar {
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 0 20px;
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    border: solid black 1px
+}
+=======
 ﻿
+>>>>>>> 5a1f850eea4aaba354a6c8041bf163a1cc851590

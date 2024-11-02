@@ -23,6 +23,11 @@ public class BSTService
     public virtual Guid AddNode(int value)
     {
         NodeService newNode = new NodeService(value);
+        if (nodeValues.Contains(value))
+        {
+            return Guid.Empty;
+        }
+
         if (Root == null)
         {
             Root = newNode;
@@ -36,7 +41,8 @@ public class BSTService
         nodeValues.Add(value); // Lưu lại giá trị của node đã thêm
         return newNode.NodeID;
     }
-    // find parent node để thêm animation
+
+    //Find parent node để thêm animation
     public NodeService? FindParentNode(int value)
     {
         NodeService? currentNode = Root;
@@ -304,44 +310,38 @@ public class BSTService
         }
     }
 
-    // Hàm tạo giá trị ngẫu nhiên để sử dụng cho hàm tạo cây ngẫu nhiên
+    // Hàm tạo giá trị ngẫu nhiên
     private List<int> GenerateRandomValues(int count, int minValue, int maxValue)
     {
         Random random = new Random();
-        List<int> values = new List<int>();
+        HashSet<int> uniqueValues = new HashSet<int>();
 
-        for (int i = 0; i < count; i++)
+        // Tiếp tục tạo số cho đến khi có đủ count số khác nhau
+        while (uniqueValues.Count < count)
         {
-            values.Add(random.Next(minValue, maxValue + 1));
+            int newValue = random.Next(minValue, maxValue + 1);
+            uniqueValues.Add(newValue); // HashSet sẽ tự động loại bỏ nếu trùng
         }
 
-        return values;
+        return uniqueValues.ToList(); // Chuyển đổi lại thành List<int>
     }
 
-    // Hàm tạo cây ngẫu nhiên
-    public void BuildRandomTree(int nodeCount, int minValue, int maxValue, string treeType)
+    //Hàm tạo cây ngẫu nhiên
+    public void BuildRandomTree(int nodeCount, int minValue, int maxValue)
     {
         List<int> randomValues = GenerateRandomValues(nodeCount, minValue, maxValue);
 
         foreach (var value in randomValues)
         {
-            switch (treeType)
-            {
-                case "BinarySearchTree":
-                    AddNode(value);
-                    break;
-                
-                //case "AVLTree":
-                //    AddNodeToAVLTree(value);
-                //    break;
-            }
+            AddNode(value);
         }
     }
 
     //Hàm xóa cây
     public void ResetTree()
     {
-        Root = null; // Đặt lại root về null
+        Root = null;
+        nodeValues.Clear();
     }
 
     // Hàm xóa node theo giá trị

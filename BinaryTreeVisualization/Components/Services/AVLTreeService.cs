@@ -25,7 +25,6 @@ public class AVLTreeService : BSTService
         return newNodeID;
     }
 
-
     // Kiểm tra và cân bằng cây sau khi thêm nút
     private void BalanceTreeAfterInsert(NodeService node)
     {

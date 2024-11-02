@@ -7,7 +7,7 @@ public class BSTService : BinaryTreeService
     private const double RootX = 800; // Xác định vị trí X cố định cho node gốc
     private const double RootY = 50;  // Y cố định cho node gốc
 
-    // Danh sách lưu các đường nối (lines) giữa các node để dễ vẽ và tô màu
+    // Danh sách lưu các đường nối (lines) giữa các node để vẽ
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
         new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
@@ -92,25 +92,7 @@ public class BSTService : BinaryTreeService
         }
     }
 
-    // Tìm Id node để làm hiệu ứng
-    public NodeService? FindNodeByID(Guid nodeID)
-    {
-        return FindNodeByIDRecursive(Root, nodeID);
-    }
-
-    private NodeService? FindNodeByIDRecursive(NodeService? currentNode, Guid nodeID)
-    {
-        if (currentNode == null) return null; // Nếu node rỗng, trả về null
-
-        if (currentNode.NodeID == nodeID) return currentNode; // Tìm thấy node khớp ID
-
-        // Duyệt đệ quy qua các node con
-        var leftSearch = FindNodeByIDRecursive(currentNode.LeftChild, nodeID);
-        if (leftSearch != null) return leftSearch;
-
-        return FindNodeByIDRecursive(currentNode.RightChild, nodeID); // Tìm tiếp ở nhánh phải
-    }
-
+    // hàm tìm node cha của node hiện tại
     public override (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? GetParentLine(NodeService node)
     {
         return lines.FirstOrDefault(line =>
@@ -414,26 +396,6 @@ public class BSTService : BinaryTreeService
         return node;
     }
 
-    // Hàm tìm kiếm nút
-    public NodeService? SearchNode(NodeService? currentNode, int value)
-    {
-        if (currentNode == null)
-        {
-            return null;
-        }
-        if (currentNode.Value == value)
-        {
-            return currentNode;
-        }
-        else if (value < currentNode.Value)
-        {
-            return SearchNode(currentNode.LeftChild, value);
-        }
-        else
-        {
-            return SearchNode(currentNode.RightChild, value);
-        }
-    }
 
     public void UpdateRoot(NodeService newRoot)
     {

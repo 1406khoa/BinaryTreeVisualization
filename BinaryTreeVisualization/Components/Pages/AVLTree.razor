@@ -1,4 +1,5 @@
-﻿@page "/avltree"
+﻿﻿
+@page "/avltree"
 @rendermode InteractiveServer
 @inject AVLTreeService avlTreeService
 
@@ -26,30 +27,30 @@
         <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
         <circle class="node-circle"
                 cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
-                fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")" 
-                @onclick="(() => OnNodeClick(nodePosition.node))"/>
+                fill="@((nodePosition.node.IsHighlighted) ? "yellow" : "white")"
+                @onclick="(() => OnNodeClick(nodePosition.node))" />
 
-            <!-- Sử dụng RenderFragment để in giá trị -->
+        <!-- Sử dụng RenderFragment để in giá trị -->
         @((RenderFragment)((builder) =>
-        {
-            builder.OpenElement(0, "text");
-            builder.AddAttribute(1, "x", nodePosition.x);
-            builder.AddAttribute(2, "y", nodePosition.y);
-            builder.AddAttribute(3, "text-anchor", "middle");
-            builder.AddAttribute(4, "dominant-baseline", "middle");
-            builder.AddAttribute(5, "dy", "0.35em"); // Điều chỉnh vị trí văn bản
-            builder.AddAttribute(6, "font-size", "12");
-            builder.AddAttribute(7, "font-weight", "bold");
-            builder.AddAttribute(8, "fill", "black");
-            builder.AddAttribute(9, "cursor", "pointer");
-            builder.AddContent(10, nodePosition.node.Value.ToString());
-            builder.CloseElement();
-        }))
+            {
+                builder.OpenElement(0, "text");
+                builder.AddAttribute(1, "x", nodePosition.x);
+                builder.AddAttribute(2, "y", nodePosition.y);
+                builder.AddAttribute(3, "text-anchor", "middle");
+                builder.AddAttribute(4, "dominant-baseline", "middle");
+                builder.AddAttribute(5, "dy", "0.35em"); // Điều chỉnh vị trí văn bản
+                builder.AddAttribute(6, "font-size", "12");
+                builder.AddAttribute(7, "font-weight", "bold");
+                builder.AddAttribute(8, "fill", "black");
+                builder.AddAttribute(9, "cursor", "pointer");
+                builder.AddContent(10, nodePosition.node.Value.ToString());
+                builder.CloseElement();
+            }))
     }
 </svg>
 
 @code {
-	@using BinaryTreeVisualization.Components.Services;
+    @using BinaryTreeVisualization.Components.Services;
 
     private int newNodeValue;
     private int editedNodeValue;

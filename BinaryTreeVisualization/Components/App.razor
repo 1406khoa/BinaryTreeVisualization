@@ -16,6 +16,8 @@
 <body>
     <Routes />
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
     <script>
         window.preventContextMenu = function() {
             document.addEventListener('contextmenu', function(event) {
@@ -46,6 +48,21 @@
                 element.classList.add('visible');
             }
         };
+
+        window.animateLine = function (lineId, fromCoords, toCoords, duration) {
+        var line = document.getElementById(lineId);
+        if (line) {
+            anime({
+                targets: line,
+                x1: [fromCoords.x1, toCoords.x1],
+                y1: [fromCoords.y1, toCoords.y1],
+                x2: [fromCoords.x2, toCoords.x2],
+                y2: [fromCoords.y2, toCoords.y2],
+                duration: duration,
+                easing: 'easeInOutQuad'
+            });
+        }
+    };
     </script>
 
     <script src="_framework/blazor.web.js"></script>

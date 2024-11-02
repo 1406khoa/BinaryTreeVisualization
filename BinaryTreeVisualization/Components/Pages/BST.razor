@@ -339,11 +339,6 @@
 
 
 
-    private string GetLineID(Guid parentID, Guid childID)
-    {
-        return $"{parentID}-{childID}"; // Trả về LineID dưới dạng string
-    }
-
 
 
 
@@ -465,30 +460,6 @@
         }
     }
 
-
-
-    private async Task HighlightPathToNode(NodeService? currentNode, int targetValue)
-    {
-        if (currentNode == null) return;
-
-        currentNode.IsHighlighted = true;
-        UpdateTreeDrawing();
-
-        await Task.Delay(1000);
-
-        // Nếu tìm thấy giá trị, dừng lại
-        if (currentNode.Value == targetValue) return;
-
-        // Nhỏ hơn tìm bên trái, lớn hơn tìm bên phải
-        if (targetValue < currentNode.Value)
-        {
-            await HighlightPathToNode(currentNode.LeftChild, targetValue);
-        }
-        else
-        {
-            await HighlightPathToNode(currentNode.RightChild, targetValue);
-        }
-    }
 
     private async Task StartControllerMovement(Vector2 destination)
     {

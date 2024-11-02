@@ -133,7 +133,7 @@
 
         if (avlTreeService.Root != null)
         {
-            avlTreeService.AssignPositionsBasedOnTreeStructure(avlTreeService.Root, avlTreeService.GetRootX(), avlTreeService.GetRootY(), 200);
+            avlTreeService.ArrangeNodePositions(avlTreeService.Root, avlTreeService.GetRootX(), avlTreeService.GetRootY(), 200);
         }
 
         nodePositions = avlTreeService.GetNodePositions(avlTreeService.Root, selectedTraversalMethod);

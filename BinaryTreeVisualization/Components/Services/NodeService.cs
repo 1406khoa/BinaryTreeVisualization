@@ -22,6 +22,7 @@
         public bool IsRoot { get; set; }  // Đánh dấu node gốc
 
 
+        public (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? ParentLine { get; set; }
         // Constructor của NodeService
         public NodeService(int value)
         {

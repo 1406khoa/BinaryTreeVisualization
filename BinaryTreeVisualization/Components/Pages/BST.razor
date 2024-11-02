@@ -1,4 +1,5 @@
-﻿@page "/bst"
+﻿﻿
+@page "/bst"
 @rendermode InteractiveServer
 @inject BSTService bstService
 @inject BinaryTreeService binaryTreeService
@@ -227,7 +228,7 @@
         {
             statusMessage = $"Node {newNodeValue} already exists";
 
-            await Task.Delay(1000);
+            await Task.Delay(500);
             OnInitialized();
             UpdateTreeDrawing();
             StateHasChanged();
@@ -340,50 +341,6 @@
         StateHasChanged();
     }
 
-<<<<<<< HEAD
-    private string GetLineID(Guid parentID, Guid childID)
-    {
-        return $"{parentID}-{childID}"; // Trả về LineID dưới dạng string
-    }
-=======
-
-
-
-
-
-
->>>>>>> 5a1f850eea4aaba354a6c8041bf163a1cc851590
-
-    // private void HighlightNodeAndLine(Guid newNodeID)
-    // {
-    //     Tìm node mới dựa trên NodeID
-    //     var newNode = nodePositions.FirstOrDefault(np => np.node.NodeID == newNodeID);
-    //     if (newNode.node == null) return;
-
-    //     Tô sáng node mới thêm
-    //     newNode.node.IsHighlighted = true;
-
-    //     Tìm đường nối giữa node cha và node mới
-    //     var parentLine = bstService.GetParentLine(newNode.node);
-    //     if (parentLine != null)
-    //     {
-    //         var lineToHighlight = lines.FirstOrDefault(line =>
-    //             line.x1 == parentLine.Value.x1 && line.y1 == parentLine.Value.y1 &&
-    //             line.x2 == parentLine.Value.x2 && line.y2 == parentLine.Value.y2);
-
-    //         if (lineToHighlight != default)
-    //         {
-    //             int index = lines.IndexOf(lineToHighlight);
-    //             if (index != -1)
-    //             {
-    //                 Tô sáng đường nối
-    //                 lines[index] = (lines[index].x1, lines[index].y1, lines[index].x2, lines[index].y2,
-    //                                 IsHighlighted: true, lines[index].LineID);
-    //             }
-    //         }
-    //     }
-    // }
-
     private void UpdateTreeDrawing()
     {
         var nodesInTraversalOrder = bstService.TraverseTree(bstService.Root, selectedTraversalMethod);
@@ -476,7 +433,6 @@
         }
     }
 
-<<<<<<< HEAD
     private async Task HighlightPathToNode(NodeService? currentNode, int targetValue)
     {
         if (currentNode == null) return;
@@ -499,8 +455,6 @@
             await HighlightPathToNode(currentNode.RightChild, targetValue);
         }
     }
-=======
->>>>>>> 5a1f850eea4aaba354a6c8041bf163a1cc851590
 
     private async Task StartControllerMovement(Vector2 destination)
     {

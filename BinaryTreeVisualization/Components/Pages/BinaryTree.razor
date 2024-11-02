@@ -15,8 +15,8 @@
                 <option value="bfs">BFS</option>
             </select>
             <input class="find-input" type="number" @bind="newNodeValue" />
-            <button class="button" @onclick="AddNode" disabled="@isTraversing">Add</button>
             <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Find</button>
+            <button class="button" @onclick="AddNode" disabled="@isTraversing">Add</button>
         </div>
     </div>
 
@@ -708,14 +708,7 @@
         StateHasChanged();
         return true;
     }
-
-
-
-
-
-
- 
-
+        
     private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {
         if (root == null) return false;

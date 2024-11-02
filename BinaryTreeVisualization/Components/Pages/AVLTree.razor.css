@@ -20,6 +20,7 @@
     height: 0px;
 }
 
+.basic-operation,
 .find-operation,
 .traverse-tree,
 .speed-control {
@@ -28,21 +29,25 @@
     justify-content: center;
 }
 
-.find-operation {
-    width: 40%;
+.basic-operation,
+.traverse-tree {
+    width: 25%;
 }
 
-.traverse-tree,
+.find-operation {
+    width: 30%
+}
+
 .speed-control {
-    width: 30%;
+    width: 20%
 }
 
 .speed-control {
     margin-top: 15px;
 }
 
-.find-operation > div,
-.traverse-tree > div
+.basic-operation > div,
+.browse-tree > div
 .speed-control > div {
     display: flex;
     flex-direction: row;
@@ -64,11 +69,11 @@ select {
     margin-bottom: 10px;
 }
 
-.random-tree > div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
+    .random-tree > div {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
 
 .status {
     color: green;
@@ -81,6 +86,10 @@ input {
     border-radius: 5px;
     padding: 0 5px;
     margin: 0 5px 0 10px;
+}
+
+.basic-op-input {
+    margin-left: 0px !important;
 }
 
 .button,
@@ -105,77 +114,22 @@ input {
     margin-right: 5px;
 }
 
-.button:hover,
-.create-random-button:hover {
-    background-color: #a080f6;
-    transition: 0.3s;
-    color: white;
-}
+    .button:hover,
+    .create-random-button:hover {
+        background-color: #a080f6;
+        transition: 0.3s;
+        color: white;
+    }
 
-.button:active,
-.create-random-button:active {
-    background-color: #8569d0;
-    transition: 0.3s;
-    color: white;
-}
+    .button:active,
+    .create-random-button:active {
+        background-color: #8569d0;
+        transition: 0.3s;
+        color: white;
+    }
 
 .node-circle {
     cursor: pointer;
-}
-
-.dropdown-menu {
-    position: relative;
-    display: flex;
-    margin-left: 20px;
-    flex-direction: column;
-    align-items: center;
-    border-radius: 10px;
-    background-color: #9375e2;
-    border: none;
-    padding: 10px;
-}
-
-.dropdown-menu::before {
-    content: '';
-    position: absolute;
-    top: 60px;
-    left: -16px;
-    border-width: 8px;
-    border-style: solid;
-    border-color: transparent #9375e2 transparent transparent;
-}
-
-.dropdown-operation {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.dropdown-input {
-    width: 90%;
-    border: none;
-    margin: 5px !important;
-}
-
-.dropdown-button {
-    background-color: #9375e2;
-    color: white;
-    height: 30px;
-    width: 33%;
-    font-size: 12px;
-    border-radius: 5px;
-    border: none;
-    margin: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-}
-
-.dropdown-button:hover {
-    background-color: rgba(255,255,255,0.37);
-    transition: 0.3s;
-    color: white;
 }
 
 .button[disabled],

@@ -1,9 +1,9 @@
 ﻿using BinaryTreeVisualization.Components.Services;
 using System.Numerics;
 
-public class BSTService : BinaryTreeService
+public class BSTService
 {
-    public new NodeService? Root { get; private set; }
+    public  NodeService? Root { get; private set; }
     private const double RootX = 800; // Xác định vị trí X cố định cho node gốc
     private const double RootY = 50;  // Y cố định cho node gốc
 
@@ -17,7 +17,6 @@ public class BSTService : BinaryTreeService
     // Danh sách để lưu trữ giá trị của các node đã thêm vào cây
     private List<int> nodeValues = new List<int>();
 
-    // Thay đổi: Không cần khôi phục lại node gốc nữa vì root sẽ không thay đổi khi duyệt cây.
     private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
 
     // Hàm thêm node vào cây nhị phân tìm kiếm
@@ -92,15 +91,7 @@ public class BSTService : BinaryTreeService
         }
     }
 
-    // hàm tìm node cha của node hiện tại
-    public override (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? GetParentLine(NodeService node)
-    {
-        return lines.FirstOrDefault(line =>
-            line.x1 == node.Parent?.PositionX &&
-            line.y1 == node.Parent?.PositionY &&
-            line.x2 == node.PositionX &&
-            line.y2 == node.PositionY);
-    }
+
 
     // Hàm thiết lập vị trí cho các nút, giữ nguyên vị trí node gốc
     private void SetNodePosition(NodeService node, double x, double y)
@@ -117,8 +108,9 @@ public class BSTService : BinaryTreeService
         }
     }
 
+
     // Phương thức này trả về danh sách vị trí của các node trong cây
-    public override List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
+    public  List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
     {
         var positions = new List<(NodeService node, double x, double y)>();
 
@@ -139,6 +131,36 @@ public class BSTService : BinaryTreeService
         return positions;
     }
 
+    // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
+    public virtual List<NodeService> TraverseTree(NodeService? node, string traversalType)
+    {
+        var result = new List<NodeService>();
+        if (node == null) return result;
+
+        // Tạo một hành động (Action) để thêm node vào danh sách result
+        Action<NodeService> addToResult = node => result.Add(node);
+
+        switch (traversalType)
+        {
+            case "pre-order":
+                PreOrderTraversal(node, addToResult);
+                break;
+            case "in-order":
+                InOrderTraversal(node, addToResult);
+                break;
+            case "post-order":
+                PostOrderTraversal(node, addToResult);
+                break;
+            case "reverse-in-order":
+                ReverseInOrderTraversal(node, addToResult);
+                break;
+            default:
+                InOrderTraversal(node, addToResult); // Mặc định là In-order
+                break;
+        }
+        return result;
+    }
+
     // Tìm node nhỏ nhất trong cây con
     private NodeService FindMin(NodeService node)
     {
@@ -149,7 +171,7 @@ public class BSTService : BinaryTreeService
         return node;
     }
 
-    public override void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
+    public  void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
     {
         double minOffset = Math.Max(60, offsetX / Math.Pow(2, depth)); // Khoảng cách tối thiểu giữa các node
 
@@ -216,42 +238,13 @@ public class BSTService : BinaryTreeService
         }
     }
 
-    // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
-    public override List<NodeService> TraverseTree(NodeService? node, string traversalType)
-    {
-        var result = new List<NodeService>();
-        if (node == null) return result;
-
-        // Tạo một hành động (Action) để thêm node vào danh sách result
-        Action<NodeService> addToResult = node => result.Add(node);
-
-        switch (traversalType)
-        {
-            case "pre-order":
-                PreOrderTraversal(node, addToResult);
-                break;
-            case "in-order":
-                InOrderTraversal(node, addToResult);
-                break;
-            case "post-order":
-                PostOrderTraversal(node, addToResult);
-                break;
-            case "reverse-in-order":
-                ReverseInOrderTraversal(node, addToResult);
-                break;
-            default:
-                InOrderTraversal(node, addToResult); // Mặc định là In-order
-                break;
-        }
-        return result;
-    }
     public void SetTraversalType(string traversalType)
     {
         CurrentTraversalType = traversalType;
     }
 
     // Hàm thu thập đường nối giữa các node cha - con
-    public override List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()
+    public List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()
     {
         var lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
         CollectLines(Root, lines);
@@ -346,7 +339,7 @@ public class BSTService : BinaryTreeService
     }
 
     //Hàm xóa cây
-    public override void ResetTree()
+    public void ResetTree()
     {
         Root = null; // Đặt lại root về null
     }
@@ -402,53 +395,24 @@ public class BSTService : BinaryTreeService
         Root = newRoot; // Cập nhật giá trị Root từ lớp con hoặc bên ngoài
     }
 
-    public override async Task MoveControllerToPosition(
-Vector2 currentPosition, Vector2 destination, int speed,
-Action<Vector2> updatePositionCallback)
+    // Hàm tìm kiếm nút
+    public NodeService? SearchNode(NodeService? currentNode, int value)
     {
-        float baseSpeed = 2f;
-        float movementSpeed = baseSpeed * speed;
-
-        int delayTime = Math.Max(1, 16 / speed);
-
-        while ((destination - currentPosition).Length() > 0.1f)
+        if (currentNode == null)
         {
-            Vector2 direction = Vector2.Normalize(destination - currentPosition);
-            float step = Math.Min(movementSpeed, (destination - currentPosition).Length());
-
-            currentPosition += direction * step;
-
-            // Gọi callback để cập nhật vị trí trong Razor Component
-            updatePositionCallback(currentPosition);
-
-            await Task.Delay(delayTime);
+            return null;
         }
-
-        updatePositionCallback(destination); // Đảm bảo vị trí cuối cùng chính xác
-    }
-
-    public override List<(double x1, double y1, double x2, double y2)> CollectLinesToNode(NodeService targetNode, List<(double x1, double y1, double x2, double y2)> allLines)
-    {
-        var path = new List<(double x1, double y1, double x2, double y2)>();
-        var currentNode = targetNode;
-
-        while (currentNode.Parent != null)
+        if (currentNode.Value == value)
         {
-            // Tìm đường nối giữa parent và node hiện tại từ danh sách đã có
-            var line = allLines.FirstOrDefault(l =>
-                l.x1 == currentNode.Parent.PositionX &&
-                l.y1 == currentNode.Parent.PositionY &&
-                l.x2 == currentNode.PositionX &&
-                l.y2 == currentNode.PositionY);
-
-            if (line != default)
-            {
-                path.Insert(0, line); // Thêm vào đầu danh sách để giữ đúng thứ tự từ gốc đến đích
-            }
-
-            currentNode = currentNode.Parent;
+            return currentNode;
         }
-
-        return path;
+        else if (value < currentNode.Value)
+        {
+            return SearchNode(currentNode.LeftChild, value);
+        }
+        else
+        {
+            return SearchNode(currentNode.RightChild, value);
+        }
     }
 }

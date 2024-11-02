@@ -1,6 +1,7 @@
 ﻿@page "/bst"
 @rendermode InteractiveServer
 @inject BSTService bstService
+@inject BinaryTreeService binaryTreeService
 
 <PageTitle>Binary Search Tree</PageTitle>
 
@@ -252,7 +253,7 @@
         isTraversing = true;
 
         // Lấy danh sách các node theo kiểu duyệt
-        var nodes = bstService.TraverseTree(bstService.Root, selectedTraversalMethod);
+        var nodes = binaryTreeService.TraverseTree(bstService.Root, selectedTraversalMethod);
 
         // Khởi tạo danh sách traversalSteps từ nodes
         traversalSteps = nodes.Select(node => new TraversalStep(node)).ToList();
@@ -304,7 +305,7 @@
         selectedTraversalMethod = e.Value?.ToString() ?? "in-order";
 
         // Lấy danh sách các node theo kiểu duyệt
-        var nodes = bstService.TraverseTree(bstService.Root, selectedTraversalMethod);
+        var nodes = binaryTreeService.TraverseTree(bstService.Root, selectedTraversalMethod);
 
         // Khởi tạo lại danh sách traversalSteps dựa trên danh sách nodes
         traversalSteps = nodes.Select(node => new TraversalStep(node)).ToList();
@@ -339,10 +340,19 @@
         StateHasChanged();
     }
 
+<<<<<<< HEAD
     private string GetLineID(Guid parentID, Guid childID)
     {
         return $"{parentID}-{childID}"; // Trả về LineID dưới dạng string
     }
+=======
+
+
+
+
+
+
+>>>>>>> 5a1f850eea4aaba354a6c8041bf163a1cc851590
 
     // private void HighlightNodeAndLine(Guid newNodeID)
     // {
@@ -380,7 +390,7 @@
 
         if (bstService.Root != null)
         {
-            bstService.ArrangeNodePositions(bstService.Root, bstService.GetRootX(), bstService.GetRootY(), 200);
+            bstService.ArrangeNodePositions(bstService.Root, binaryTreeService.GetRootX(), binaryTreeService.GetRootY(), 200);
         }
 
         nodePositions = bstService.GetNodePositions(bstService.Root, selectedTraversalMethod);
@@ -466,6 +476,7 @@
         }
     }
 
+<<<<<<< HEAD
     private async Task HighlightPathToNode(NodeService? currentNode, int targetValue)
     {
         if (currentNode == null) return;
@@ -488,10 +499,12 @@
             await HighlightPathToNode(currentNode.RightChild, targetValue);
         }
     }
+=======
+>>>>>>> 5a1f850eea4aaba354a6c8041bf163a1cc851590
 
     private async Task StartControllerMovement(Vector2 destination)
     {
-        await bstService.MoveControllerToPosition(
+        await binaryTreeService.MoveControllerToPosition(
             controllerPosition, destination, Val3,
             (newPosition) =>
             {
@@ -797,7 +810,7 @@
                          .ToList();
 
         // Gọi hàm CollectLinesToNode từ service
-        return bstService.CollectLinesToNode(targetNode, allLines);
+        return binaryTreeService.CollectLinesToNode(targetNode, allLines);
     }
 
     private async Task MoveControllerAlongPath(List<(double x1, double y1, double x2, double y2)> path)

@@ -1,6 +1,6 @@
 ﻿using BinaryTreeVisualization.Components.Services;
 
-public class AVLTreeService : BSTService 
+public class AVLTreeService : BSTService
 {
     // Phương thức thêm nút vào cây AVL
     public override Guid AddNode(int value)
@@ -27,38 +27,38 @@ public class AVLTreeService : BSTService
 
     // Kiểm tra và cân bằng cây sau khi thêm nút
     private void BalanceTreeAfterInsert(NodeService node)
-	{
-		NodeService? parent = node.Parent;
+    {
+        NodeService? parent = node.Parent;
 
-		while (parent != null)
-		{
-			// Cập nhật chiều cao của cha
-			parent.UpdateHeight();
+        while (parent != null)
+        {
+            // Cập nhật chiều cao của cha
+            parent.UpdateHeight();
 
-			// Kiểm tra cân bằng
-			if (!IsBalanced(parent))
-			{
-				// Nếu không cân bằng, thực hiện xoay
-				parent = PerformRotation(parent);
-			}
+            // Kiểm tra cân bằng
+            if (!IsBalanced(parent))
+            {
+                // Nếu không cân bằng, thực hiện xoay
+                parent = PerformRotation(parent);
+            }
 
-			parent = parent.Parent; // Tiếp tục dò ngược lên cao hơn
-		}
-	}
+            parent = parent.Parent; // Tiếp tục dò ngược lên cao hơn
+        }
+    }
 
-	// Kiểm tra cân bằng tại thời điểm thêm nút
-	private bool IsBalanced(NodeService node)
-	{
-		if (node == null) return true;
-		return Math.Abs(GetBalanceFactor(node)) <= 1;
-	}
+    // Kiểm tra cân bằng tại thời điểm thêm nút
+    private bool IsBalanced(NodeService node)
+    {
+        if (node == null) return true;
+        return Math.Abs(GetBalanceFactor(node)) <= 1;
+    }
 
-	// Tính toán hệ số cân bằng
-	private int GetBalanceFactor(NodeService node)
-	{
-		if (node == null) return 0;
-		return (node.LeftChild?.Height ?? 0) - (node.RightChild?.Height ?? 0);
-	}
+    // Tính toán hệ số cân bằng
+    private int GetBalanceFactor(NodeService node)
+    {
+        if (node == null) return 0;
+        return (node.LeftChild?.Height ?? 0) - (node.RightChild?.Height ?? 0);
+    }
 
     // Xoay cây
     private NodeService PerformRotation(NodeService node)
@@ -201,4 +201,3 @@ public class AVLTreeService : BSTService
         return newRoot;
     }
 }
-

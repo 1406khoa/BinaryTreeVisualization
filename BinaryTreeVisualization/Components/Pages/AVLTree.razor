@@ -1,5 +1,7 @@
-﻿@page "/avltree"
+﻿﻿
+@page "/avltree"
 @rendermode InteractiveServer
+@inject BinaryTreeService binaryTreeService
 @inject AVLTreeService avlTreeService
 
 <PageTitle>AVL Tree</PageTitle>
@@ -237,7 +239,7 @@
 
         newNode.node.IsHighlighted = true;
 
-        var parentLine = avlTreeService.GetParentLine(newNode.node);
+        var parentLine = binaryTreeService.GetParentLine(newNode.node);
         if (parentLine != null)
         {
             var lineToHighlight = lines.FirstOrDefault(line =>
@@ -257,11 +259,11 @@
 
     private void UpdateTreeDrawing()
     {
-        var nodesInTraversalOrder = avlTreeService.TraverseTree(avlTreeService.Root, selectedTraversalMethod);
+        var nodesInTraversalOrder = binaryTreeService.TraverseTree(avlTreeService.Root, selectedTraversalMethod);
 
         if (avlTreeService.Root != null)
         {
-            avlTreeService.ArrangeNodePositions(avlTreeService.Root, avlTreeService.GetRootX(), avlTreeService.GetRootY(), 200);
+            avlTreeService.ArrangeNodePositions(avlTreeService.Root, binaryTreeService.GetRootX(), binaryTreeService.GetRootY(), 200);
         }
 
         nodePositions = avlTreeService.GetNodePositions(avlTreeService.Root, selectedTraversalMethod);

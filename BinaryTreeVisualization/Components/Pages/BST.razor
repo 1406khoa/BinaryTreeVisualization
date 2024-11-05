@@ -320,11 +320,6 @@
         {
             node.node.IsHighlighted = false;
         }
-
-        for (int i = 0; i < lines.Count; i++)
-        {
-            lines[i] = (lines[i].x1, lines[i].y1, lines[i].x2, lines[i].y2, IsHighlighted: false, lines[i].LineID);
-        }
     }
 
     private void HighlightNode(Guid newNodeID)
@@ -378,12 +373,53 @@
         StateHasChanged();
     }
 
-    private void DeleteNode()
+    private async Task DeleteNode()
     {
-        bool isDeleted = bstService.DeleteNode(newNodeValue);
+        // Tìm node cần xóa
+        var nodeToDelete = bstService.FindNodeFromRoot(newNodeValue);
 
-        UpdateTreeDrawing(); // Cập nhật lại giao diện sau khi xóa
+        if (nodeToDelete != null)
+        {
+            // Tìm đường đi từ gốc đến node cần xóa
+            var pathToNode = GetPathToNode(nodeToDelete);
+
+            // Di chuyển controller theo đường đi tới node cần xóa
+            await MoveControllerAlongPath(pathToNode);
+
+            // Sau khi controller đến node cần xóa, thực hiện xóa node
+            bool isDeleted = bstService.DeleteNode(newNodeValue);
+
+            // Kiểm tra nếu xóa thành công
+            if (isDeleted)
+            {
+                // Cập nhật lại giao diện và tô sáng vị trí đã xóa
+                UpdateTreeDrawing();
+                HighlightNode(nodeToDelete.NodeID);
+
+                OnInitialized();
+                showController = false;
+                UpdateTreeDrawing();
+                statusMessage = $"Delete {newNodeValue} Successfully!";
+            }
+            else
+            {
+                // Thông báo nếu không thể xóa (ví dụ: node không tồn tại)
+                statusMessage = $"Node {newNodeValue} does not exist.";
+                await Task.Delay(500);
+                UpdateTreeDrawing();
+                StateHasChanged();
+            }
+        }
+        else
+        {
+            // Thông báo nếu node cần xóa không tồn tại
+            statusMessage = $"Node {newNodeValue} does not exist.";
+            await Task.Delay(500);
+            UpdateTreeDrawing();
+            StateHasChanged();
+        }
     }
+
 
     //Hàm để lưu thông tin và tô màu node được chọn
     private void OnNodeClick(NodeService node)
@@ -414,6 +450,12 @@
     {
         if (selectedNode != null)
         {
+            // Tìm đường đi từ gốc đến node cần chỉnh sửa
+            var pathToNode = GetPathToNode(selectedNode);
+
+            // Di chuyển controller theo đường đi tới node cần chỉnh sửa
+            await MoveControllerAlongPath(pathToNode);
+
             // Lưu ID của nút cũ để xóa
             var oldNodeID = selectedNode.NodeID;
 
@@ -423,15 +465,18 @@
             // Thêm nút mới với giá trị đã chỉnh sửa
             var newNodeID = bstService.AddNode(newNodeValue);
 
+            // Cập nhật giao diện cây và tô sáng node mới
             UpdateTreeDrawing();
-
             HighlightNode(newNodeID);
-            await Task.Delay(2000);
 
+            // Đợi 2 giây rồi bỏ tô sáng node mới
+            await Task.Delay(2000);
+            showController = false;
             RemoveHighlighting();
             UpdateTreeDrawing();
         }
     }
+
 
     private async Task HighlightPathToNode(NodeService? currentNode, int targetValue)
     {
@@ -577,10 +622,11 @@
         // Kiểm tra nếu đây là node cần tìm
         if (node.Value == targetValue)
         {
-            statusMessage = $"Found node {targetValue} successfully.";
             await Task.Delay(2000);
 
+            OnNodeClick(node);
             RemoveHighlighting();
+            statusMessage = $"Found node {targetValue} successfully.";
             showController = false;
             OnInitialized();
             UpdateTreeDrawing();
@@ -632,8 +678,11 @@
             // Kiểm tra nếu đây là node cần tìm
             if (currentNode.Value == targetValue)
             {
-                statusMessage = $"Found node {targetValue} successfully.";
                 await Task.Delay(2000);
+
+
+                OnNodeClick(currentNode);
+                statusMessage = $"Found node {targetValue} successfully.";
 
                 RemoveHighlighting();
                 showController = false;
@@ -713,14 +762,14 @@
             // Tạm dừng dựa trên tốc độ từ slider
             await Task.Delay((int)(1000 / Val3));
 
-            // Bỏ tô sáng sau khi hoàn thành bước
-            node.IsHighlighted = false;
             UpdateTreeDrawing();
         }
 
         // Ẩn controller sau khi hoàn thành
         showController = false;
         StateHasChanged();
+        RemoveHighlighting();
+        OnNodeClick(path.Last());
         OnInitialized();
 
         statusMessage = $"Node {targetValue} found successfully.";

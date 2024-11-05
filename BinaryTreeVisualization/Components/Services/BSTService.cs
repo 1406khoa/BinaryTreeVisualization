@@ -1,5 +1,4 @@
 ﻿using BinaryTreeVisualization.Components.Services;
-using System.Numerics;
 
 public class BSTService
 {
@@ -188,7 +187,7 @@ public class BSTService
         if (node.LeftChild != null)
         {
             double leftX = x - minOffset;
-            double leftY = y + 100;
+            double leftY = y + 115;
 
             // Đệ quy để đặt vị trí cho con trái
             ArrangeNodePositions(node.LeftChild, leftX, leftY, offsetX, depth + 1);
@@ -204,7 +203,7 @@ public class BSTService
         if (node.RightChild != null)
         {
             double rightX = x + minOffset;
-            double rightY = y + 100;
+            double rightY = y + 115;
 
             // Đệ quy để đặt vị trí cho con phải
             ArrangeNodePositions(node.RightChild, rightX, rightY, offsetX, depth + 1);
@@ -224,13 +223,13 @@ public class BSTService
             Math.Pow(node1.PositionX - node2.PositionX, 2) +
             Math.Pow(node1.PositionY - node2.PositionY, 2));
 
-        return distance < 70; // Kiểm tra nếu khoảng cách giữa các node nhỏ hơn 40 đơn vị
+        return distance < 100; // Kiểm tra nếu khoảng cách giữa các node nhỏ hơn 40 đơn vị
     }
 
     // Đẩy các nút ra xa để tránh chồng lấn
     private void PushNodesApart(NodeService node, double pushAmount)
     {
-        node.PositionX += pushAmount;
+        node.PositionX *= pushAmount;
 
         // Nếu node có con, đẩy tất cả con theo hướng tương tự
         if (node.LeftChild != null)
@@ -396,7 +395,7 @@ public class BSTService
     }
 
     // Hàm tìm kiếm nút
-    public NodeService? SearchNode(NodeService? currentNode, int value)
+    private NodeService? FindNodeRecursive(NodeService? currentNode, int value)
     {
         if (currentNode == null)
         {
@@ -408,11 +407,15 @@ public class BSTService
         }
         else if (value < currentNode.Value)
         {
-            return SearchNode(currentNode.LeftChild, value);
+            return FindNodeRecursive(currentNode.LeftChild, value);
         }
         else
         {
-            return SearchNode(currentNode.RightChild, value);
+            return FindNodeRecursive(currentNode.RightChild, value);
         }
+    }
+    public NodeService? FindNodeFromRoot(int value)
+    {
+        return FindNodeRecursive(Root, value);
     }
 }

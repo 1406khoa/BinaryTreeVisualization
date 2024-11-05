@@ -21,7 +21,8 @@
 
         public bool IsRoot { get; set; }  // Đánh dấu node gốc
 
-
+        public double IdealPositionX { get; set; }  // Thêm vị trí lý tưởng X
+        public double IdealPositionY { get; set; }  // Thêm vị trí lý tưởng Y
         public (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? ParentLine { get; set; }
         // Constructor của NodeService
         public NodeService(int value)

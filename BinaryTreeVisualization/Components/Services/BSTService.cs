@@ -14,7 +14,7 @@ public class BSTService
     //public double GetRootY() => RootY;
 
     // Danh sách để lưu trữ giá trị của các node đã thêm vào cây
-    private List<int> nodeValues = new List<int>();
+    public List<int> nodeValues = new List<int>();
 
     private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
 
@@ -346,9 +346,19 @@ public class BSTService
     // Hàm xóa node theo giá trị
     public bool DeleteNode(int value)
     {
+        // Gọi hàm đệ quy để xóa node
         Root = DeleteNodeRecursive(Root, value);
 
-        // Sau khi xóa node, cập nhật lại vị trí của tất cả các node
+        // Sau khi xóa node thành công, loại bỏ giá trị khỏi danh sách nodeValues
+        if (!nodeValues.Remove(value))
+        {
+            Console.WriteLine($"Warning: Value {value} not found in nodeValues list.");
+        }
+
+        // Cập nhật lại tham chiếu Parent cho tất cả các node còn lại trong cây
+        UpdateParentReferences(Root, null);
+
+        // Cập nhật lại vị trí của tất cả các node nếu cây không rỗng
         if (Root != null)
         {
             ArrangeNodePositions(Root, RootX, RootY, 200);
@@ -356,6 +366,20 @@ public class BSTService
 
         return Root != null;
     }
+
+    // Hàm đệ quy để cập nhật tham chiếu Parent của các node
+    private void UpdateParentReferences(NodeService? currentNode, NodeService? parent)
+    {
+        if (currentNode == null) return;
+
+        // Cập nhật Parent cho node hiện tại
+        currentNode.Parent = parent;
+
+        // Đệ quy cập nhật cho các node con
+        UpdateParentReferences(currentNode.LeftChild, currentNode);
+        UpdateParentReferences(currentNode.RightChild, currentNode);
+    }
+
 
     // Đệ quy xóa node khỏi cây nhị phân
     private NodeService? DeleteNodeRecursive(NodeService? node, int value)

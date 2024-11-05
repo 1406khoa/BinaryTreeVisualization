@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 public class BinaryTreeService
 {
-    public virtual NodeService? Root { get; private set; }
+    public  NodeService? Root { get; private set; }
     private const double RootX = 800; // Xác định vị trí X cố định cho node gốc
     private const double RootY = 50;  // Y cố định cho node gốc
 
@@ -94,7 +94,7 @@ public class BinaryTreeService
     }
 
 
-    public virtual (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? GetParentLine(NodeService node)
+    public (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? GetParentLine(NodeService node)
     {
         return lines.FirstOrDefault(line =>
             line.x1 == node.Parent?.PositionX &&
@@ -124,7 +124,7 @@ public class BinaryTreeService
     }
 
     // Phương thức này trả về danh sách vị trí của các node trong cây
-    public virtual List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
+    public  List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
     {
         var positions = new List<(NodeService node, double x, double y)>();
 
@@ -147,7 +147,7 @@ public class BinaryTreeService
 
 
     // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
-    public virtual List<NodeService> TraverseTree(NodeService? node, string traversalType)
+    public  List<NodeService> TraverseTree(NodeService? node, string traversalType)
     {
         var result = new List<NodeService>();
         if (node == null) return result;
@@ -176,7 +176,7 @@ public class BinaryTreeService
         return result;
     }
 
-    public virtual void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
+    public  void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
     {
         double minOffset = Math.Max(60, offsetX / Math.Pow(2, depth)); // Khoảng cách tối thiểu giữa các node
 

@@ -9,7 +9,7 @@ public class AVLTreeService : BSTService
         var newNodeID = base.AddNode(value);
 
         // Sau khi thêm, lấy nút vừa thêm và cân bằng nếu cần
-        var newNode = SearchNode(Root, value);
+        var newNode = FindNodeFromRoot(value);
 
         if (newNode != null)
         {

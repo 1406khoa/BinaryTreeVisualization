@@ -10,7 +10,7 @@
         <p class="title">Find Node</p>
         <div>
             <select @onchange="OnSearchMethodChange">
-                <zoption value="shortest-path">Shortest Path</zoption>
+                <option value="shortest-path">Shortest Path</option>
                 <option value="dfs">DFS</option>
                 <option value="bfs">BFS</option>
             </select>
@@ -443,11 +443,6 @@
         {
             node.node.IsHighlighted = false;
         }
-
-        for (int i = 0; i < lines.Count; i++)
-        {
-            lines[i] = (lines[i].x1, lines[i].y1, lines[i].x2, lines[i].y2, IsHighlighted: false, lines[i].LineID);
-        }
     }
 
     private void HighlightNodeAndLine(Guid newNodeID)
@@ -694,21 +689,21 @@
             // Tạm dừng dựa trên tốc độ từ slider
             await Task.Delay((int)(1000 / Val3));
 
-            // Bỏ tô sáng sau khi hoàn thành bước
-            node.IsHighlighted = false;
             UpdateTreeDrawing();
         }
 
         // Ẩn controller sau khi hoàn thành
         showController = false;
         StateHasChanged();
+        RemoveHighlighting();
+        OnNodeClick(path.Last());
         OnInitialized();
 
         statusMessage = $"Node {targetValue} found successfully.";
         StateHasChanged();
         return true;
     }
-        
+
     private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {
         if (root == null) return false;
@@ -742,6 +737,7 @@
                 statusMessage = $"Found node {targetValue} successfully.";
                 await Task.Delay(2000);
 
+                OnNodeClick(currentNode);
                 RemoveHighlighting();
                 showController = false;
                 OnInitialized();
@@ -789,6 +785,7 @@
             statusMessage = $"Found node {targetValue} successfully.";
             await Task.Delay(2000);
 
+            OnNodeClick(node);
             RemoveHighlighting();
             showController = false;
             OnInitialized();

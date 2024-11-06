@@ -115,7 +115,7 @@
                     <xhtml:div class="dropdown-operation">
                         <xhtml:button class="dropdown-button" @onclick="AddNode"
                                       disabled=@isAddNodeDisabled>Add</xhtml:button>
-                        <xhtml:button class="dropdown-button" @onclick="EditNode">Edit</xhtml:button>
+                        <xhtml:button class="dropdown-button" @onclick="UpdateNode">Update</xhtml:button>
                         <xhtml:button class="dropdown-button" @onclick="DeleteNode">Delete</xhtml:button>
                     </xhtml:div>
 
@@ -548,7 +548,7 @@
         StateHasChanged();
     }
 
-    private void EditNode()
+    private void UpdateNode()
     {
         if (selectedNode != null)
         {

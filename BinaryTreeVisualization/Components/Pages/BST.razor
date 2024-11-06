@@ -207,6 +207,8 @@
 
     private async Task AddNode()
     {
+        isTraversing = true;
+
         // Tìm node cha cho node mới
         var parentNode = bstService.FindParentNode(newNodeValue);
 
@@ -243,6 +245,8 @@
             OnInitialized();
             UpdateTreeDrawing();
             StateHasChanged();
+            isTraversing = false;
+
         }
     }
 
@@ -374,11 +378,13 @@
 
     private async Task DeleteNode()
     {
+
         // Tìm node cần xóa
         var nodeToDelete = bstService.FindNodeFromRoot(newNodeValue);
 
         if (nodeToDelete != null)
         {
+            isTraversing = true;
             // Tìm đường đi từ gốc đến node cần xóa
             var pathToNode = GetPathToNode(nodeToDelete);
 
@@ -399,14 +405,18 @@
                 showController = false;
                 UpdateTreeDrawing();
                 statusMessage = $"Delete {newNodeValue} Successfully!";
+                isTraversing = false;
+
             }
             else
             {
                 // Thông báo nếu không thể xóa (ví dụ: node không tồn tại)
-                statusMessage = $"Node {newNodeValue} does not exist.";
+                statusMessage = $"we don't {newNodeValue} in tree ";
                 await Task.Delay(500);
                 UpdateTreeDrawing();
                 StateHasChanged();
+                isTraversing = false;
+
             }
         }
         else
@@ -445,8 +455,113 @@
         StateHasChanged();
     }
 
+    // Edit không thay đổi cấu trúc cây
+    // private async Task EditNode()
+    // {
+    //     if (selectedNode != null)
+    //     {
+    //         var existingNode = bstService.FindNodeFromRoot(newNodeValue);
+    //         if (existingNode != null && existingNode != selectedNode)
+    //         {
+    //             statusMessage = $"Node with value {newNodeValue} already exists. Edit operation canceled.";
+    //             showController = false;
+    //             OnInitialized();
+    //             StateHasChanged();
+    //             return;
+    //         }
+
+    //         var pathToNode = GetPathToNode(selectedNode);
+
+    //         await MoveControllerAlongPath(pathToNode);
+
+    //         bool canEditInPlace = true;
+
+    //         if (selectedNode.LeftChild != null && newNodeValue <= selectedNode.LeftChild.Value)
+    //         {
+    //             canEditInPlace = false;
+    //         }
+    //         if (selectedNode.RightChild != null && newNodeValue >= selectedNode.RightChild.Value)
+    //         {
+    //             canEditInPlace = false;
+    //         }
+
+    //         if (canEditInPlace)
+    //         {
+    //             selectedNode.Value = newNodeValue;
+    //             statusMessage = "Edit completed without restructuring.";
+    //             UpdateTreeDrawing();
+    //             HighlightNode(selectedNode.NodeID);
+    //             showController = false;
+    //             OnInitialized();
+
+    //             await Task.Delay(1000);
+    //             RemoveHighlighting();
+
+    //             Kiểm tra và di chuyển node dựa trên giá trị của node cha
+    //             if (selectedNode.Parent != null)
+    //             {
+    //                 if (selectedNode.Value < selectedNode.Parent.Value && selectedNode.Parent.LeftChild != selectedNode)
+    //                 {
+    //                     selectedNode.Parent.LeftChild = selectedNode;
+    //                     selectedNode.Parent.RightChild = null;
+    //                     UpdateTreeDrawing();
+
+    //                 }
+    //                 else if (selectedNode.Value > selectedNode.Parent.Value && selectedNode.Parent.RightChild != selectedNode)
+    //                 {
+    //                     selectedNode.Parent.RightChild = selectedNode;
+    //                     selectedNode.Parent.LeftChild = null;
+    //                     UpdateTreeDrawing();
+
+    //                 }
+    //             }
+
+    //             StateHasChanged();
+    //         }
+    //         else
+    //         {
+    //             statusMessage = $"Value change requires restructuring. Removing node {selectedNode.Value} and reinserting with new value.";
+    //             StateHasChanged();
+
+    //             bool isDeleted = bstService.DeleteNode(selectedNode.Value);
+
+    //             if (isDeleted)
+    //             {
+    //                 var newNodeID = bstService.AddNode(newNodeValue);
+
+    //                 statusMessage = "Edit completed with restructuring.";
+
+    //                 var newNode = bstService.FindNodeFromRoot(newNodeValue);
+    //                 if (newNode != null)
+    //                 {
+    //                     await MoveControllerAlongPath(pathToNode);
+    //                     HighlightNode(newNode.NodeID);
+    //                 }
+
+    //                 showController = false;
+    //                 RemoveHighlighting();
+    //                 OnInitialized();
+    //                 StateHasChanged();
+    //                 UpdateTreeDrawing();
+
+    //             }
+    //             else
+    //             {
+    //                 statusMessage = $"Node {selectedNode.Value} could not be deleted. Edit operation canceled.";
+    //                 showController = false;
+    //                 StateHasChanged();
+    //             }
+    //         }
+
+    //         UpdateTreeDrawing();
+    //     }
+    // }
+
+
+
     private async Task EditNode()
     {
+        isTraversing = true;
         if (selectedNode != null)
         {
             // Kiểm tra xem giá trị mới đã tồn tại trong cây chưa
@@ -503,10 +618,13 @@
             {
                 OnNodeClick(newNode);
             }
+            isTraversing = false;
+
 
         }
-    }
+        statusMessage = "Node does not exist";
 
+    }
 
 
 
@@ -746,7 +864,7 @@
             StateHasChanged();
             return false;
         }
-
+        UpdateTreeDrawing();
         // Tìm kiếm node cần tìm bằng DFS
         var targetNode = DFSFindNode(root, targetValue);
 

@@ -18,6 +18,23 @@ public class BSTService
 
     private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
 
+    public List<NodeService> GetAllNodes()
+    {
+        List<NodeService> nodes = new List<NodeService>();
+        TraverseTree(Root, node => nodes.Add(node));
+        return nodes;
+    }
+
+    // Hàm trợ giúp TraverseTree dùng đệ quy để duyệt qua tất cả các node
+    private void TraverseTree(NodeService? node, Action<NodeService> action)
+    {
+        if (node == null) return;
+
+        action(node); // Thực hiện thao tác với node hiện tại
+        TraverseTree(node.LeftChild, action); // Duyệt nhánh trái
+        TraverseTree(node.RightChild, action); // Duyệt nhánh phải
+    }
+
     // Hàm thêm node vào cây nhị phân tìm kiếm
     public virtual Guid AddNode(int value)
     {

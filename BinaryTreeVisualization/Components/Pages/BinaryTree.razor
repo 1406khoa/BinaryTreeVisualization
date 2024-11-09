@@ -206,13 +206,13 @@
 
     private string GetNodeFillColor(NodeService node)
     {
-        if (node.IsHighlighted) // Ưu tiên màu vàng nếu node đang được tìm kiếm
-        {
-            return "#FFC107"; //Vàng hổ phách nhạt (Amber)
-        }
-        else if (node == selectedNode) // Nếu node được chọn, tô màu xanh lá
+        if (node == selectedNode) // Ưu tiên màu xanh lá nếu node được chọn
         {
             return "lightgreen";
+        }
+        else if (node.IsHighlighted) // Tô màu vàng cho node đang được tìm kiếm
+        {
+            return "#FFC107"; // Vàng hổ phách nhạt (Amber)
         }
         return "white"; // Màu mặc định cho các node khác
     }
@@ -239,7 +239,7 @@
 
         UpdateTreeDrawing();
 
-        HighlightNodeAndLine(newNodeID);
+        HighlightNode(newNodeID);
         await Task.Delay(2000);
 
         RemoveHighlighting();
@@ -282,7 +282,7 @@
             newNodeID = binaryTreeService.AddNodeToBinaryTree(newNodeValue, selectedNode, selectedLeftChild);
             UpdateTreeDrawing();
 
-            HighlightNodeAndLine(newNodeID);
+            HighlightNode(newNodeID);
             HideDropdown();
             await Task.Delay(2000);
 
@@ -407,6 +407,7 @@
 
     private async Task StartTraversalAnimation(List<NodeService> traversalOrderNodes) //animation dùng cho chức năng duyệt theo thuật toán
     {
+        OnInitialized();
         showController = true; // Hiển thị kiểm soát viên
         StateHasChanged(); // Cập nhật giao diện
 
@@ -428,46 +429,38 @@
             await Task.Delay((int)(1000 / Val3));
 
             // Bỏ tô sáng node sau khi hoàn thành bước này
-            node.IsHighlighted = false;
             UpdateTreeDrawing();
         }
 
         showController = false; // Ẩn kiểm soát viên sau khi duyệt xong
         StateHasChanged();
-        OnInitialized();
     }
 
     private void RemoveHighlighting()
     {
-        foreach (var node in nodePositions)
+        foreach (var node in binaryTreeService.GetAllNodes())
         {
-            node.node.IsHighlighted = false;
+            node.IsHighlighted = false;
         }
+        UpdateTreeDrawing();
     }
 
-    private void HighlightNodeAndLine(Guid newNodeID)
-    {
-        var newNode = nodePositions.FirstOrDefault(np => np.node.NodeID == newNodeID);
-        if (newNode.node == null) return;
 
+
+
+
+    private void HighlightNode(Guid newNodeID)
+    {
+        // Tìm node mới dựa trên NodeID
+        var newNode = nodePositions.FirstOrDefault(np => np.node.NodeID == newNodeID);
+        if (newNode.node == null) return;  // Thoát nếu không tìm thấy node
+
+        // Tô sáng node mới
         newNode.node.IsHighlighted = true;
 
-        var parentLine = binaryTreeService.GetParentLine(newNode.node);
-        if (parentLine != null)
-        {
-            var lineToHighlight = lines.FirstOrDefault(line =>
-                line.x1 == parentLine.Value.x1 && line.y1 == parentLine.Value.y1 &&
-                line.x2 == parentLine.Value.x2 && line.y2 == parentLine.Value.y2);
-
-            if (lineToHighlight != default)
-            {
-                int index = lines.IndexOf(lineToHighlight);
-                if (index != -1)
-                {
-                    lines[index] = (lines[index].x1, lines[index].y1, lines[index].x2, lines[index].y2, IsHighlighted: true, lines[index].LineID);
-                }
-            }
-        }
+        // Cập nhật giao diện
+        UpdateTreeDrawing();
+        StateHasChanged();
     }
 
     private void UpdateTreeDrawing()
@@ -494,6 +487,7 @@
 
     private void CreateRandomTree()
     {
+        showController = false;
         // Đặt lại và tạo cây mới
         binaryTreeService.ResetTree();
         binaryTreeService.GenerateRandomBinaryTree(nodeCount, minValue, maxValue);
@@ -517,6 +511,7 @@
 
     private void DeleteTree()
     {
+        showController = false;
         binaryTreeService.ResetTree();
         DeselectNode();
         UpdateTreeDrawing();
@@ -578,6 +573,9 @@
 
     protected override void OnInitialized() // đặt controller ở vị trí mặc định
     {
+        traversalOrderFragment = builder => { };
+        DeselectNode();
+        RemoveHighlighting();
         // Cài đặt vị trí kiểm soát viên ở node gốc
         if (binaryTreeService.Root != null)
         {
@@ -635,12 +633,16 @@
 
     private async Task<bool> ShortestPathVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {
+
         if (root == null)
         {
             statusMessage = "Tree is empty.";
             StateHasChanged();
             return false;
         }
+
+        // Reset all highlights and deselect any node before starting search
+        OnInitialized();
 
         // Tìm kiếm node cần tìm bằng DFS
         var targetNode = DFSFindNode(root, targetValue);
@@ -693,11 +695,8 @@
         }
 
         // Ẩn controller sau khi hoàn thành
-        showController = false;
         StateHasChanged();
-        RemoveHighlighting();
         OnNodeClick(path.Last());
-        OnInitialized();
 
         statusMessage = $"Node {targetValue} found successfully.";
         StateHasChanged();
@@ -706,7 +705,11 @@
 
     private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {
+
         if (root == null) return false;
+
+        OnInitialized();
+
 
         var queue = new Queue<NodeService>();
         queue.Enqueue(root);
@@ -738,9 +741,6 @@
                 await Task.Delay(2000);
 
                 OnNodeClick(currentNode);
-                RemoveHighlighting();
-                showController = false;
-                OnInitialized();
                 UpdateTreeDrawing();
                 return true;
             }
@@ -750,10 +750,6 @@
             if (currentNode.RightChild != null) queue.Enqueue(currentNode.RightChild);
         }
 
-        // Chỉ bỏ highlight sau khi thuật toán kết thúc
-        RemoveHighlighting();
-        showController = false;
-        OnInitialized();
         UpdateTreeDrawing();
 
         statusMessage = $"Node {targetValue} not found.";
@@ -762,16 +758,21 @@
 
     private async Task<bool> DFSVisualization(NodeService? node, int targetValue, List<TraversalStep> traversalSteps)
     {
+        // Khởi tạo lại trạng thái khi bắt đầu từ root node
+        if (node == binaryTreeService.Root)
+        {
+            OnInitialized();
+        }
+
         if (node == null) return false;
 
-        // Thêm node hiện tại vào danh sách các bước đã duyệt
+        // Thêm node hiện tại vào danh sách các bước duyệt
         var step = new TraversalStep(node);
         traversalSteps.Add(step);
 
-        // Di chuyển controller tới node hiện tại
+        // Di chuyển controller đến node hiện tại
         showController = true;
         await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
-        // Cập nhật UI với node mới được thêm vào
         UpdateTraversalOrderFragment(traversalSteps.Count - 1);
 
         // Tô sáng node hiện tại
@@ -786,27 +787,38 @@
             await Task.Delay(2000);
 
             OnNodeClick(node);
-            RemoveHighlighting();
-            showController = false;
-            OnInitialized();
             UpdateTreeDrawing();
             return true;
         }
 
-        // Tiếp tục tìm kiếm ở nhánh trái
+        // Duyệt nhánh trái
         bool foundInLeft = await DFSVisualization(node.LeftChild, targetValue, traversalSteps);
         if (foundInLeft) return true;
 
-        // Tiếp tục tìm kiếm ở nhánh phải
+        // Quay lại node cha sau khi hoàn thành nhánh trái
+        if (node.LeftChild != null)
+        {
+            // Di chuyển controller trở về node cha trước khi tiếp tục
+            await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
+            await Task.Delay((int)(1000 / Val3));
+        }
+
+        // Duyệt nhánh phải từ node cha sau khi đã quay lại
         bool foundInRight = await DFSVisualization(node.RightChild, targetValue, traversalSteps);
         if (foundInRight) return true;
 
-        // Bỏ highlight nếu không tìm thấy ở cả hai nhánh
-        node.IsHighlighted = false;
-        OnInitialized();
+        // Quay lại node cha sau khi hoàn thành nhánh phải (nếu không phải root)
+        if (node.RightChild != null && node != binaryTreeService.Root)
+        {
+            // Di chuyển controller trở về node cha của nhánh hiện tại
+            await StartControllerMovement(new Vector2((float)node.Parent.PositionX, (float)node.Parent.PositionY));
+            await Task.Delay((int)(1000 / Val3));
+        }
+
         UpdateTreeDrawing();
         return false;
     }
+
 
 
     private async Task StartControllerMovement(Vector2 destination)

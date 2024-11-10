@@ -24,6 +24,9 @@
         public double IdealPositionX { get; set; }  // Thêm vị trí lý tưởng X
         public double IdealPositionY { get; set; }  // Thêm vị trí lý tưởng Y
         public (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? ParentLine { get; set; }
+        public bool IsTargetNode { get; set; } = false;
+
+
         // Constructor của NodeService
         public NodeService(int value)
         {
@@ -53,5 +56,7 @@
         {
             Depth = Parent != null ? Parent.Depth + 1 : 0;
         }
+
+
     }
 }

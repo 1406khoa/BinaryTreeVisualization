@@ -2,21 +2,11 @@
 @rendermode InteractiveServer
 @inject BinaryTreeService binaryTreeService
 @inject AVLTreeService avlTreeService
+@inject IJSRuntime JSRuntime
 
 <PageTitle>AVL Tree</PageTitle>
 
 <div class="first-component">
-    <div class="basic-operation">
-        <p class="title">Basic Operation</p>
-        <div>
-            <input class="basic-op-input" type="number" @bind="newNodeValue" />
-
-            <button class="button" @onclick="AddNode" disabled="@isTraversing">Add</button>
-            <button class="button" disabled="@isTraversing">Update</button>
-            <button class="button" disabled="@isTraversing">Delete</button>
-        </div>
-    </div>
-
     <div class="find-operation">
         <p class="title">Find Node</p>
         <div>
@@ -61,11 +51,10 @@
         <label style="margin-left: 5px">Max:</label>
         <input type="number" @bind="maxValue" />
         <button class="create-random-button" @onclick="CreateRandomTree" disabled="@isTraversing">Create Random Tree</button>
-        <button class="button" @onclick="DeleteTree" disabled="@isTraversing">Clear</button>
+        <button class="clear-button" @onclick="DeleteTree" disabled="@isTraversing">Clear Tree</button>
     </div>
 </div>
 
-<!-- Phần hiển thị dãy số khi duyệt cây -->
 <p class="title">Traversal Order</p>
 <div style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
     @traversalOrderFragment
@@ -73,11 +62,11 @@
 
 <!-- Thông báo trạng thái -->
 <div class="status-bar">
-    <p class="status">@($"Status: {statusMessage}")</p>
+    <p class="status">@($"{statusMessage}")</p>
 </div>
 
 <!-- Khối SVG -->
-<svg width="100%" height="100vh" style="overflow: visible;">
+<svg @oncontextmenu="OnSvgRightClick" width="100%" height="100vh" style="overflow: visible;">
     @foreach (var line in lines)
     {
         <!-- Đường nối giữa các node -->
@@ -91,7 +80,8 @@
         <circle class="node-circle @((nodePosition.node == selectedNode) ? "selected-node" : "")"
                 cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
                 fill="@GetNodeFillColor(nodePosition.node)"
-                @onclick="(() => OnNodeClick(nodePosition.node))" />
+                @onclick="(() => OnNodeClick(nodePosition.node))"
+                @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
 
         <!-- Sử dụng RenderFragment để in giá trị -->
         @((RenderFragment)((builder) =>
@@ -108,9 +98,26 @@
                 builder.AddAttribute(9, "cursor", "pointer");
                 builder.AddAttribute(10, "onclick", EventCallback.Factory
                 .Create(this, () => OnNodeClick(nodePosition.node)));
-                builder.AddContent(11, nodePosition.node.Value.ToString());
+                builder.AddAttribute(11, "oncontextmenu", EventCallback.Factory
+                .Create(this, () => ShowDropdown(nodePosition.node)));
+                builder.AddContent(12, nodePosition.node.Value.ToString());
                 builder.CloseElement();
             }))
+    }
+
+    <!-- Dropdown menu -->
+    @if (showDropdown)
+    {
+        <foreignObject x="@dropdownX" y="@dropdownY" width="180" height="180"
+                       xmlns:xhtml="http://www.w3.org/1999/xhtml">
+            <xhtml:div class="dropdown-menu">
+                <input class="dropdown-input" type="number" @bind="newNodeValue" />
+                <xhtml:button class="dropdown-button" @onclick="AddNode"
+                              disabled="@isTraversing">Add Node</xhtml:button>
+                <xhtml:button class="dropdown-button" disabled="@isTraversing">Update Node</xhtml:button>
+                <xhtml:button class="dropdown-button" disabled="@isTraversing">Delete Node</xhtml:button>
+            </xhtml:div>
+        </foreignObject>
     }
 
     <!-- Hình tròn kiểm soát viên -->
@@ -160,6 +167,10 @@
     private int minValue { get; set; } = 0;
     private int maxValue { get; set; } = 100;
 
+    // Cụm biến liên quan đến Dropdown Menu
+    private bool showDropdown = false;
+    private double dropdownX, dropdownY;
+
     // Cụm biến liên quan đến Animation và Controller
     private bool showController = false;
     private Vector2 controllerPosition = new Vector2(0, 0); // Vị trí mặc định của controller
@@ -192,6 +203,7 @@
 
     private async Task AddNode()
     {
+        HideDropdown();
         var newNodeID = avlTreeService.AddNode(newNodeValue);
         if (newNodeID == Guid.Empty)
         {
@@ -206,6 +218,58 @@
             RemoveHighlighting();
             UpdateTreeDrawing();
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("preventContextMenu");
+            await JSRuntime.InvokeVoidAsync("addOutsideClickListener", DotNetObjectReference.Create(this));
+        }
+    }
+
+    // Hàm hiển thị dropdown menu khi click chuột phải vào không gian trống
+    private void ShowDropdownForRoot(MouseEventArgs e)
+    {
+        dropdownX = e.ClientX - 250;
+        dropdownY = e.ClientY - 300;
+        showDropdown = true;
+
+        UpdateTreeDrawing();
+        StateHasChanged();
+    }
+
+    private void OnSvgRightClick(MouseEventArgs e)
+    {
+        if (avlTreeService.Root == null)
+        {
+            ShowDropdownForRoot(e);
+        }
+    }
+
+    // Hàm hiển thị dropdown menu khi click chuột phải vào node
+    private void ShowDropdown(NodeService? node = null)
+    {
+        if (node != null)
+        {
+            selectedNode = node;
+            newNodeValue = selectedNode.Value;
+            statusMessage = $"Node {node.Value} is selected";
+            dropdownX = node.PositionX + 15;
+            dropdownY = node.PositionY - 67;
+            showDropdown = true;
+        }
+
+        UpdateTreeDrawing();
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void HideDropdown()
+    {
+        showDropdown = false;
+        StateHasChanged();
     }
 
     private void OnTraversalMethodChange(ChangeEventArgs e)

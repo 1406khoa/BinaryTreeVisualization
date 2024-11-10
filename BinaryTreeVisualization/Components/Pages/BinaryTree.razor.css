@@ -70,11 +70,7 @@ select {
     align-items: center;
 }
 
-.status {
-    color: green;
-    margin-top: 10px;
-    font-weight: 600;
-}
+
 
 input {
     width: 100px;
@@ -195,11 +191,17 @@ input {
     height: 50px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start; /* Align content to the left */
     font-size: 1.1rem;
     font-weight: 500;
     padding: 0 20px;
     margin-left: -1.5rem;
     margin-right: -1.5rem;
-    border: solid black 1px
+    background-color: #e0e0e0; /* Slightly darker white background */
+}
+
+.status {
+    color: black;
+    margin-top: 20px;
+    font-weight: 500;
 }

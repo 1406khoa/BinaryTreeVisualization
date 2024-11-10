@@ -511,16 +511,6 @@
         // Cập nhật giao diện cây
         UpdateTreeDrawing();
         traversalOrderFragment = builder => { };
-
-        // Lấy danh sách các node từ cây mới
-        var nodes = binaryTreeService.TraverseTree(binaryTreeService.Root, selectedTraversalMethod);
-
-        // Khởi tạo danh sách traversalSteps từ danh sách nodes
-        traversalSteps = nodes.Select(node => new TraversalStep(node)).ToList();
-
-        // Cập nhật dãy số hiển thị trong giao diện
-        traversalOrderDisplay = string.Join(" ⭢ ", nodes.Select(n => n.Value));
-
         statusMessage = "Random tree created";
         // Làm mới giao diện sau khi tạo cây mới
         StateHasChanged();
@@ -713,6 +703,7 @@
         }
 
         // Ẩn controller sau khi hoàn thành
+        showController = false;
         StateHasChanged();
         OnNodeClick(path.Last());
 
@@ -755,10 +746,10 @@
             // Kiểm tra nếu đây là node cần tìm
             if (currentNode.Value == targetValue)
             {
-                statusMessage = $"Found node {targetValue} successfully.";
                 await Task.Delay(2000);
-
+                showController = false;
                 OnNodeClick(currentNode);
+                statusMessage = $"Found node {targetValue} successfully.";
                 UpdateTreeDrawing();
                 return true;
             }
@@ -801,10 +792,10 @@
         // Kiểm tra nếu đây là node cần tìm
         if (node.Value == targetValue)
         {
-            statusMessage = $"Found node {targetValue} successfully.";
             await Task.Delay(2000);
-
+            showController = false;
             OnNodeClick(node);
+            statusMessage = $"Found node {targetValue} successfully.";
             UpdateTreeDrawing();
             return true;
         }

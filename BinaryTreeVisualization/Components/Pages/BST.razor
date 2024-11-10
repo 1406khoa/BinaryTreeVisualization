@@ -425,7 +425,7 @@
                                LineID: Guid.NewGuid()
                            )).ToList();
         // Cập nhật dãy số duyệt cây
-        traversalOrderDisplay = string.Join(" -> ", nodesInTraversalOrder.Select(n => n.Value));
+        traversalOrderDisplay = string.Join(" ⭢ ", nodesInTraversalOrder.Select(n => n.Value));
         StateHasChanged();
     }
 
@@ -434,6 +434,7 @@
         showController = false;
         traversalOrderFragment = builder => { };
         bstService.ResetTree();
+        statusMessage = "Random tree created";
         bstService.BuildRandomTree(nodeCount, minValue, maxValue);
         UpdateTreeDrawing();
     }
@@ -759,7 +760,7 @@
                 if (i < traversalSteps.Count - 1)
                 {
                     builder.OpenElement(2, "span");
-                    builder.AddContent(3, " -> ");
+                    builder.AddContent(3, " ⭢ ");
                     builder.CloseElement();
                 }
             }
@@ -844,10 +845,11 @@
         // Kiểm tra nếu đây là node cần tìm
         if (node.Value == targetValue)
         {
-            statusMessage = $"Found node {targetValue} successfully.";
             await Task.Delay(2000);
 
             OnNodeClick(node);
+            statusMessage = $"Found node {targetValue} successfully.";
+
             showController = false;
             UpdateTreeDrawing();
             return true;
@@ -915,10 +917,11 @@
             // Kiểm tra nếu đây là node cần tìm
             if (currentNode.Value == targetValue)
             {
-                statusMessage = $"Found node {targetValue} successfully.";
                 await Task.Delay(2000);
 
                 OnNodeClick(currentNode);
+                statusMessage = $"Found node {targetValue} successfully.";
+
                 showController = false;
                 UpdateTreeDrawing();
                 return true;

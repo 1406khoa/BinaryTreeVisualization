@@ -80,7 +80,8 @@ input {
 }
 
 .button,
-.create-random-button {
+.create-random-button,
+.clear-button {
     background-color: #9375e2;
     text-decoration: none;
     color: white;
@@ -101,8 +102,13 @@ input {
     margin-right: 5px;
 }
 
+.clear-button {
+    width: 6%;
+}
+
 .button:hover,
-.create-random-button:hover {
+.create-random-button:hover,
+.clear-button:hover {
     background-color: #a080f6;
     transition: 0.3s;
     color: white;
@@ -141,12 +147,6 @@ input {
     border-color: transparent #9375e2 transparent transparent;
 }
 
-.dropdown-operation {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
 .dropdown-input {
     width: 90%;
     border: none;
@@ -157,7 +157,7 @@ input {
     background-color: #9375e2;
     color: white;
     height: 30px;
-    width: 33%;
+    width: 90%;
     font-size: 12px;
     border-radius: 5px;
     border: none;
@@ -176,6 +176,7 @@ input {
 
 .button[disabled],
 .create-random-button[disabled],
+.clear-button[disabled],
 .dropdown-button[disabled] {
     opacity: 0.5 !important;
     cursor: not-allowed !important;

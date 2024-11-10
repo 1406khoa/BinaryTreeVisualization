@@ -75,11 +75,7 @@ select {
     align-items: center;
 }
 
-.status {
-    color: black;
-    margin-top: 20px;
-    font-weight: 500;
-}
+
 
 input {
     width: 100px;
@@ -155,4 +151,9 @@ input {
     margin-left: -1.5rem;
     margin-right: -1.5rem;
     background-color: #e0e0e0; /* Slightly darker white background */
+}
+.status {
+    color: black;
+    margin-top: 20px;
+    font-weight: 500;
 }

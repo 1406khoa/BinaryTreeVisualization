@@ -70,9 +70,7 @@ main {
         width: 0;
     }
 
-    .top-row, article {
-        padding-right: 1.5rem !important;
-    }
+    
 }
 
 #blazor-error-ui {

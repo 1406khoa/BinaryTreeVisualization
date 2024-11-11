@@ -1,24 +1,137 @@
 ﻿@page "/"
-@rendermode InteractiveServer
-<PageTitle>Home</PageTitle>
-<h1>THIS IS LANDING PAGE HTML DÙNG ĐỂ HƯỚNG DẪN SỬ DỤNG TRANG WEB</h1>
+@layout HomeLayout
+@using BinaryTreeVisualization.Components.Layout
+@using Microsoft.AspNetCore.Components.Web
+@inject IJSRuntime JSRuntime
 
 
+<header>
+    <a href="" class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 3v12"></path>
+            <path d="M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+            <path d="M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+            <path d="M15 6a9 9 0 0 0-9 9"></path>
+        </svg>
+        <span>Binary Tree Viz</span>
+    </a>
+    <nav>
+        <a href="#functions">Functions</a>
+        <a href="#cta">Get Started</a>
+    </nav>
+</header>
+
+<main>
+    <section class="hero">
+        <img src="Images/Tree3.png" alt="Background Image" class="background-image" />
+        <div class="hero-content">
+            <h1>Binary Tree Visualization</h1>
+            <p>Explore, manipulate, and understand binary trees with our interactive visualization tool.</p>
+            <div class="button-group">
+                <a href="/binarytree" class="button button-primary">Get Started</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="functions" class="functions">
+        <h2>Key Functions</h2>
+        <div class="function-grid" style="grid-template-columns: 1fr 1fr; max-width: 1800px;">
+            <div class="function-box">
+                <div class="function-content">
+                    <svg class="function-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"></path>
+                    </svg>
+                    <div class="function-text">
+                        <h3>Add Node</h3>
+                        <p>Easily add new nodes to your binary tree.</p>
+                    </div>
+                </div>
+                <div class="function-image">
+                    <video src="Videos/AddNode.mp4" muted loop preload="metadata" class="hover-video"></video>
+                </div>
+            </div>
+
+            <div class="function-box">
+                <div class="function-content">
+                    <svg class="function-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                    </svg>
+                    <div class="function-text">
+                        <h3>Update Node</h3>
+                        <p>Modify existing node values with a simple click.</p>
+                    </div>
+                </div>
+                <div class="function-image">
+                    <video src="Videos/Update.mp4" muted loop preload="metadata" class="hover-video"></video>
+                </div>
+            </div>
+
+            <div class="function-box">
+                <div class="function-content">
+                    <svg class="function-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    </svg>
+                    <div class="function-text">
+                        <h3>Delete Node</h3>
+                        <p>Remove nodes and watch the tree restructure.</p>
+                    </div>
+                </div>
+                <div class="function-image">
+                    <video src="Videos/DeleteNode.mp4" muted loop preload="metadata" class="hover-video"></video>
+                </div>
+            </div>
+
+            <div class="function-box">
+                <div class="function-content">
+                    <svg class="function-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.3-4.3"></path>
+                    </svg>
+                    <div class="function-text">
+                        <h3>Find Node</h3>
+                        <p>Visualize different find node methods in action.</p>
+                    </div>
+                </div>
+                <div class="function-image">
+                    <video src="Videos/FindNode.mp4" muted loop preload="metadata" class="hover-video"></video>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="cta" class="cta">
+        <h2>Ready to Explore Other Visualize Binary Trees?</h2>
+        <p>Start exploring and learning about binary trees with our interactive visualization tool.</p>
+        <a href="/binarytree" class="button button-primary">
+            Get Started Now
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 0.5rem; display: inline-block; vertical-align: middle;">
+                <path d="M5 12h14M12 5l7 7-7 7"></path>
+            </svg>
+        </a>
+    </section>
+</main>
+
+<footer>
+    <div class="footer-content">
+        <p>Đồ án thực tập lập trình A</p>
+        <div class="footer-links">
+            <p>Nguyễn Đăng Khoa</p>
+            <p>Trần Huy Minh</p>
+            <p>Lê Nguyễn Bảo Kim</p>
+        </div>
+    </div>
+</footer>
 
 
+@code {
+    [Inject] IJSRuntime Js { get; set; } = default!;
 
-
-
-
-
-
-
-
-
-
-@code
-{
-
-    // ĐÂY LÀ PHẦN CODE, NẾU CẦN ANIMATION OR STH THÌ CÓ THỂ ĐỂ VÀO ĐÂY
-
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Gọi hàm JavaScript điều khiển phát video khi hover
+            await Js.InvokeVoidAsync("controlHoverVideo");
+        }
+    }
 }

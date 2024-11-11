@@ -63,11 +63,35 @@
             });
         }
     };
+        window.controlHoverVideo = function () {
+            document.querySelectorAll('.function-box').forEach(box => {
+                const video = box.querySelector('.hover-video');
+
+                // Phát video khi hover vào .function-box
+                box.addEventListener('mouseenter', function () {
+                    video.currentTime = 0; // Đặt lại video về điểm bắt đầu
+                    video.play(); // Phát video
+                });
+
+                // Dừng và đặt lại video khi rời khỏi hover
+                box.addEventListener('mouseleave', function () {
+                    video.pause(); // Dừng video
+                    video.currentTime = 0; // Đặt lại video về điểm bắt đầu
+                });
+            });
+        };
+
+        // Gọi hàm này trong JavaScript khi trang được tải
+        window.controlHoverVideo();
+
     </script>
 
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/MatBlazor/dist/matBlazor.js"></script>
     <link href="_content/MatBlazor/dist/matBlazor.css" rel="stylesheet" />
+    <link href="./tailwind.css" rel="stylesheet" />
+
+
 </body>
 
 </html>

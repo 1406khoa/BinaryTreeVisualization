@@ -1,5 +1,300 @@
-﻿/*CSS HERE*/
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 body {
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1E1858; /* Màu của --primary */
+    overflow-x: hidden;
+}
 
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5rem;
+    padding: 0 1.5rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    z-index: 50;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #1E1858; /* Màu của --primary */
+}
+
+    .logo span {
+        margin-left: 0.5rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+nav {
+    margin-left: auto;
+    display: flex;
+    gap: 1.5rem;
+}
+
+    nav a {
+        color: #1E1858; /* Màu của --primary */
+        text-decoration: none;
+        font-size: 1.125rem;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+        nav a:hover {
+            color: #3A3A8F; /* Màu của --secondary */
+        }
+
+.hero {
+    padding: 8rem 1.5rem;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+.background-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(4px); /* Hiệu ứng mờ nhẹ cho hình ảnh */
+    z-index: 1;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1E1858, #3A3A8F); /* --primary và --secondary */
+    opacity: 0.1;
+    z-index: 2;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    max-width: 64rem;
+    margin: 0 auto;
+}
+
+.hero h1 {
+    font-size: clamp(3rem, 8vw, 5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(to right, #1E1858, #3A3A8F);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+}
+
+.hero p {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+    color: rgba(30, 24, 88, 0.9); /* Tăng độ đậm để dễ đọc trên nền mờ */
+    max-width: 50rem;
+    margin: 0 auto 2rem;
+}
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.button {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none; /* Xóa gạch chân */
+}
+
+.button-primary {
+    background-color: #1E1858; /* Màu của --primary */
+    color: #FFFFFF; /* Màu của --white */
+    border: none;
+}
+
+    .button-primary:hover {
+        background-color: #3A3A8F; /* Màu của --secondary */
+    }
+
+.button-outline {
+    background-color: transparent;
+    color: #1E1858; /* Màu của --primary */
+    border: 2px solid #1E1858;
+}
+
+    .button-outline:hover {
+        background-color: #1E1858; /* Màu của --primary */
+        color: #FFFFFF; /* Màu của --white */
+    }
+
+.functions {
+
+    padding: 6rem 1.5rem;
+    background: linear-gradient(180deg, #FFFFFF, #F0F0FF); /* --white và --accent */
+}
+
+    .functions h2 {
+        font-size: 3rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+.function-grid {
+    display: grid;
+    gap: 2rem; /* Khoảng cách giữa các block */
+    margin: 0 auto;
+    padding: 2rem; /* Khoảng cách bao quanh grid */
+    max-width: 100%; /* Đảm bảo grid chiếm toàn bộ chiều rộng */
+    width: 100%; /* Đảm bảo grid tự giãn rộng */
+}
+
+.function-box {
+    background-color: #FFFFFF; /* Màu của --white */
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    padding: 2rem; /* Increase padding */
+}
+
+    .function-box:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+
+.function-content {
+    padding: 2rem; /* Increase padding */
+    display: flex;
+    gap: 1.5rem; /* Increase gap */
+}
+
+.function-image video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+video{
+    height: 50%;
+}
+
+.function-box:hover .function-image video {
+    display: block; /* Hiển thị video khi hover */
+}
+
+
+.function-icon {
+    width: 2rem;
+    height: 2rem;
+    color: #1E1858; /* Màu của --primary */
+}
+
+.function-text h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.function-text p {
+    color: rgba(30, 24, 88, 0.7);
+}
+
+.function-image {
+    height: 200px;
+    background-color: #F0F0FF; /* Màu của --accent */
+    position: relative;
+}
+
+    .function-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.cta {
+    padding: 6rem 1.5rem;
+    background: linear-gradient(135deg, #1E1858, #3A3A8F); /* --primary và --secondary */
+    color: #FFFFFF; /* Màu của --white */
+    text-align: center;
+}
+
+    .cta h2 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta p {
+        font-size: 1.25rem;
+        opacity: 0.8;
+        max-width: 50rem;
+        margin: 0 auto 2rem;
+    }
+
+footer {
+    background-color: #1E1858; /* Màu của --primary */
+    color: #FFFFFF; /* Màu của --white */
+    padding: 1.5rem;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+    .footer-content p {
+        opacity: 0.6;
+    }
+
+.footer-links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+    .footer-links a {
+        color: #FFFFFF; /* Màu của --white */
+        text-decoration: none;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+    }
+
+        .footer-links a:hover {
+            opacity: 1;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+
+@media (max-width: 768px) {
+    .button-group {
+        flex-direction: column;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
 }

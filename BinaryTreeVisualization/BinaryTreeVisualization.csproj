@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\Images\" />
+    <PackageReference Include="MatBlazor" Version="2.10.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MatBlazor" Version="2.10.0" />
+    <Folder Include="wwwroot\Videos\" />
   </ItemGroup>
 
 </Project>

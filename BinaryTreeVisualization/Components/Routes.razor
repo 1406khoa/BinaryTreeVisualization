@@ -1,6 +1,25 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
+﻿@using BinaryTreeVisualization.Components.Layout
+@using BinaryTreeVisualization.Components.Pages
+<Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <!-- Sử dụng hàm GetLayout để chọn layout dựa trên trang -->
+        <RouteView RouteData="routeData" DefaultLayout="@GetLayout(routeData)" />
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
+
+    <NotFound>
+         <!-- Điều hướng đến trang NotFound.razor với layout NoMenuLayout -->
+        <LayoutView Layout="typeof(Layout.NoMenuLayout)">
+            <NotFound />
+        </LayoutView>
+    </NotFound>
+
 </Router>
+
+@code {
+    private Type GetLayout(RouteData routeData)
+    {
+        // Kiểm tra nếu trang là Home thì dùng HomeLayout, nếu không thì dùng MainLayout
+        return routeData.PageType == typeof(Pages.Home) ? typeof(Layout.HomeLayout) : typeof(Layout.MainLayout);
+    }
+}

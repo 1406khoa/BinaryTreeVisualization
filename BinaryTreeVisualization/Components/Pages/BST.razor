@@ -821,7 +821,7 @@
     private async Task<bool> DFSVisualization(NodeService? node, int targetValue, List<TraversalStep> traversalSteps)
     {
         // Khởi tạo lại trạng thái khi bắt đầu từ root node
-        if (node == bstService.Root)
+        if (node == binaryTreeService.Root)
         {
             OnInitialized();
         }
@@ -846,42 +846,56 @@
         if (node.Value == targetValue)
         {
             await Task.Delay(2000);
-
+            showController = false;
             OnNodeClick(node);
             statusMessage = $"Found node {targetValue} successfully.";
-
-            showController = false;
             UpdateTreeDrawing();
             return true;
         }
 
-        // Duyệt nhánh trái
-        bool foundInLeft = await DFSVisualization(node.LeftChild, targetValue, traversalSteps);
-        if (foundInLeft) return true;
+        // Tạo danh sách để lưu lại lộ trình quay về các node cha khi hoàn tất duyệt nhánh con
+        var backtrackPath = new List<NodeService>();
 
-        // Quay lại node cha sau khi hoàn thành nhánh trái
+        // Duyệt nhánh trái và lưu lộ trình quay lại
         if (node.LeftChild != null)
         {
-            // Di chuyển controller trở về node cha trước khi tiếp tục
-            await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
-            await Task.Delay((int)(1000 / Val3));
+            backtrackPath.Add(node); // Lưu node cha hiện tại trước khi duyệt nhánh trái
+            bool foundInLeft = await DFSVisualization(node.LeftChild, targetValue, traversalSteps);
+            if (foundInLeft) return true;
+
+            // Nếu không tìm thấy ở nhánh trái, quay lại từng node cha
+            await BacktrackToParent(backtrackPath);
         }
 
-        // Duyệt nhánh phải từ node cha sau khi đã quay lại
-        bool foundInRight = await DFSVisualization(node.RightChild, targetValue, traversalSteps);
-        if (foundInRight) return true;
-
-        // Quay lại node cha sau khi hoàn thành nhánh phải (nếu không phải root)
-        if (node.RightChild != null && node != bstService.Root)
+        // Duyệt nhánh phải và lưu lộ trình quay lại
+        if (node.RightChild != null)
         {
-            // Di chuyển controller trở về node cha của nhánh hiện tại
-            await StartControllerMovement(new Vector2((float)node.Parent.PositionX, (float)node.Parent.PositionY));
-            await Task.Delay((int)(1000 / Val3));
+            backtrackPath.Add(node); // Lưu node cha hiện tại trước khi duyệt nhánh phải
+            bool foundInRight = await DFSVisualization(node.RightChild, targetValue, traversalSteps);
+            if (foundInRight) return true;
+
+            // Nếu không tìm thấy ở nhánh phải, quay lại từng node cha
+            await BacktrackToParent(backtrackPath);
         }
 
         UpdateTreeDrawing();
         return false;
     }
+
+
+
+    private async Task BacktrackToParent(List<NodeService> backtrackPath)
+    {
+        for (int i = backtrackPath.Count - 1; i >= 0; i--)
+        {
+            var parentNode = backtrackPath[i];
+            await StartControllerMovement(new Vector2((float)parentNode.PositionX, (float)parentNode.PositionY));
+            await Task.Delay((int)(1000 / Val3));
+            UpdateTreeDrawing();
+        }
+        backtrackPath.Clear(); // Xóa lộ trình sau khi quay lại hoàn tất
+    }
+
 
     private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {

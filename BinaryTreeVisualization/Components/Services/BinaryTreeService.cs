@@ -24,9 +24,13 @@ public class BinaryTreeService
     public List<NodeService> GetAllNodes()
     {
         List<NodeService> nodes = new List<NodeService>();
-        TraverseTree(Root, node => nodes.Add(node));
+        if (Root != null)
+        {
+            TraverseTree(Root, node => nodes.Add(node));
+        }
         return nodes;
     }
+
 
     // Hàm trợ giúp TraverseTree dùng đệ quy để duyệt qua tất cả các node
     private void TraverseTree(NodeService? node, Action<NodeService> action)
@@ -196,73 +200,52 @@ public class BinaryTreeService
         return result;
     }
 
-    public  void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
+
+    public void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
+{
+    double adjustedOffset = offsetX / Math.Max(1, Math.Pow(2, depth / 2.0));
+    double minOffset = Math.Max(100, adjustedOffset);
+
+    SetNodePosition(node, x, y);
+
+    node.Depth = depth;
+
+    // Kiểm tra va chạm với tất cả các node cùng cấp
+    var nodesAtSameLevel = GetAllNodes().Where(n => n.Depth == depth && n != node).ToList();
+    foreach (var existingNode in nodesAtSameLevel)
     {
-        double minOffset = Math.Max(60, offsetX / Math.Pow(2, depth)); // Khoảng cách tối thiểu giữa các node
-
-        // Đặt vị trí cho node hiện tại
-        SetNodePosition(node, x, y);
-
-        // Điều chỉnh vị trí nút con trái nếu tồn tại
-        if (node.LeftChild != null)
+        if (IsOverlappingWithBoundary(existingNode, node))
         {
-            double leftX = x - minOffset;
-            double leftY = y + 100;
-
-            // Đệ quy để đặt vị trí cho con trái
-            ArrangeNodePositions(node.LeftChild, leftX, leftY, offsetX, depth + 1);
-
-            // Kiểm tra và đẩy nút con nếu nó chồng lên nút cha hoặc anh em
-            if (IsOverlapping(node, node.LeftChild))
-            {
-                PushNodesApart(node.LeftChild, -minOffset);
-            }
-        }
-
-        // Điều chỉnh vị trí nút con phải nếu tồn tại
-        if (node.RightChild != null)
-        {
-            double rightX = x + minOffset;
-            double rightY = y + 100;
-
-            // Đệ quy để đặt vị trí cho con phải
-            ArrangeNodePositions(node.RightChild, rightX, rightY, offsetX, depth + 1);
-
-            // Kiểm tra và đẩy nút con nếu nó chồng lên nút cha hoặc anh em
-            if (IsOverlapping(node, node.RightChild))
-            {
-                PushNodesApart(node.RightChild, minOffset);
-            }
+            x += minOffset; // Đẩy node mới sang phải
+            SetNodePosition(node, x, y);
         }
     }
 
-    // Kiểm tra xem hai nút có chồng lên nhau không
-    private bool IsOverlapping(NodeService node1, NodeService node2)
+    if (node.LeftChild != null)
     {
-        double distance = Math.Sqrt(
-            Math.Pow(node1.PositionX - node2.PositionX, 2) +
-            Math.Pow(node1.PositionY - node2.PositionY, 2));
-
-        return distance < 70; // Kiểm tra nếu khoảng cách giữa các node nhỏ hơn 40 đơn vị
+        double leftX = x - minOffset;
+        double leftY = y + 100;
+        ArrangeNodePositions(node.LeftChild, leftX, leftY, offsetX, depth + 1);
     }
 
-    // Đẩy các nút ra xa để tránh chồng lấn
-    private void PushNodesApart(NodeService node, double pushAmount)
+    if (node.RightChild != null)
     {
-        node.PositionX += pushAmount;
-
-        // Nếu node có con, đẩy tất cả con theo hướng tương tự
-        if (node.LeftChild != null)
-        {
-            PushNodesApart(node.LeftChild, pushAmount);
-        }
-
-        if (node.RightChild != null)
-        {
-            PushNodesApart(node.RightChild, pushAmount);
-        }
+        double rightX = x + minOffset;
+        double rightY = y + 100;
+        ArrangeNodePositions(node.RightChild, rightX, rightY, offsetX, depth + 1);
     }
+}
 
+
+
+    private bool IsOverlappingWithBoundary(NodeService existingNode, NodeService newNode)
+    {
+        // Kiểm tra xem node mới có nắm trong vùng của bức tường trái hoặc phải của node hiện tại không, chỉ áp dụng với node cùng cấp
+        bool overlapLeft = newNode.RightWallX > existingNode.LeftWallX && newNode.PositionX < existingNode.PositionX;
+        bool overlapRight = newNode.LeftWallX < existingNode.RightWallX && newNode.PositionX > existingNode.PositionX;
+
+        return overlapLeft || overlapRight;
+    }
 
 
 

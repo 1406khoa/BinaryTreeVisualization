@@ -30,7 +30,25 @@ public class BinaryTreeService
         }
         return nodes;
     }
-
+    public NodeService? SearchNode(NodeService? currentNode, int value)
+    {
+        if (currentNode == null)
+        {
+            return null;
+        }
+        if (currentNode.Value == value)
+        {
+            return currentNode;
+        }
+        else if (value < currentNode.Value)
+        {
+            return SearchNode(currentNode.LeftChild, value);
+        }
+        else
+        {
+            return SearchNode(currentNode.RightChild, value);
+        }
+    }
 
     // Hàm trợ giúp TraverseTree dùng đệ quy để duyệt qua tất cả các node
     private void TraverseTree(NodeService? node, Action<NodeService> action)

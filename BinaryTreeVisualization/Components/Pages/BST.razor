@@ -114,8 +114,8 @@
                 <input class="dropdown-input" type="number" @bind="newNodeValue" />
                 <xhtml:button class="dropdown-button" @onclick="AddNode"
                               disabled="@isTraversing">Add Node</xhtml:button>
-                <xhtml:button class="dropdown-button" disabled="@isTraversing" @onclick="UpdateNode">Update Node</xhtml:button>
-                <xhtml:button class="dropdown-button" disabled="@isTraversing" @onclick="DeleteNode">Delete Node</xhtml:button>
+                <xhtml:button class="dropdown-button" disabled="@(isRootAbsent || isTraversing || selectedNode == null)" @onclick="UpdateNode">Update Node</xhtml:button>
+                    <xhtml:button class="dropdown-button" disabled="@(isRootAbsent || isTraversing || selectedNode == null)" @onclick="DeleteNode">Delete Node</xhtml:button>
             </xhtml:div>
         </foreignObject>
     }
@@ -187,6 +187,9 @@
 
     // Biến thông báo trạng thái
     private string statusMessage = "";
+
+    // Biến kiểm tra điều kiện để disable các nút
+    private bool isRootAbsent => bstService.Root == null;
 
     protected override void OnInitialized() // đặt controller ở vị trí mặc định
     {
@@ -280,7 +283,7 @@
     private void ShowDropdownForRoot(MouseEventArgs e)
     {
         dropdownX = e.ClientX - 250;
-        dropdownY = e.ClientY - 300;
+        dropdownY = e.ClientY - 275;
         showDropdown = true;
 
         UpdateTreeDrawing();
@@ -289,10 +292,11 @@
 
     private void OnSvgRightClick(MouseEventArgs e)
     {
-        if (bstService.Root == null)
+        if (selectedNode == null)
         {
             ShowDropdownForRoot(e);
         }
+        StateHasChanged();
     }
 
     // Hàm hiển thị dropdown menu khi click chuột phải vào node

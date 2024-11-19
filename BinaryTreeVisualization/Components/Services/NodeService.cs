@@ -21,22 +21,12 @@
 
         public bool IsRoot { get; set; }  // Đánh dấu node gốc
 
-        public double IdealPositionX { get; set; }  // Thêm vị trí lý tưởng X
-        public double IdealPositionY { get; set; }  // Thêm vị trí lý tưởng Y
-        public (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? ParentLine { get; set; }
-        public bool IsTargetNode { get; set; } = false;
-
-        // Thêm thuộc tính mới để lưu trữ độ rộng nhánh
-        public double SubtreeWidth { get; set; } = 1; // Khởi tạo mặc định là 1
-
         public const double NodeRadius = 20; // Bán kính của node
 
         // Tọa độ của "bức tường" trái và phải
         public double LeftWallX => PositionX - NodeRadius; // X của bức tường trái
-        public double LeftWallY => PositionY; // Y của bức tường trái (giữ nguyên Y)
 
         public double RightWallX => PositionX + NodeRadius; // X của bức tường phải
-        public double RightWallY => PositionY; // Y của bức tường phải (giữ nguyên Y)
 
         // Constructor của NodeService
         public NodeService(int value)
@@ -67,7 +57,5 @@
         {
             Depth = Parent != null ? Parent.Depth + 1 : 0;
         }
-
-
     }
 }

@@ -115,13 +115,13 @@
                 <input class="dropdown-input" type="number" @bind="newNodeValue" />
                 <xhtml:button class="dropdown-button" @onclick="AddNode"
                               disabled="@(isAddNodeDisabled || isTraversing)">Add Node</xhtml:button>
-                <xhtml:button class="dropdown-button" disabled="@isTraversing" @onclick="UpdateNode">Update Node</xhtml:button>
-                <xhtml:button class="dropdown-button" disabled="@isTraversing" @onclick="DeleteNode">Delete Node</xhtml:button>
+                <xhtml:button class="dropdown-button" disabled="@(isRootAbsent || isTraversing)" @onclick="UpdateNode">Update Node</xhtml:button>
+                <xhtml:button class="dropdown-button" disabled="@(isRootAbsent || isTraversing)" @onclick="DeleteNode">Delete Node</xhtml:button>
                 <xhtml:button class="dropdown-button" @onclick="() => AddNodeToDirection(true)"
-                              disabled="@(isLeftDisabled || isTraversing)">Add Left Child</xhtml:button>
+                              disabled="@(isRootAbsent || isLeftDisabled || isTraversing)">Add Left Child</xhtml:button>
                 <xhtml:button class="dropdown-button" @onclick="() => AddNodeToDirection(false)"
-                              disabled="@(isRightDisabled || isTraversing)">Add Right Child</xhtml:button>
-                <xhtml:button class="dropdown-button" @onclick="() => SwitchChild()" disabled="@isTraversing">Switch Child</xhtml:button>
+                              disabled="@(isRootAbsent || isRightDisabled || isTraversing)">Add Right Child</xhtml:button>
+                <xhtml:button class="dropdown-button" @onclick="() => SwitchChild()" disabled="@(isRootAbsent || isTraversing)">Switch Child</xhtml:button>
             </xhtml:div>
         </foreignObject>
     }
@@ -194,10 +194,11 @@
     // Biến thông báo trạng thái
     private string statusMessage = "";
 
-    // Biến kiểm tra xem có con trái hoặc phải chưa để disable nút bấm
+    // Cụm biến kiểm tra điều kiện để disable các nút
     private bool isLeftDisabled => selectedNode?.LeftChild != null;
     private bool isRightDisabled => selectedNode?.RightChild != null;
     private bool isAddNodeDisabled => selectedNode?.LeftChild != null && selectedNode?.RightChild != null;
+    private bool isRootAbsent => binaryTreeService.Root == null;
 
     private string GetNodeFillColor(NodeService node)
     {
@@ -254,7 +255,7 @@
     private void ShowDropdownForRoot(MouseEventArgs e)
     {
         dropdownX = e.ClientX - 250;
-        dropdownY = e.ClientY - 300;
+        dropdownY = e.ClientY - 275;
         showDropdown = true;
 
         UpdateTreeDrawing();

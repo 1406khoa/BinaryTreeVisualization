@@ -397,7 +397,6 @@ public class BSTService
         UpdateParentReferences(currentNode.RightChild, currentNode);
     }
 
-
     // Đệ quy xóa node khỏi cây nhị phân
     private NodeService? DeleteNodeRecursive(NodeService? node, int value)
     {
@@ -428,7 +427,6 @@ public class BSTService
 
         return node;
     }
-
 
     public void UpdateRoot(NodeService newRoot)
     {

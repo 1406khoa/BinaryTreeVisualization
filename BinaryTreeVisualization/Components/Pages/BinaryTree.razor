@@ -549,7 +549,6 @@
     public void DeselectNode()
     {
         selectedNode = null; // Hủy chọn node
-        newNodeValue = 0; // Xóa giá trị hiện tại nếu cần
         statusMessage = "Node deselected.";
         StateHasChanged();
     }
@@ -644,7 +643,8 @@
 
     private async Task<bool> ShortestPathVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {
-
+        // Reset all highlights and deselect any node before starting
+        OnInitialized();
         if (root == null)
         {
             statusMessage = "Tree is empty.";
@@ -652,22 +652,18 @@
             return false;
         }
 
-        // Reset all highlights and deselect any node before starting search
-        OnInitialized();
-
-        // Tìm kiếm node cần tìm bằng DFS
+        // Kiểm tra node mục tiêu trước khi bắt đầu
         var targetNode = DFSFindNode(root, targetValue);
 
-        // Nếu không tìm thấy node, sử dụng DFSVisualization để duyệt toàn bộ cây
         if (targetNode == null)
         {
-            statusMessage = $"Node {targetValue} not found. Starting full tree traversal.";
+            // Nếu không tìm thấy node, thông báo ngay lập tức
+            statusMessage = $"Node {targetValue} not found.";
             StateHasChanged();
-
-            // Thực hiện duyệt cây bằng DFS với hoạt ảnh
-            await DFSVisualization(root, targetValue, traversalSteps);
             return false;
         }
+
+       
 
         // Nếu tìm thấy node, tạo đường đi từ root đến node
         var path = new List<NodeService>();
@@ -718,9 +714,24 @@
     private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {
 
-        if (root == null) return false;
-
+        // Reset trạng thái trước khi bắt đầu
         OnInitialized();
+        // Kiểm tra nếu cây rỗng
+        if (root == null)
+        {
+            statusMessage = "Tree is empty.";
+            StateHasChanged();
+            return false;
+        }
+
+        // Kiểm tra nếu node mục tiêu không tồn tại
+        var targetNode = DFSFindNode(root, targetValue);
+        if (targetNode == null)
+        {
+            statusMessage = $"Node {targetValue} not found.";
+            StateHasChanged();
+            return false;
+        }
 
 
         var queue = new Queue<NodeService>();
@@ -770,10 +781,20 @@
 
     private async Task<bool> DFSVisualization(NodeService? node, int targetValue, List<TraversalStep> traversalSteps)
     {
-        // Khởi tạo lại trạng thái khi bắt đầu từ root node
         if (node == binaryTreeService.Root)
         {
+            // Reset trạng thái trước khi bắt đầu tìm kiếm
             OnInitialized();
+
+            // Kiểm tra node mục tiêu trước khi thực hiện duyệt
+            var targetNode = DFSFindNode(node, targetValue);
+            if (targetNode == null)
+            {
+                // Nếu không tìm thấy node, hiển thị thông báo và thoát
+                statusMessage = $"Node {targetValue} not found.";
+                StateHasChanged();
+                return false;
+            }
         }
 
         if (node == null) return false;

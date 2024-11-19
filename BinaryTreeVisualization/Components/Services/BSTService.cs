@@ -21,19 +21,14 @@ public class BSTService
     public List<NodeService> GetAllNodes()
     {
         List<NodeService> nodes = new List<NodeService>();
-        TraverseTree(Root, node => nodes.Add(node));
+        PreOrderTraversal(Root, node => nodes.Add(node));
         return nodes;
     }
 
-    // Hàm trợ giúp TraverseTree dùng đệ quy để duyệt qua tất cả các node
-    private void TraverseTree(NodeService? node, Action<NodeService> action)
-    {
-        if (node == null) return;
+   
+   
 
-        action(node); // Thực hiện thao tác với node hiện tại
-        TraverseTree(node.LeftChild, action); // Duyệt nhánh trái
-        TraverseTree(node.RightChild, action); // Duyệt nhánh phải
-    }
+    
 
     // Hàm thêm node vào cây nhị phân tìm kiếm
     public virtual Guid AddNode(int value)
@@ -152,6 +147,20 @@ public class BSTService
 
         return positions;
     }
+    // Phương thức tìm node dựa trên vị trí
+    public NodeService? GetNodeByPosition(double x, double y, string traversalType = "in-order")
+    {
+        // Lấy danh sách tất cả node và vị trí của chúng
+        var positions = GetNodePositions(Root, traversalType);
+
+        // Tìm node gần nhất với tọa độ (x, y)
+        return positions
+            .Where(pos => Math.Abs(pos.x - x) < 1 && Math.Abs(pos.y - y) < 1)
+            .Select(pos => pos.node)
+            .FirstOrDefault();
+    }
+
+
 
     // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
     public virtual List<NodeService> TraverseTree(NodeService? node, string traversalType)
@@ -456,5 +465,25 @@ public class BSTService
     public NodeService? FindNodeFromRoot(int value)
     {
         return FindNodeRecursive(Root, value);
+    }
+
+    public NodeService? SearchNode(NodeService? currentNode, int value)
+    {
+        if (currentNode == null)
+        {
+            return null;
+        }
+        if (currentNode.Value == value)
+        {
+            return currentNode;
+        }
+        else if (value < currentNode.Value)
+        {
+            return SearchNode(currentNode.LeftChild, value);
+        }
+        else
+        {
+            return SearchNode(currentNode.RightChild, value);
+        }
     }
 }

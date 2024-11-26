@@ -10,13 +10,13 @@
     <div class="find-operation">
         <p class="title">Find Node</p>
         <div>
-            <select>
-                <option value="shortest-path">Shortest Path</option>
+            <select @onchange="OnSearchMethodChange">
+                <option value="bst">Search BST</option>
                 <option value="dfs">DFS</option>
                 <option value="bfs">BFS</option>
             </select>
             <input class="find-input" type="number" @bind="newNodeValue" />
-            <button class="button" disabled="@isTraversing">Find</button>
+            <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Find</button>
         </div>
     </div>
 
@@ -29,7 +29,8 @@
                 <option value="post-order">Post-order (LRN)</option>
                 <option value="reverse-in-order">Reverse In-order (RNL)</option>
             </select>
-            <button class="button" disabled="@isTraversing">Traverse</button>
+            <button class="button" @onclick="StartTraversal" disabled="@isTraversing">Traverse</button>
+
         </div>
     </div>
 
@@ -163,7 +164,7 @@
     public List<int> traversalOrder = new(); // Lưu các giá trị đã duyệt
 
     //Biến liên quan tới tìm node theo DFS hoặc BFS
-    private string selectedSearchMethod = "shortest-path"; // Phương thức tìm kiếm được chọn
+    private string selectedSearchMethod = "bst"; // Phương thức tìm kiếm được chọn
 
     // Cụm biến liên quan đến Random Tree Generation
     private int nodeCount { get; set; } = 10;
@@ -210,6 +211,19 @@
     private async Task AddNode()
     {
         HideDropdown();
+        isTraversing = true;
+
+        // Tìm node cha cho node mới
+        var parentNode = avlTreeService.FindParentNode(newNodeValue);
+
+        if (parentNode != null)
+        {
+            // Lấy đường đi từ gốc đến node cha
+            var pathToParent = GetPathToNode(parentNode);
+
+            // Di chuyển controller theo đường đi tới node cha
+            await MoveControllerAlongPath(pathToParent);
+        }
 
         // Lưu vị trí cũ trước khi thêm node
         if (avlTreeService.Root != null)
@@ -220,7 +234,13 @@
         var newNodeID = avlTreeService.AddNode(newNodeValue);
         if (newNodeID == Guid.Empty)
         {
+            isTraversing = false;
+            showController = false;
+            await Task.Delay(500);
+            OnInitialized();
             statusMessage = $"Node {newNodeValue} already exists";
+            UpdateTreeDrawing();
+            StateHasChanged();
         }
         else
         {
@@ -231,15 +251,53 @@
 
             if (avlTreeService.DidRotate)
             {
-                // Thực hiện animation một lần sau khi cây đã cân bằng
+                showController = false;
+
+                statusMessage = "Rotating...";
                 await AnimateRotations();
+                // Gọi OnNodeClick với node vừa thêm để chọn và hiển thị node mới
+                var newNode = avlTreeService.FindNodeFromRoot(newNodeValue);
+                if (newNode != null)
+                {
+                    OnNodeClick(newNode);
+                    statusMessage = "Rotated!";
+
+                }
+                HighlightNode(newNodeID);
+                // Thực hiện animation một lần sau khi cây đã cân bằng
+
+                await Task.Delay(2000);
+                RemoveHighlighting();
+                isTraversing = false;
+                OnInitialized();
+
+
+
             }
             else
             {
                 // Nếu không xoay, node mới xuất hiện ngay lập tức
                 avlTreeService.SetAnimatedPositionToCurrent();
+                isTraversing = false;
+                OnInitialized();
+
+                // Gọi OnNodeClick với node vừa thêm để chọn và hiển thị node mới
+                var newNode = avlTreeService.FindNodeFromRoot(newNodeValue);
+                if (newNode != null)
+                {
+                    OnNodeClick(newNode);
+                    statusMessage = $"Add {newNodeValue} successfully";
+
+                }
+                HighlightNode(newNodeID);
+                await Task.Delay(2000);
+                RemoveHighlighting();
+
                 UpdateTreeDrawing();
             }
+            statusMessage = "Tree Balanced!";
+
+
         }
     }
 
@@ -348,25 +406,79 @@
 
     private void OnTraversalMethodChange(ChangeEventArgs e)
     {
-        selectedTraversalMethod = e.Value?.ToString() ?? "in-order"; // Lấy kiểu duyệt từ select box
-        statusMessage = $"Traversal method changed to {selectedTraversalMethod}."; // Cập nhật thông báo
+        // Cập nhật phương thức duyệt được chọn từ select tag
+        selectedTraversalMethod = e.Value?.ToString() ?? "in-order";
 
-        // Chỉ cần thay đổi kiểu duyệt mà không tái cấu trúc lại cây
-        avlTreeService.SetTraversalType(selectedTraversalMethod);
-        UpdateTreeDrawing(); // Vẽ lại cây theo kiểu duyệt mới
+        // Lấy danh sách các node theo kiểu duyệt
+        var nodes = avlTreeService.TraverseTree(avlTreeService.Root, selectedTraversalMethod);
+
+        // Khởi tạo lại danh sách traversalSteps dựa trên danh sách nodes
+        traversalSteps = nodes.Select(node => new TraversalStep(node)).ToList();
+
+        StateHasChanged(); // Cập nhật giao diện để hiển thị những thay đổi mới
+    }
+    private async Task StartTraversal()
+    {
+        if (isTraversing) return;
+
+
+        isTraversing = true;
+
+        // Lấy danh sách các node theo kiểu duyệt
+        var nodes = avlTreeService.TraverseTree(avlTreeService.Root, selectedTraversalMethod);
+
+        // Khởi tạo danh sách traversalSteps từ nodes
+        traversalSteps = nodes.Select(node => new TraversalStep(node)).ToList();
+
+        StateHasChanged();
+
+        // Bắt đầu hoạt ảnh duyệt cây
+        await StartTraversalAnimation(traversalSteps.Select(ts => ts.Node).ToList());
+
+        isTraversing = false;
+        statusMessage = "Finished!";
+        StateHasChanged();
+    }
+
+    private async Task StartTraversalAnimation(List<NodeService> traversalOrderNodes) //animation dùng cho chức năng duyệt theo thuật toán
+    {
+        OnInitialized();
+        statusMessage = "Traversing...";
+        showController = true; // Hiển thị kiểm soát viên
+        StateHasChanged(); // Cập nhật giao diện
+
+        for (int i = 0; i < traversalOrderNodes.Count; i++)
+        {
+            var node = traversalOrderNodes[i];
+
+            // Di chuyển kiểm soát viên tới node hiện tại
+            await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
+
+            // Cập nhật RenderFragment cho bước hiện tại
+            UpdateTraversalOrderFragment(i);
+
+            // Tô sáng node hiện tại
+            node.IsHighlighted = true;
+            UpdateTreeDrawing();
+
+            // Dừng lại một chút dựa trên tốc độ từ slider
+            await Task.Delay((int)(1000 / Val3));
+
+            // Bỏ tô sáng node sau khi hoàn thành bước này
+            UpdateTreeDrawing();
+        }
+
+        showController = false; // Ẩn kiểm soát viên sau khi duyệt xong
+        StateHasChanged();
     }
 
     private void RemoveHighlighting()
     {
-        foreach (var node in nodePositions)
+        foreach (var node in avlTreeService.GetAllNodes())
         {
-            node.node.IsHighlighted = false;
+            node.IsHighlighted = false;
         }
-
-        for (int i = 0; i < lines.Count; i++)
-        {
-            lines[i] = (lines[i].nodeFrom, lines[i].nodeTo, IsHighlighted: false, lines[i].LineID);
-        }
+        UpdateTreeDrawing();
     }
 
     private void HighlightNode(Guid newNodeID)
@@ -382,25 +494,6 @@
         UpdateTreeDrawing();
         StateHasChanged();
     }
-
-    private void HighlightNodeAndLine(Guid newNodeID)
-    {
-        var newNode = nodePositions.FirstOrDefault(np => np.node.NodeID == newNodeID);
-        if (newNode.node == null) return;
-
-        newNode.node.IsHighlighted = true;
-
-        var parentLine = lines.FirstOrDefault(line => line.nodeTo == newNode.node);
-        if (parentLine != default)
-        {
-            int index = lines.IndexOf(parentLine);
-            if (index != -1)
-            {
-                lines[index] = (lines[index].nodeFrom, lines[index].nodeTo, IsHighlighted: true, lines[index].LineID);
-            }
-        }
-    }
-
 
     private void UpdateTreeDrawing()
     {
@@ -489,7 +582,6 @@
     public void DeselectNode()
     {
         selectedNode = null; // Hủy chọn node
-        statusMessage = "Node deselected.";
         StateHasChanged();
     }
 
@@ -506,6 +598,7 @@
 
         // Tìm node cần xóa
         var nodeToDelete = avlTreeService.FindNodeFromRoot(newNodeValue);
+        statusMessage = $"Find {newNodeValue} to delete...";
 
         if (nodeToDelete != null)
         {
@@ -516,6 +609,7 @@
             // Di chuyển controller theo đường đi tới node cần xóa
             await MoveControllerAlongPath(pathToNode);
 
+            await Task.Delay(1500);
             // Sau khi controller đến node cần xóa, thực hiện xóa node
             bool isDeleted = avlTreeService.DeleteNode(newNodeValue);
 
@@ -525,8 +619,11 @@
                 showController = false;
                 if (avlTreeService.DidRotate)
                 {
-                    // Thực hiện animation một lần sau khi cây đã cân bằng
+                    showController = false;
+                    statusMessage = "Rotating...";
                     await AnimateRotations();
+                    statusMessage = "Rotated!";
+
                 }
                 else
                 {
@@ -558,8 +655,6 @@
             UpdateTreeDrawing();
             StateHasChanged();
         }
-
-        OnInitialized();
     }
 
     private async Task UpdateNode()
@@ -688,5 +783,330 @@
                 controllerPosition = newPosition; // Cập nhật vị trí kiểm soát viên
                 InvokeAsync(StateHasChanged); // Cập nhật giao diện
             });
+    }
+
+    private void UpdateTraversalOrderFragment(int index)
+    {
+        traversalOrderFragment = builder => { };
+
+        // Kiểm tra nếu traversalSteps chưa được khởi tạo hoặc rỗng
+        if (traversalSteps == null || traversalSteps.Count == 0)
+        {
+            statusMessage = "No traversal steps to display.";
+            StateHasChanged();
+            return;
+        }
+
+        // Kiểm tra chỉ số index hợp lệ
+        if (index < 0 || index >= traversalSteps.Count)
+        {
+            statusMessage = "Invalid traversal step index.";
+            StateHasChanged();
+            return;
+        }
+
+        // Khởi tạo RenderFragment để hiển thị các bước đã duyệt
+        traversalOrderFragment = builder =>
+        {
+            for (int i = 0; i <= index; i++)
+            {
+                builder.OpenElement(0, "span");
+                builder.AddContent(1, traversalSteps[i].Value);
+                builder.CloseElement();
+
+                if (i < traversalSteps.Count - 1)
+                {
+                    builder.OpenElement(2, "span");
+                    builder.AddContent(3, " ⭢ ");
+                    builder.CloseElement();
+                }
+            }
+        };
+
+        // Cập nhật giao diện sau khi tạo xong RenderFragment
+        StateHasChanged();
+    }
+    // Hàm thay đổi phương thức tìm kiếm
+    private void OnSearchMethodChange(ChangeEventArgs e)
+    {
+        selectedSearchMethod = e.Value?.ToString() ?? "bst";
+    }
+
+    private async Task StartFindNodeAnimation() // Hàm này dùng để tìm kiếm node theo phương pháp đã chọn
+    {
+        if (isTraversing) return; // Nếu đang duyệt, không thực hiện thêm.
+
+        isTraversing = true;
+        traversalSteps = new List<TraversalStep>(); // Khởi tạo lại danh sách trước mỗi lần tìm kiếm
+
+
+        switch (selectedSearchMethod)
+        {
+            case "dfs":
+                bool found = await DFSVisualization(avlTreeService.Root, newNodeValue, traversalSteps);
+                if (!found)
+                {
+                    statusMessage = $"Node {newNodeValue} not found.";
+                }
+                break;
+
+            case "bfs":
+                bool bfsFound = await BFSVisualization(avlTreeService.Root, newNodeValue, traversalSteps);
+                if (!bfsFound)
+                {
+                    statusMessage = $"Node {newNodeValue} not found.";
+                }
+                break;
+            case "bst":
+                await BSTVisualization(newNodeValue);
+                break;
+
+            default:
+                statusMessage = "Invalid search method selected.";
+                break;
+        }
+
+        isTraversing = false;
+        StateHasChanged(); // Cập nhật giao diện
+    }
+    private async Task<bool> DFSVisualization(NodeService? node, int targetValue, List<TraversalStep> traversalSteps)
+    {
+
+        // Kiểm tra node mục tiêu trước khi bắt đầu
+        if (node == avlTreeService.Root)
+        {
+            // Reset trạng thái trước khi tìm kiếm
+            OnInitialized();
+
+            var targetNode = avlTreeService.SearchNode(avlTreeService.Root, targetValue);
+            if (targetNode == null)
+            {
+                statusMessage = $"Node {targetValue} not found.";
+                StateHasChanged();
+                return false;
+            }
+        }
+
+        if (node == null) return false;
+
+        // Thêm node hiện tại vào danh sách các bước duyệt
+        var step = new TraversalStep(node);
+        traversalSteps.Add(step);
+
+        // Di chuyển controller đến node hiện tại
+        showController = true;
+        await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
+        UpdateTraversalOrderFragment(traversalSteps.Count - 1);
+
+        // Tô sáng node hiện tại
+        node.IsHighlighted = true;
+        UpdateTreeDrawing();
+        await Task.Delay((int)(1000 / Val3));
+
+        // Kiểm tra nếu đây là node cần tìm
+        if (node.Value == targetValue)
+        {
+            await Task.Delay(2000);
+            showController = false;
+            OnNodeClick(node);
+            statusMessage = $"Found node {targetValue} successfully.";
+            UpdateTreeDrawing();
+            return true;
+        }
+
+        // Tạo danh sách để lưu lại lộ trình quay về các node cha khi hoàn tất duyệt nhánh con
+        var backtrackPath = new List<NodeService>();
+
+        // Duyệt nhánh trái và lưu lộ trình quay lại
+        if (node.LeftChild != null)
+        {
+            backtrackPath.Add(node); // Lưu node cha hiện tại trước khi duyệt nhánh trái
+            bool foundInLeft = await DFSVisualization(node.LeftChild, targetValue, traversalSteps);
+            if (foundInLeft) return true;
+
+            // Nếu không tìm thấy ở nhánh trái, quay lại từng node cha
+            await BacktrackToParent(backtrackPath);
+        }
+
+        // Duyệt nhánh phải và lưu lộ trình quay lại
+        if (node.RightChild != null)
+        {
+            backtrackPath.Add(node); // Lưu node cha hiện tại trước khi duyệt nhánh phải
+            bool foundInRight = await DFSVisualization(node.RightChild, targetValue, traversalSteps);
+            if (foundInRight) return true;
+
+            // Nếu không tìm thấy ở nhánh phải, quay lại từng node cha
+            await BacktrackToParent(backtrackPath);
+        }
+
+        UpdateTreeDrawing();
+        return false;
+    }
+
+    private async Task BacktrackToParent(List<NodeService> backtrackPath)
+    {
+        for (int i = backtrackPath.Count - 1; i >= 0; i--)
+        {
+            var parentNode = backtrackPath[i];
+            await StartControllerMovement(new Vector2((float)parentNode.PositionX, (float)parentNode.PositionY));
+            await Task.Delay((int)(1000 / Val3));
+            UpdateTreeDrawing();
+        }
+        backtrackPath.Clear(); // Xóa lộ trình sau khi quay lại hoàn tất
+    }
+
+
+    private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
+    {
+
+        // Reset trạng thái trước khi bắt đầu
+        OnInitialized();
+        // Kiểm tra nếu cây rỗng
+        if (root == null)
+        {
+            statusMessage = "Tree is empty.";
+            StateHasChanged();
+            return false;
+        }
+
+        // Kiểm tra nếu node mục tiêu không tồn tại
+        var targetNode = avlTreeService.SearchNode(root, targetValue);
+        if (targetNode == null)
+        {
+            statusMessage = $"Node {targetValue} not found.";
+            StateHasChanged();
+            return false;
+        }
+
+
+
+        var queue = new Queue<NodeService>();
+        queue.Enqueue(root);
+
+        while (queue.Count > 0)
+        {
+            var currentNode = queue.Dequeue();
+
+            // Thêm node hiện tại vào danh sách các bước đã duyệt
+            var step = new TraversalStep(currentNode);
+            traversalSteps.Add(step);
+
+            // Di chuyển controller tới node hiện tại
+            showController = true;
+            await StartControllerMovement(new Vector2((float)currentNode.PositionX, (float)currentNode.PositionY));
+
+            // Cập nhật UI với node mới được thêm vào
+            UpdateTraversalOrderFragment(traversalSteps.Count - 1);
+
+            // Tô sáng node hiện tại và giữ sáng cho đến khi kết thúc
+            currentNode.IsHighlighted = true;
+            UpdateTreeDrawing();
+            await Task.Delay((int)(1000 / Val3));
+
+            // Kiểm tra nếu đây là node cần tìm
+            if (currentNode.Value == targetValue)
+            {
+                await Task.Delay(2000);
+
+                OnNodeClick(currentNode);
+                statusMessage = $"Found node {targetValue} successfully.";
+
+                showController = false;
+                UpdateTreeDrawing();
+                return true;
+            }
+
+            // Thêm các node con vào hàng đợi (trái trước, phải sau)
+            if (currentNode.LeftChild != null) queue.Enqueue(currentNode.LeftChild);
+            if (currentNode.RightChild != null) queue.Enqueue(currentNode.RightChild);
+        }
+
+        UpdateTreeDrawing();
+
+        return false;
+    }
+
+    private async Task BSTVisualization(int value)
+    {
+        // Reset trạng thái và vị trí controller trước khi bắt đầu tìm kiếm
+        OnInitialized();
+
+        // Xóa danh sách traversalSteps
+        traversalSteps.Clear();
+
+        // Tìm kiếm node mục tiêu
+        var targetNode = avlTreeService.SearchNode(avlTreeService.Root, value);
+
+        if (targetNode == null)
+        {
+            // Node không tồn tại
+            statusMessage = $"Node {value} not found.";
+            StateHasChanged();
+            return;
+        }
+
+        // Lấy đường dẫn từ root đến targetNode
+        var path = GetPathToNode(targetNode);
+
+        if (path.Count == 0)
+        {
+            statusMessage = $"No path found to Node {value}.";
+            StateHasChanged();
+            return;
+        }
+
+        // Hiển thị controller trước khi bắt đầu di chuyển
+        showController = true;
+        StateHasChanged();
+
+        // Xử lý riêng cho root
+        var root = avlTreeService.Root;
+        if (root != null)
+        {
+            // Tô sáng root
+            root.IsHighlighted = true;
+            UpdateTreeDrawing();
+
+            // Thêm root vào traversalSteps
+            traversalSteps.Add(new TraversalStep(root));
+            UpdateTraversalOrderFragment(traversalSteps.Count - 1);
+        }
+
+        // Di chuyển qua từng node trên đường đi
+        foreach (var line in path)
+        {
+            // Tìm node hiện tại dựa trên vị trí cuối của line
+            var currentNode = avlTreeService.GetNodeByPosition(line.x2, line.y2);
+
+            if (currentNode != null)
+            {
+                // Di chuyển controller tới node hiện tại
+                var destination = new Vector2((float)line.x2, (float)line.y2);
+                await StartControllerMovement(destination);
+
+                // Sau khi controller đến, tô sáng node hiện tại
+                currentNode.IsHighlighted = true;
+                UpdateTreeDrawing();
+
+                // Thêm node hiện tại vào traversalSteps
+                traversalSteps.Add(new TraversalStep(currentNode));
+                UpdateTraversalOrderFragment(traversalSteps.Count - 1);
+
+                // Chờ thêm để hiển thị node rõ ràng
+                await Task.Delay((int)(1000 / Val3));
+            }
+        }
+
+        // Tô sáng node mục tiêu (node cuối cùng)
+        targetNode.IsHighlighted = true;
+        UpdateTreeDrawing();
+
+        // Cập nhật trạng thái
+        OnNodeClick(targetNode);
+        statusMessage = $"Found node {value} successfully.";
+
+        // Ẩn controller sau khi hoàn thành
+        showController = false;
+        StateHasChanged();
     }
 }

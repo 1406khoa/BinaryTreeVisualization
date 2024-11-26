@@ -185,7 +185,7 @@ public class BSTService
         return result;
     }
 
-    public  void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
+    public  void ArrangeNodePositions(NodeService? node, double x, double y, double offsetX, int depth = 0)
     {
         double minOffset = Math.Max(60, offsetX / Math.Pow(2, depth)); // Khoảng cách tối thiểu giữa các node
 

@@ -252,7 +252,6 @@
             await Task.Delay(500);
             UpdateTreeDrawing();
             StateHasChanged();
-            isTraversing = false;
         }
         else
         {
@@ -339,6 +338,7 @@
 
         // Bắt đầu hoạt ảnh duyệt cây
         await StartTraversalAnimation(traversalSteps.Select(ts => ts.Node).ToList());
+        statusMessage = "Finished!";
 
         isTraversing = false;
         StateHasChanged();
@@ -347,6 +347,7 @@
     private async Task StartTraversalAnimation(List<NodeService> traversalOrderNodes) //animation dùng cho chức năng duyệt theo thuật toán
     {
         OnInitialized();
+        statusMessage = "Traversing...";
         showController = true; // Hiển thị kiểm soát viên
         StateHasChanged(); // Cập nhật giao diện
 
@@ -591,6 +592,8 @@
             if (newNode != null)
             {
                 OnNodeClick(newNode);
+                statusMessage = $"Update {newNodeValue} successfully";
+
             }
             isTraversing = false;
         }

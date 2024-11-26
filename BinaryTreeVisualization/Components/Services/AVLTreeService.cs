@@ -40,7 +40,7 @@ public class AVLTreeService : BSTService
             currentNode.UpdateHeight();
             int balanceFactor = GetBalanceFactor(currentNode);
 
-            if (Math.Abs(balanceFactor) > 1)
+            if (!IsBalanced(currentNode))
             {
                 PerformRotation(currentNode);
                 rotated = true;

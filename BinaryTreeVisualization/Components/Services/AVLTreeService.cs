@@ -2,7 +2,7 @@
 
 public class AVLTreeService : BSTService
 {
-    // Phương thức thêm nút vào cây AVL
+    //Thêm nút
     public override Guid AddNode(int value)
     {
         // Thêm nút vào cây nhị phân thông qua phương thức AddNode của TreeService
@@ -18,7 +18,7 @@ public class AVLTreeService : BSTService
             // Cập nhật lại root nếu cần
             if (newNode.Parent == null)
             {
-                UpdateRoot(newNode); // Gọi phương thức cập nhật root
+                UpdateRoot(newNode);
             }
         }
 
@@ -38,11 +38,49 @@ public class AVLTreeService : BSTService
             // Kiểm tra cân bằng
             if (!IsBalanced(parent))
             {
-                // Nếu không cân bằng, thực hiện xoay
                 parent = PerformRotation(parent);
             }
 
-            parent = parent.Parent; // Tiếp tục dò ngược lên cao hơn
+            // Tiếp tục dò ngược lên cao hơn
+            parent = parent.Parent; 
+        }
+    }
+
+    //Xóa nút
+    public override bool DeleteNode(int value)
+    {
+        // Tìm node cần xóa, nếu node tồn tại, lấy cha của node đó trước khi xóa
+        var nodeToDelete = FindNodeFromRoot(value);
+        NodeService? parent = nodeToDelete?.Parent;
+
+        // Gọi hàm xóa của BSTService để xóa node
+        bool isDeleted = base.DeleteNode(value);
+
+        // Nếu node đã bị xóa, kiểm tra và cân bằng lại cây
+        if (isDeleted)
+        {
+            BalanceTreeAfterDelete(parent);
+        }
+
+        return isDeleted;
+    }
+
+    // Kiểm tra và cân bằng cây sau khi xóa nút
+    private void BalanceTreeAfterDelete(NodeService? node)
+    {
+        while (node != null)
+        {
+            // Cập nhật chiều cao của node hiện tại (tức là node cha của node đã bị xóa)
+            node.UpdateHeight();
+
+            // Kiểm tra cân bằng
+            if (!IsBalanced(node))
+            {
+                node = PerformRotation(node);
+            }
+
+            // Tiếp tục dò ngược lên cao hơn
+            node = node.Parent;
         }
     }
 

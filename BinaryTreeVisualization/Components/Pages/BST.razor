@@ -446,8 +446,11 @@
 
     private void DeleteTree()
     {
+        showController = false;
         bstService.ResetTree();
+        DeselectNode();
         UpdateTreeDrawing();
+        statusMessage = "Tree cleared";
         StateHasChanged();
     }
 
@@ -473,8 +476,6 @@
             if (isDeleted)
             {
                 UpdateTreeDrawing();
-                HighlightNode(nodeToDelete.NodeID);
-
                 OnInitialized();
                 showController = false;
                 UpdateTreeDrawing();
@@ -527,8 +528,6 @@
         selectedNode = null; // Hủy chọn node
         StateHasChanged();
     }
-
-
 
     private async Task UpdateNode()
     {
@@ -595,11 +594,7 @@
         }
 
         isTraversing = false;
-
-
-
     }
-
 
     private async Task StartControllerMovement(Vector2 destination)
     {
@@ -771,8 +766,6 @@
         return false;
     }
 
-
-
     private async Task BacktrackToParent(List<NodeService> backtrackPath)
     {
         for (int i = backtrackPath.Count - 1; i >= 0; i--)
@@ -939,7 +932,6 @@
         showController = false;
         StateHasChanged();
     }
-
 
     private List<(double x1, double y1, double x2, double y2)> GetPathToNode(NodeService targetNode)
     {

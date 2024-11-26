@@ -5,8 +5,6 @@
 
 <PageTitle>Binary Tree</PageTitle>
 
-
-
 <div class="first-component">
     <div class="find-operation">
         <p class="title">Find Node</p>
@@ -464,10 +462,6 @@
         UpdateTreeDrawing();
     }
 
-
-
-
-
     private void HighlightNode(Guid newNodeID)
     {
         // Tìm node mới dựa trên NodeID
@@ -663,8 +657,6 @@
             return false;
         }
 
-       
-
         // Nếu tìm thấy node, tạo đường đi từ root đến node
         var path = new List<NodeService>();
         while (targetNode != null)
@@ -853,8 +845,6 @@
         return false;
     }
 
-
-
     private async Task BacktrackToParent(List<NodeService> backtrackPath)
     {
         for (int i = backtrackPath.Count - 1; i >= 0; i--)
@@ -866,8 +856,6 @@
         }
         backtrackPath.Clear(); // Xóa lộ trình sau khi quay lại hoàn tất
     }
-
-
 
     private async Task StartControllerMovement(Vector2 destination)
     {

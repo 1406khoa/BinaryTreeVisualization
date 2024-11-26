@@ -472,6 +472,4 @@ public class BinaryTreeService
 
         return path;
     }
-
-
 }

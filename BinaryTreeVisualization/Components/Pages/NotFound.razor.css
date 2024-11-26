@@ -5,13 +5,17 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 50px;
+    margin-top: 70px;
 }
 
 .heading {
     font-size: 45px;
     font-weight: 600;
     margin-bottom: 50px;
+}
+
+h1 {
+    color: red;
 }
 
 .announcement {
@@ -26,33 +30,27 @@
 }
 
 .image {
-    width: 200px;
+    width: 40%;
     margin: 20px;
 }
 
 .button {
-    background-color: #cfbdff;
+    background-color: #CCCCCC;
     display: flex;
     justify-content: center;
     align-items: center;
     text-decoration: none;
     color: black;
     font-weight: 600;
-    width: 35%;
-    height: 70px;
+    width: 20%;
+    height: 65px;
     font-size: 20px;
-    margin-top: 50px;
-    border-radius: 5px;
+    border-radius: 0.5rem;
 }
 
 .button:hover {
-    background-color: #a080f6;
+    background-color: #AAAAAA;
     transition: 0.3s;
     color: white;
 }
 
-.button:active {
-    background-color: #8569d0;
-    transition: 0.3s;
-    color: white;
-}

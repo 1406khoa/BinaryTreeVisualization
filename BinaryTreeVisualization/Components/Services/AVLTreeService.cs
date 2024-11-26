@@ -22,7 +22,7 @@ public class AVLTreeService : BSTService
             // Cập nhật lại root nếu cần
             if (newNode.Parent == null)
             {
-                UpdateRoot(newNode); // Gọi phương thức cập nhật root
+                UpdateRoot(newNode);
             }
         }
 
@@ -49,12 +49,57 @@ public class AVLTreeService : BSTService
                 break;
             }
 
-            currentNode = currentNode.Parent;
+            // Tiếp tục dò ngược lên cao hơn
+            currentNode = currentNode.Parent; 
         }
 
         return rotated;
     }
 
+    //Xóa nút
+    public override bool DeleteNode(int value)
+    {
+        DidRotate = false;
+
+        // Tìm node cần xóa, nếu node tồn tại, lấy cha của node đó trước khi xóa
+        var nodeToDelete = FindNodeFromRoot(value);
+        NodeService? parent = nodeToDelete?.Parent;
+
+        // Gọi hàm xóa của BSTService để xóa node
+        bool isDeleted = base.DeleteNode(value);
+
+        // Nếu node đã bị xóa, kiểm tra và cân bằng lại cây
+        if (isDeleted)
+        {
+            DidRotate = BalanceTreeAfterDelete(parent);
+
+        }
+
+        return isDeleted;
+    }
+
+    // Kiểm tra và cân bằng cây sau khi xóa nút
+    private bool BalanceTreeAfterDelete(NodeService? node)
+    {
+        bool rotated = false;
+        while (node != null)
+        {
+            // Cập nhật chiều cao của node hiện tại (tức là node cha của node đã bị xóa)
+            node.UpdateHeight();
+
+            // Kiểm tra cân bằng
+            if (!IsBalanced(node))
+            {
+                node = PerformRotation(node);
+                rotated = true;
+            }
+
+            // Tiếp tục dò ngược lên cao hơn
+            node = node.Parent;
+        }
+
+        return rotated;
+    }
 
     // Kiểm tra cân bằng tại thời điểm thêm nút
     private bool IsBalanced(NodeService node)

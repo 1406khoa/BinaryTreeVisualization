@@ -24,12 +24,7 @@ public class BSTService
         List<NodeService> nodes = new List<NodeService>();
         PreOrderTraversal(Root, node => nodes.Add(node));
         return nodes;
-    }
-
-   
-   
-
-    
+    }         
 
     // Hàm thêm node vào cây nhị phân tìm kiếm
     public virtual Guid AddNode(int value)
@@ -109,8 +104,6 @@ public class BSTService
         }
     }
 
-
-
     // Hàm thiết lập vị trí cho các nút, giữ nguyên vị trí node gốc
     public virtual void SetNodePosition(NodeService? node, double x, double y)
     {
@@ -125,7 +118,6 @@ public class BSTService
             node.PositionY = y;
         }
     }
-
 
     // Phương thức này trả về danh sách vị trí của các node trong cây
     public virtual  List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
@@ -193,17 +185,7 @@ public class BSTService
         return result;
     }
 
-    // Tìm node nhỏ nhất trong cây con
-    private NodeService FindMin(NodeService node)
-    {
-        while (node.LeftChild != null)
-        {
-            node = node.LeftChild;
-        }
-        return node;
-    }
-
-    public virtual  void ArrangeNodePositions(NodeService? node, double x, double y, double offsetX, int depth = 0)
+    public  void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
     {
         double minOffset = Math.Max(60, offsetX / Math.Pow(2, depth)); // Khoảng cách tối thiểu giữa các node
 
@@ -371,7 +353,7 @@ public class BSTService
     }
 
     // Hàm xóa node theo giá trị
-    public bool DeleteNode(int value)
+    public virtual bool DeleteNode(int value)
     {
         // Gọi hàm đệ quy để xóa node
         Root = DeleteNodeRecursive(Root, value);
@@ -405,6 +387,16 @@ public class BSTService
         // Đệ quy cập nhật cho các node con
         UpdateParentReferences(currentNode.LeftChild, currentNode);
         UpdateParentReferences(currentNode.RightChild, currentNode);
+    }
+
+    // Tìm node nhỏ nhất trong cây con
+    private NodeService FindMin(NodeService node)
+    {
+        while (node.LeftChild != null)
+        {
+            node = node.LeftChild;
+        }
+        return node;
     }
 
     // Đệ quy xóa node khỏi cây nhị phân

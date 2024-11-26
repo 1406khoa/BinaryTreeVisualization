@@ -2,10 +2,14 @@
 
 public class AVLTreeService : BSTService
 {
-    //Thêm nút
+    public bool DidRotate { get; private set; }
+    // Phương thức thêm nút vào cây AVL
     public override Guid AddNode(int value)
     {
-        // Thêm nút vào cây nhị phân thông qua phương thức AddNode của TreeService
+        // Cờ để xác định xem có xoay cây hay không
+        DidRotate = false;
+
+        // Thêm nút vào cây nhị phân thông qua phương thức AddNode của lớp cơ sở
         var newNodeID = base.AddNode(value);
 
         // Sau khi thêm, lấy nút vừa thêm và cân bằng nếu cần
@@ -13,7 +17,7 @@ public class AVLTreeService : BSTService
 
         if (newNode != null)
         {
-            BalanceTreeAfterInsert(newNode);
+            DidRotate = BalanceTreeAfterInsert(newNode);
 
             // Cập nhật lại root nếu cần
             if (newNode.Parent == null)
@@ -25,30 +29,38 @@ public class AVLTreeService : BSTService
         return newNodeID;
     }
 
-    // Kiểm tra và cân bằng cây sau khi thêm nút
-    private void BalanceTreeAfterInsert(NodeService node)
+
+    private bool BalanceTreeAfterInsert(NodeService node)
     {
-        NodeService? parent = node.Parent;
+        bool rotated = false;
+        NodeService currentNode = node;
 
-        while (parent != null)
+        while (currentNode != null)
         {
-            // Cập nhật chiều cao của cha
-            parent.UpdateHeight();
+            currentNode.UpdateHeight();
+            int balanceFactor = GetBalanceFactor(currentNode);
 
-            // Kiểm tra cân bằng
-            if (!IsBalanced(parent))
+            if (Math.Abs(balanceFactor) > 1)
             {
-                parent = PerformRotation(parent);
+                PerformRotation(currentNode);
+                rotated = true;
+
+                // Sau khi xoay, thoát khỏi vòng lặp vì chỉ xoay một lần
+                break;
             }
 
             // Tiếp tục dò ngược lên cao hơn
-            parent = parent.Parent; 
+            currentNode = currentNode.Parent; 
         }
+
+        return rotated;
     }
 
     //Xóa nút
     public override bool DeleteNode(int value)
     {
+        DidRotate = false;
+
         // Tìm node cần xóa, nếu node tồn tại, lấy cha của node đó trước khi xóa
         var nodeToDelete = FindNodeFromRoot(value);
         NodeService? parent = nodeToDelete?.Parent;
@@ -59,15 +71,17 @@ public class AVLTreeService : BSTService
         // Nếu node đã bị xóa, kiểm tra và cân bằng lại cây
         if (isDeleted)
         {
-            BalanceTreeAfterDelete(parent);
+            DidRotate = BalanceTreeAfterDelete(parent);
+
         }
 
         return isDeleted;
     }
 
     // Kiểm tra và cân bằng cây sau khi xóa nút
-    private void BalanceTreeAfterDelete(NodeService? node)
+    private bool BalanceTreeAfterDelete(NodeService? node)
     {
+        bool rotated = false;
         while (node != null)
         {
             // Cập nhật chiều cao của node hiện tại (tức là node cha của node đã bị xóa)
@@ -77,11 +91,14 @@ public class AVLTreeService : BSTService
             if (!IsBalanced(node))
             {
                 node = PerformRotation(node);
+                rotated = true;
             }
 
             // Tiếp tục dò ngược lên cao hơn
             node = node.Parent;
         }
+
+        return rotated;
     }
 
     // Kiểm tra cân bằng tại thời điểm thêm nút
@@ -98,7 +115,6 @@ public class AVLTreeService : BSTService
         return (node.LeftChild?.Height ?? 0) - (node.RightChild?.Height ?? 0);
     }
 
-    // Xoay cây
     private NodeService PerformRotation(NodeService node)
     {
         int balanceFactor = GetBalanceFactor(node);
@@ -108,83 +124,58 @@ public class AVLTreeService : BSTService
         {
             if (node.LeftChild != null && GetBalanceFactor(node.LeftChild) < 0)
             {
-                // Xoay trái trước
                 node.LeftChild = RotateLeft(node.LeftChild);
             }
-            // Xoay phải
-            node = RotateRight(node);
+            return RotateRight(node);
         }
         // Lệch phải -> xoay trái
         else if (balanceFactor < -1)
         {
             if (node.RightChild != null && GetBalanceFactor(node.RightChild) > 0)
             {
-                // Xoay phải trước
                 node.RightChild = RotateRight(node.RightChild);
             }
-            // Xoay trái
-            node = RotateLeft(node);
+            return RotateLeft(node);
         }
 
-        // Cập nhật parent cho nút mới
-        if (node.Parent != null)
-        {
-            if (node.Parent.LeftChild == node)
-            {
-                node.Parent.LeftChild = node;
-            }
-            else
-            {
-                node.Parent.RightChild = node;
-            }
-        }
-        else
-        {
-            // Nếu node là gốc, cập nhật lại gốc của cây
-            UpdateRoot(node); // Cập nhật gốc sau khi xoay
-        }
-
-        // Cập nhật cha cho các nút con
-        if (node.LeftChild != null)
-        {
-            node.LeftChild.Parent = node; // Cập nhật parent cho LeftChild
-        }
-        if (node.RightChild != null)
-        {
-            node.RightChild.Parent = node; // Cập nhật parent cho RightChild
-        }
-
-        return node; // Trả về nút gốc mới
+        return node; // Không xoay nếu cây cân bằng
     }
+
 
     private NodeService RotateRight(NodeService node)
     {
         NodeService? newRoot = node.LeftChild;
         if (newRoot == null) return node; // Tránh trường hợp null exception
 
-        node.LeftChild = newRoot.RightChild; // Cập nhật LeftChild của node hiện tại
-        if (newRoot.RightChild != null) // Nếu newRoot.RightChild không null, cập nhật parent của nó
+        // Lưu vị trí cũ cho animation
+        node.OldPositionX = node.PositionX;
+        node.OldPositionY = node.PositionY;
+        newRoot.OldPositionX = newRoot.PositionX;
+        newRoot.OldPositionY = newRoot.PositionY;
+
+        // Thực hiện xoay
+        node.LeftChild = newRoot.RightChild;
+        if (newRoot.RightChild != null)
         {
-            newRoot.RightChild.Parent = node; // Cập nhật parent cho child
+            newRoot.RightChild.Parent = node;
         }
-        newRoot.RightChild = node; // Đặt node hiện tại làm RightChild của newRoot
+        newRoot.RightChild = node;
 
         // Cập nhật chiều cao
         node.UpdateHeight();
         newRoot.UpdateHeight();
 
-        // Cập nhật cha cho newRoot
-        newRoot.Parent = node.Parent; // Cập nhật parent của newRoot
-        node.Parent = newRoot; // Cập nhật parent của node hiện tại
+        // Cập nhật parent
+        newRoot.Parent = node.Parent;
+        node.Parent = newRoot;
 
-        // Nếu node là gốc, cập nhật lại gốc của cây
+        // Cập nhật liên kết với parent của node gốc
         if (newRoot.Parent == null)
         {
-            UpdateRoot(node); // Cập nhật gốc sau khi xoay
+            UpdateRoot(newRoot); // Cập nhật gốc sau khi xoay
         }
         else
         {
-            // Cập nhật con cho parent
             if (newRoot.Parent.LeftChild == node)
             {
                 newRoot.Parent.LeftChild = newRoot;
@@ -194,38 +185,44 @@ public class AVLTreeService : BSTService
                 newRoot.Parent.RightChild = newRoot;
             }
         }
-
         return newRoot;
     }
+
 
     private NodeService RotateLeft(NodeService node)
     {
         NodeService? newRoot = node.RightChild;
         if (newRoot == null) return node; // Tránh trường hợp null exception
 
-        node.RightChild = newRoot.LeftChild; // Cập nhật RightChild của node hiện tại
-        if (newRoot.LeftChild != null) // Nếu newRoot.LeftChild không null, cập nhật parent của nó
+        // Lưu vị trí cũ cho animation
+        node.OldPositionX = node.PositionX;
+        node.OldPositionY = node.PositionY;
+        newRoot.OldPositionX = newRoot.PositionX;
+        newRoot.OldPositionY = newRoot.PositionY;
+
+        // Thực hiện xoay
+        node.RightChild = newRoot.LeftChild;
+        if (newRoot.LeftChild != null)
         {
-            newRoot.LeftChild.Parent = node; // Cập nhật parent cho child
+            newRoot.LeftChild.Parent = node;
         }
-        newRoot.LeftChild = node; // Đặt node hiện tại làm LeftChild của newRoot
+        newRoot.LeftChild = node;
 
         // Cập nhật chiều cao
         node.UpdateHeight();
         newRoot.UpdateHeight();
 
-        // Cập nhật cha cho newRoot
-        newRoot.Parent = node.Parent; // Cập nhật parent của newRoot
-        node.Parent = newRoot; // Cập nhật parent của node hiện tại
+        // Cập nhật parent
+        newRoot.Parent = node.Parent;
+        node.Parent = newRoot;
 
-        // Nếu node là gốc, cập nhật lại gốc của cây
+        // Cập nhật liên kết với parent của node gốc
         if (newRoot.Parent == null)
         {
-            UpdateRoot(node); // Cập nhật gốc sau khi xoay
+            UpdateRoot(newRoot); // Cập nhật gốc sau khi xoay
         }
         else
         {
-            // Cập nhật con cho parent
             if (newRoot.Parent.LeftChild == node)
             {
                 newRoot.Parent.LeftChild = newRoot;
@@ -236,6 +233,64 @@ public class AVLTreeService : BSTService
             }
         }
 
+        
+
         return newRoot;
     }
+
+
+    public void StoreOldPositions(NodeService? node)
+    {
+        if (node == null) return;
+
+        node.OldPositionX = node.AnimatedX;
+        node.OldPositionY = node.AnimatedY;
+
+        StoreOldPositions(node.LeftChild);
+        StoreOldPositions(node.RightChild);
+    }
+    public override List<(NodeService node, double x, double y)> GetNodePositions(NodeService? root, string traversalType)
+    {
+        var positions = new List<(NodeService node, double x, double y)>();
+        if (root == null) return positions;
+
+        positions.Add((root, root.AnimatedX, root.AnimatedY));
+        positions.AddRange(GetNodePositions(root.LeftChild, traversalType));
+        positions.AddRange(GetNodePositions(root.RightChild, traversalType));
+
+        return positions;
+    }
+
+    public void UpdateNodePositions(NodeService? node, double x, double y, double offset)
+    {
+        if (node == null) return;
+
+        node.PositionX = x;
+        node.PositionY = y;
+
+        if (node.LeftChild != null)
+        {
+            UpdateNodePositions(node.LeftChild, x - offset, y + 80, offset / 2);
+        }
+        if (node.RightChild != null)
+        {
+            UpdateNodePositions(node.RightChild, x + offset, y + 80, offset / 2);
+        }
+    }
+    public void SetAnimatedPositionToCurrent()
+    {
+        SetAnimatedPositionToCurrent(Root);
+    }
+
+    private void SetAnimatedPositionToCurrent(NodeService? node)
+    {
+        if (node == null) return;
+
+        node.AnimatedX = node.PositionX;
+        node.AnimatedY = node.PositionY;
+
+        SetAnimatedPositionToCurrent(node.LeftChild);
+        SetAnimatedPositionToCurrent(node.RightChild);
+    }
+
 }

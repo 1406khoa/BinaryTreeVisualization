@@ -69,16 +69,17 @@
 <svg @oncontextmenu="OnSvgRightClick" width="100%" height="100vh" style="overflow: visible;">
     @foreach (var line in lines)
     {
-        <!-- Đường nối giữa các node -->
-        <line x1="@line.x1" y1="@line.y1" x2="@line.x2" y2="@line.y2"
+        <line x1="@line.nodeFrom.AnimatedX" y1="@line.nodeFrom.AnimatedY"
+              x2="@line.nodeTo.AnimatedX" y2="@line.nodeTo.AnimatedY"
               stroke="@((line.IsHighlighted) ? "#FFC107" : "black")" stroke-width="2" />
     }
+
 
     @foreach (var nodePosition in nodePositions)
     {
         <!-- Vẽ hình tròn cho node, tô màu nếu là node được thêm -->
         <circle class="node-circle @((nodePosition.node == selectedNode) ? "selected-node" : "")"
-                cx="@nodePosition.x" cy="@nodePosition.y" r="20" stroke="black" stroke-width="2"
+                cx="@nodePosition.node.AnimatedX" cy="@nodePosition.node.AnimatedY" r="20" stroke="black" stroke-width="2"
                 fill="@GetNodeFillColor(nodePosition.node)"
                 @onclick="(() => OnNodeClick(nodePosition.node))"
                 @oncontextmenu="(() => ShowDropdown(nodePosition.node))" />
@@ -137,7 +138,7 @@
     private int newNodeValue;
     private NodeService? selectedNode;
     private List<(NodeService node, double x, double y)> nodePositions = new();
-    private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines = new();
+    List<(NodeService nodeFrom, NodeService nodeTo, bool IsHighlighted, Guid LineID)> lines = new();
 
     // Cụm biến liên quan đến Traversal và Duyệt cây
     private string selectedTraversalMethod = "in-order";
@@ -209,6 +210,13 @@
     private async Task AddNode()
     {
         HideDropdown();
+
+        // Lưu vị trí cũ trước khi thêm node
+        if (avlTreeService.Root != null)
+        {
+            avlTreeService.StoreOldPositions(avlTreeService.Root);
+        }
+
         var newNodeID = avlTreeService.AddNode(newNodeValue);
         if (newNodeID == Guid.Empty)
         {
@@ -216,14 +224,74 @@
         }
         else
         {
-            UpdateTreeDrawing();
-            HighlightNodeAndLine(newNodeID);
-            await Task.Delay(2000);
+            // Cập nhật vị trí mới của các node
+            avlTreeService.ArrangeNodePositions(avlTreeService.Root, binaryTreeService.GetRootX(), binaryTreeService.GetRootY(), 200);
 
-            RemoveHighlighting();
             UpdateTreeDrawing();
+
+            if (avlTreeService.DidRotate)
+            {
+                // Thực hiện animation một lần sau khi cây đã cân bằng
+                await AnimateRotations();
+            }
+            else
+            {
+                // Nếu không xoay, node mới xuất hiện ngay lập tức
+                avlTreeService.SetAnimatedPositionToCurrent();
+                UpdateTreeDrawing();
+            }
         }
     }
+
+    private async Task AnimateRotations()
+    {
+        int duration = 1000; // Thời gian animation
+        int steps = 60;
+        int delay = duration / steps;
+
+        for (int i = 1; i <= steps; i++)
+        {
+            double t = (double)i / steps;
+
+            foreach (var node in GetAllNodes(avlTreeService.Root))
+            {
+                if (node == null) continue;
+
+                node.AnimatedX = Bezier(node.OldPositionX, (node.OldPositionX + node.PositionX) / 2, node.PositionX, t);
+                node.AnimatedY = Bezier(node.OldPositionY, (node.OldPositionY + node.PositionY) / 2, node.PositionY, t);
+            }
+
+            UpdateTreeDrawing();
+            await Task.Delay(delay);
+        }
+
+        foreach (var node in GetAllNodes(avlTreeService.Root))
+        {
+            if (node == null) continue;
+
+            node.AnimatedX = node.PositionX;
+            node.AnimatedY = node.PositionY;
+        }
+
+        UpdateTreeDrawing();
+    }
+
+    private List<NodeService> GetAllNodes(NodeService? node)
+    {
+        var nodes = new List<NodeService>();
+        if (node == null) return nodes;
+
+        nodes.Add(node);
+        nodes.AddRange(GetAllNodes(node.LeftChild));
+        nodes.AddRange(GetAllNodes(node.RightChild));
+
+        return nodes;
+    }
+    private double Bezier(double p0, double p1, double p2, double t)
+    {
+        return Math.Pow(1 - t, 2) * p0 + 2 * (1 - t) * t * p1 + Math.Pow(t, 2) * p2;
+    }
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -297,7 +365,7 @@
 
         for (int i = 0; i < lines.Count; i++)
         {
-            lines[i] = (lines[i].x1, lines[i].y1, lines[i].x2, lines[i].y2, IsHighlighted: false, lines[i].LineID);
+            lines[i] = (lines[i].nodeFrom, lines[i].nodeTo, IsHighlighted: false, lines[i].LineID);
         }
     }
 
@@ -322,23 +390,17 @@
 
         newNode.node.IsHighlighted = true;
 
-        var parentLine = binaryTreeService.GetParentLine(newNode.node);
-        if (parentLine != null)
+        var parentLine = lines.FirstOrDefault(line => line.nodeTo == newNode.node);
+        if (parentLine != default)
         {
-            var lineToHighlight = lines.FirstOrDefault(line =>
-                line.x1 == parentLine.Value.x1 && line.y1 == parentLine.Value.y1 &&
-                line.x2 == parentLine.Value.x2 && line.y2 == parentLine.Value.y2);
-
-            if (lineToHighlight != default)
+            int index = lines.IndexOf(parentLine);
+            if (index != -1)
             {
-                int index = lines.IndexOf(lineToHighlight);
-                if (index != -1)
-                {
-                    lines[index] = (lines[index].x1, lines[index].y1, lines[index].x2, lines[index].y2, IsHighlighted: true, lines[index].LineID);
-                }
+                lines[index] = (lines[index].nodeFrom, lines[index].nodeTo, IsHighlighted: true, lines[index].LineID);
             }
         }
     }
+
 
     private void UpdateTreeDrawing()
     {
@@ -351,16 +413,33 @@
 
         nodePositions = avlTreeService.GetNodePositions(avlTreeService.Root, selectedTraversalMethod);
 
-        lines = avlTreeService.GetLines()
-                           .Select(line => (
-                               line.x1, line.y1, line.x2, line.y2,
-                               IsHighlighted: false,
-                               LineID: Guid.NewGuid()
-                           )).ToList();
+        // Tạo danh sách lines mới
+        lines.Clear();
+        PopulateLines(avlTreeService.Root);
+
         // Cập nhật dãy số duyệt cây
         traversalOrderDisplay = string.Join(" ⭢ ", nodesInTraversalOrder.Select(n => n.Value));
         StateHasChanged();
     }
+
+    private void PopulateLines(NodeService? node)
+    {
+        if (node == null) return;
+
+        if (node.LeftChild != null)
+        {
+            lines.Add((nodeFrom: node, nodeTo: node.LeftChild, IsHighlighted: false, LineID: Guid.NewGuid()));
+            PopulateLines(node.LeftChild);
+        }
+
+        if (node.RightChild != null)
+        {
+            lines.Add((nodeFrom: node, nodeTo: node.RightChild, IsHighlighted: false, LineID: Guid.NewGuid()));
+            PopulateLines(node.RightChild);
+        }
+    }
+
+
 
     private void CreateRandomTree()
     {
@@ -369,6 +448,14 @@
         avlTreeService.ResetTree();
         statusMessage = "Random tree created";
         avlTreeService.BuildRandomTree(nodeCount, minValue, maxValue);
+
+        // Sắp xếp vị trí các node sau khi tạo cây
+        avlTreeService.ArrangeNodePositions(avlTreeService.Root, binaryTreeService.GetRootX(), binaryTreeService.GetRootY(), 200);
+
+        // Cập nhật AnimatedX và AnimatedY để hiển thị cây ngay lập tức
+        avlTreeService.SetAnimatedPositionToCurrent();
+
+        StateHasChanged();
         UpdateTreeDrawing();
     }
 
@@ -410,6 +497,13 @@
     private async Task DeleteNode()
     {
         HideDropdown();
+
+        // Lưu vị trí cũ trước khi thêm node
+        if (avlTreeService.Root != null)
+        {
+            avlTreeService.StoreOldPositions(avlTreeService.Root);
+        }
+
         // Tìm node cần xóa
         var nodeToDelete = avlTreeService.FindNodeFromRoot(newNodeValue);
 
@@ -428,9 +522,20 @@
             // Kiểm tra nếu xóa thành công
             if (isDeleted)
             {
+                showController = false;
+                if (avlTreeService.DidRotate)
+                {
+                    // Thực hiện animation một lần sau khi cây đã cân bằng
+                    await AnimateRotations();
+                }
+                else
+                {
+                    // Nếu không xoay, node mới xuất hiện ngay lập tức
+                    avlTreeService.SetAnimatedPositionToCurrent();
+                    UpdateTreeDrawing();
+                }
                 UpdateTreeDrawing();
                 OnInitialized();
-                showController = false;
                 UpdateTreeDrawing();
                 statusMessage = $"Deleted node {newNodeValue} successfully!";
                 isTraversing = false;
@@ -498,14 +603,14 @@
             selectedNode = null;
 
             // Thêm node mới với giá trị đã chỉnh sửa
-            var newNodeID = avlTreeService.AddNode(newNodeValue);
-
             showController = false;
+            await AddNode();
+
             statusMessage = "Edit Success";
+            OnInitialized();
 
             // Cập nhật giao diện cây và tô sáng node mới
             UpdateTreeDrawing();
-            HighlightNode(newNodeID);
 
             // Đợi 2 giây rồi bỏ tô sáng node mới
             await Task.Delay(2000);

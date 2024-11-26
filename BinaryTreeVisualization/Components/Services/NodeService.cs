@@ -38,10 +38,8 @@
 
         // Tọa độ của "bức tường" trái và phải
         public double LeftWallX => PositionX - NodeRadius; // X của bức tường trái
-        public double LeftWallY => PositionY; // Y của bức tường trái (giữ nguyên Y)
 
         public double RightWallX => PositionX + NodeRadius; // X của bức tường phải
-        public double RightWallY => PositionY; // Y của bức tường phải (giữ nguyên Y)
 
         // Constructor của NodeService
         public NodeService(int value)
@@ -81,7 +79,5 @@
         {
             Depth = Parent != null ? Parent.Depth + 1 : 0;
         }
-
-
     }
 }

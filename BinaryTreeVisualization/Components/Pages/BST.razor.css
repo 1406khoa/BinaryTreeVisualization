@@ -198,7 +198,6 @@ input {
     margin-left: -1.5rem;
     margin-right: -1.5rem;
     background-color: #e0e0e0; /* Slightly darker white background */
-    border-top: solid #666 1px;
 }
 
 .status {

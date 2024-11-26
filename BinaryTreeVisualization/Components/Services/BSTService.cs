@@ -2,7 +2,8 @@
 
 public class BSTService
 {
-    public  NodeService? Root { get; private set; }
+    public  NodeService? Root { get; protected set; }
+
     private const double RootX = 800; // Xác định vị trí X cố định cho node gốc
     private const double RootY = 50;  // Y cố định cho node gốc
 
@@ -43,7 +44,7 @@ public class BSTService
         {
             Root = newNode;
             Root.IsRoot = true; // Đánh dấu đây là node gốc
-            SetNodePosition(Root, RootX, RootY); // Cố định vị trí của node gốc
+            SetNodePosition(Root, RootX, RootY);
         }
         else
         {
@@ -111,7 +112,7 @@ public class BSTService
 
 
     // Hàm thiết lập vị trí cho các nút, giữ nguyên vị trí node gốc
-    private void SetNodePosition(NodeService node, double x, double y)
+    public virtual void SetNodePosition(NodeService? node, double x, double y)
     {
         if (node == Root)
         {
@@ -127,7 +128,7 @@ public class BSTService
 
 
     // Phương thức này trả về danh sách vị trí của các node trong cây
-    public  List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
+    public virtual  List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
     {
         var positions = new List<(NodeService node, double x, double y)>();
 
@@ -202,7 +203,7 @@ public class BSTService
         return node;
     }
 
-    public  void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
+    public virtual  void ArrangeNodePositions(NodeService? node, double x, double y, double offsetX, int depth = 0)
     {
         double minOffset = Math.Max(60, offsetX / Math.Pow(2, depth)); // Khoảng cách tối thiểu giữa các node
 
@@ -243,7 +244,7 @@ public class BSTService
     }
 
     // Kiểm tra xem hai nút có chồng lên nhau không
-    private bool IsOverlapping(NodeService node1, NodeService node2)
+    public virtual bool IsOverlapping(NodeService node1, NodeService node2)
     {
         double distance = Math.Sqrt(
             Math.Pow(node1.PositionX - node2.PositionX, 2) +
@@ -253,7 +254,7 @@ public class BSTService
     }
 
     // Đẩy các nút ra xa để tránh chồng lấn
-    private void PushNodesApart(NodeService node, double pushAmount)
+    public virtual void PushNodesApart(NodeService node, double pushAmount)
     {
         node.PositionX *= pushAmount;
 
@@ -445,28 +446,9 @@ public class BSTService
     }
 
     // Hàm tìm kiếm nút
-    private NodeService? FindNodeRecursive(NodeService? currentNode, int value)
-    {
-        if (currentNode == null)
-        {
-            return null;
-        }
-        if (currentNode.Value == value)
-        {
-            return currentNode;
-        }
-        else if (value < currentNode.Value)
-        {
-            return FindNodeRecursive(currentNode.LeftChild, value);
-        }
-        else
-        {
-            return FindNodeRecursive(currentNode.RightChild, value);
-        }
-    }
     public NodeService? FindNodeFromRoot(int value)
     {
-        return FindNodeRecursive(Root, value);
+        return SearchNode(Root, value);
     }
 
     public NodeService? SearchNode(NodeService? currentNode, int value)

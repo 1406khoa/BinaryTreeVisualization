@@ -653,7 +653,7 @@
     // Hàm thay đổi phương thức tìm kiếm
     private void OnSearchMethodChange(ChangeEventArgs e)
     {
-        selectedSearchMethod = e.Value?.ToString() ?? "shortest-path";
+        selectedSearchMethod = e.Value?.ToString() ?? "bst";
     }
 
     private async Task StartFindNodeAnimation() // Hàm này dùng để tìm kiếm node theo phương pháp đã chọn

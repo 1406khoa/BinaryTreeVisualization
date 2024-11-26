@@ -10,6 +10,14 @@
         // Thuộc tính hỗ trợ trực quan hóa
         public double PositionX { get; set; }    // Tọa độ X của node
         public double PositionY { get; set; }    // Tọa độ Y của node
+
+        // Vị trí cũ (trước khi xoay)
+        public double OldPositionX { get; set; }
+        public double OldPositionY { get; set; }
+
+        // Vị trí hoạt hình
+        public double AnimatedX { get; set; }
+        public double AnimatedY { get; set; }
         public bool IsHighlighted { get; set; }  // Trạng thái highlight của node (true/false)
 
         // Thuộc tính dùng cho việc kiểm tra cân bằng cây AVL
@@ -21,10 +29,7 @@
 
         public bool IsRoot { get; set; }  // Đánh dấu node gốc
 
-        public double IdealPositionX { get; set; }  // Thêm vị trí lý tưởng X
-        public double IdealPositionY { get; set; }  // Thêm vị trí lý tưởng Y
         public (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? ParentLine { get; set; }
-        public bool IsTargetNode { get; set; } = false;
 
         // Thêm thuộc tính mới để lưu trữ độ rộng nhánh
         public double SubtreeWidth { get; set; } = 1; // Khởi tạo mặc định là 1
@@ -45,8 +50,17 @@
             LeftChild = null;
             RightChild = null;
             Parent = null;
+
             PositionX = 0;
             PositionY = 0;
+
+            OldPositionX = 0;
+            OldPositionY = 0;
+
+            // Khởi tạo AnimatedX và AnimatedY bằng PositionX và PositionY
+            AnimatedX = PositionX;
+            AnimatedY = PositionY;
+
             IsHighlighted = false;
             Height = 1;   // Mặc định chiều cao của node khi mới tạo là 1
             Depth = 0;    // Mặc định độ sâu khi node mới được thêm vào là 0

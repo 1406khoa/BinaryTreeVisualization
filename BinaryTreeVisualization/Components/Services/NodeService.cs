@@ -29,11 +29,6 @@
 
         public bool IsRoot { get; set; }  // Đánh dấu node gốc
 
-        public (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? ParentLine { get; set; }
-
-        // Thêm thuộc tính mới để lưu trữ độ rộng nhánh
-        public double SubtreeWidth { get; set; } = 1; // Khởi tạo mặc định là 1
-
         public const double NodeRadius = 20; // Bán kính của node
 
         // Tọa độ của "bức tường" trái và phải
@@ -72,12 +67,6 @@
             int leftHeight = LeftChild?.Height ?? 0;
             int rightHeight = RightChild?.Height ?? 0;
             Height = 1 + Math.Max(leftHeight, rightHeight);
-        }
-
-        // Cập nhật độ sâu của node dựa trên độ sâu của node cha
-        public void UpdateDepth()
-        {
-            Depth = Parent != null ? Parent.Depth + 1 : 0;
         }
     }
 }

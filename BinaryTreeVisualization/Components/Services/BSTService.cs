@@ -11,13 +11,8 @@ public class BSTService
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
         new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
-    //public double GetRootX() => RootX;
-    //public double GetRootY() => RootY;
-
     // Danh sách để lưu trữ giá trị của các node đã thêm vào cây
     public List<int> nodeValues = new List<int>();
-
-    private string CurrentTraversalType = "in-order"; // Kiểu duyệt mặc định
 
     public List<NodeService> GetAllNodes()
     {
@@ -153,8 +148,6 @@ public class BSTService
             .FirstOrDefault();
     }
 
-
-
     // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
     public virtual List<NodeService> TraverseTree(NodeService? node, string traversalType)
     {
@@ -250,11 +243,6 @@ public class BSTService
         {
             PushNodesApart(node.RightChild, pushAmount);
         }
-    }
-
-    public void SetTraversalType(string traversalType)
-    {
-        CurrentTraversalType = traversalType;
     }
 
     // Hàm thu thập đường nối giữa các node cha - con

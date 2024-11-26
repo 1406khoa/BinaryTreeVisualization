@@ -11,7 +11,7 @@
         <p class="title">Find Node</p>
         <div>
             <select @onchange="OnSearchMethodChange">
-                <option value="bst">Search BST</option>
+                <option value="bst">Binary Search</option>
                 <option value="dfs">DFS</option>
                 <option value="bfs">BFS</option>
             </select>
@@ -74,7 +74,6 @@
               x2="@line.nodeTo.AnimatedX" y2="@line.nodeTo.AnimatedY"
               stroke="@((line.IsHighlighted) ? "#FFC107" : "black")" stroke-width="2" />
     }
-
 
     @foreach (var nodePosition in nodePositions)
     {
@@ -345,11 +344,11 @@
 
         return nodes;
     }
+
     private double Bezier(double p0, double p1, double p2, double t)
     {
         return Math.Pow(1 - t, 2) * p0 + 2 * (1 - t) * t * p1 + Math.Pow(t, 2) * p2;
     }
-
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -582,6 +581,7 @@
     public void DeselectNode()
     {
         selectedNode = null; // Hủy chọn node
+        statusMessage = "Node deselected";
         StateHasChanged();
     }
 
@@ -724,10 +724,7 @@
         isTraversing = false;
     }
 
-
-
-
-    //Controller 
+    //Controller
     protected override void OnInitialized() // đặt controller ở vị trí mặc định
     {
         statusMessage = "";
@@ -826,6 +823,7 @@
         // Cập nhật giao diện sau khi tạo xong RenderFragment
         StateHasChanged();
     }
+
     // Hàm thay đổi phương thức tìm kiếm
     private void OnSearchMethodChange(ChangeEventArgs e)
     {
@@ -869,6 +867,7 @@
         isTraversing = false;
         StateHasChanged(); // Cập nhật giao diện
     }
+
     private async Task<bool> DFSVisualization(NodeService? node, int targetValue, List<TraversalStep> traversalSteps)
     {
 
@@ -958,7 +957,6 @@
 
     private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
     {
-
         // Reset trạng thái trước khi bắt đầu
         OnInitialized();
         // Kiểm tra nếu cây rỗng
@@ -977,8 +975,6 @@
             StateHasChanged();
             return false;
         }
-
-
 
         var queue = new Queue<NodeService>();
         queue.Enqueue(root);

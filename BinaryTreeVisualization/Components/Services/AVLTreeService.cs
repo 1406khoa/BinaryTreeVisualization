@@ -29,16 +29,14 @@ public class AVLTreeService : BSTService
         return newNodeID;
     }
 
-
     private bool BalanceTreeAfterInsert(NodeService node)
     {
         bool rotated = false;
-        NodeService currentNode = node;
+        NodeService? currentNode = node;
 
         while (currentNode != null)
         {
             currentNode.UpdateHeight();
-            int balanceFactor = GetBalanceFactor(currentNode);
 
             if (!IsBalanced(currentNode))
             {
@@ -141,7 +139,6 @@ public class AVLTreeService : BSTService
         return node; // Không xoay nếu cây cân bằng
     }
 
-
     private NodeService RotateRight(NodeService node)
     {
         NodeService? newRoot = node.LeftChild;
@@ -188,7 +185,6 @@ public class AVLTreeService : BSTService
         return newRoot;
     }
 
-
     private NodeService RotateLeft(NodeService node)
     {
         NodeService? newRoot = node.RightChild;
@@ -233,11 +229,8 @@ public class AVLTreeService : BSTService
             }
         }
 
-        
-
         return newRoot;
     }
-
 
     public void StoreOldPositions(NodeService? node)
     {
@@ -249,6 +242,7 @@ public class AVLTreeService : BSTService
         StoreOldPositions(node.LeftChild);
         StoreOldPositions(node.RightChild);
     }
+
     public override List<(NodeService node, double x, double y)> GetNodePositions(NodeService? root, string traversalType)
     {
         var positions = new List<(NodeService node, double x, double y)>();
@@ -292,5 +286,4 @@ public class AVLTreeService : BSTService
         SetAnimatedPositionToCurrent(node.LeftChild);
         SetAnimatedPositionToCurrent(node.RightChild);
     }
-
 }

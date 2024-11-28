@@ -223,6 +223,7 @@
 
     private async Task AddNode()
     {
+        RemoveHighlighting();
         Guid newNodeID;
         if (selectedNode == null)
         {
@@ -239,8 +240,6 @@
 
         HighlightNode(newNodeID);
         await Task.Delay(2000);
-
-        RemoveHighlighting();
         UpdateTreeDrawing();
     }
 
@@ -675,7 +674,7 @@
     public void DeselectNode()
     {
         selectedNode = null; // Hủy chọn node
-        statusMessage = "Node deselected.";
+        statusMessage = "Node deselected";
         StateHasChanged();
     }
 
@@ -999,7 +998,6 @@
                 InvokeAsync(StateHasChanged); // Cập nhật giao diện
             });
     }
-
 
     // Hàm DFS tìm node và thu thập danh sách LineID
     private NodeService? DFSFindNode(NodeService? currentNode, int targetValue)

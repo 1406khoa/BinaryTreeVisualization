@@ -11,7 +11,7 @@
         <p class="title">Find Node</p>
         <div>
             <select @onchange="OnSearchMethodChange">
-                <option value="bst">Search BST</option>
+                <option value="bst">Binary Search</option>
                 <option value="dfs">DFS</option>
                 <option value="bfs">BFS</option>
             </select>
@@ -114,8 +114,10 @@
                 <input class="dropdown-input" type="number" @bind="newNodeValue" />
                 <xhtml:button class="dropdown-button" @onclick="AddNode"
                               disabled="@isTraversing">Add Node</xhtml:button>
-                <xhtml:button class="dropdown-button" disabled="@(isRootAbsent || isTraversing || selectedNode == null)" @onclick="UpdateNode">Update Node</xhtml:button>
-                    <xhtml:button class="dropdown-button" disabled="@(isRootAbsent || isTraversing || selectedNode == null)" @onclick="DeleteNode">Delete Node</xhtml:button>
+                <xhtml:button class="dropdown-button" disabled="@(isRootAbsent || isTraversing || selectedNode == null)" 
+                        @onclick="UpdateNode">Update Node</xhtml:button>
+                <xhtml:button class="dropdown-button" disabled="@(isRootAbsent || isTraversing || selectedNode == null)" 
+                        @onclick="DeleteNode">Delete Node</xhtml:button>
             </xhtml:div>
         </foreignObject>
     }
@@ -227,6 +229,7 @@
 
     private async Task AddNode()
     {
+        OnInitialized();
         HideDropdown();
         isTraversing = true;
         // Tìm node cha cho node mới
@@ -261,13 +264,10 @@
             HighlightNode(newNodeID);
             await Task.Delay(1000);
 
-            RemoveHighlighting();
             UpdateTreeDrawing();
             StateHasChanged();
             isTraversing = false;
-
         }
-        OnInitialized();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -652,6 +652,7 @@
     public void DeselectNode()
     {
         selectedNode = null; // Hủy chọn node
+        statusMessage = "Node deselected";
         StateHasChanged();
     }
 
@@ -908,76 +909,73 @@
         backtrackPath.Clear(); // Xóa lộ trình sau khi quay lại hoàn tất
     }
 
+    private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
+    {
 
-        private async Task<bool> BFSVisualization(NodeService? root, int targetValue, List<TraversalStep> traversalSteps)
+        // Reset trạng thái trước khi bắt đầu
+        OnInitialized();
+        // Kiểm tra nếu cây rỗng
+        if (root == null)
         {
-
-            // Reset trạng thái trước khi bắt đầu
-            OnInitialized();
-            // Kiểm tra nếu cây rỗng
-            if (root == null)
-            {
-                statusMessage = "Tree is empty.";
-                StateHasChanged();
-                return false;
-            }
-
-            // Kiểm tra nếu node mục tiêu không tồn tại
-            var targetNode = bstService.SearchNode(root, targetValue);
-            if (targetNode == null)
-            {
-                statusMessage = $"Node {targetValue} not found.";
-                StateHasChanged();
-                return false;
-            }
-
-            
-
-            var queue = new Queue<NodeService>();
-            queue.Enqueue(root);
-
-            while (queue.Count > 0)
-            {
-                var currentNode = queue.Dequeue();
-
-                // Thêm node hiện tại vào danh sách các bước đã duyệt
-                var step = new TraversalStep(currentNode);
-                traversalSteps.Add(step);
-
-                // Di chuyển controller tới node hiện tại
-                showController = true;
-                await StartControllerMovement(new Vector2((float)currentNode.PositionX, (float)currentNode.PositionY));
-
-                // Cập nhật UI với node mới được thêm vào
-                UpdateTraversalOrderFragment(traversalSteps.Count - 1);
-
-                // Tô sáng node hiện tại và giữ sáng cho đến khi kết thúc
-                currentNode.IsHighlighted = true;
-                UpdateTreeDrawing();
-                await Task.Delay((int)(1000 / Val3));
-
-                // Kiểm tra nếu đây là node cần tìm
-                if (currentNode.Value == targetValue)
-                {
-                    await Task.Delay(2000);
-
-                    OnNodeClick(currentNode);
-                    statusMessage = $"Found node {targetValue} successfully.";
-
-                    showController = false;
-                    UpdateTreeDrawing();
-                    return true;
-                }
-
-                // Thêm các node con vào hàng đợi (trái trước, phải sau)
-                if (currentNode.LeftChild != null) queue.Enqueue(currentNode.LeftChild);
-                if (currentNode.RightChild != null) queue.Enqueue(currentNode.RightChild);
-            }
-
-            UpdateTreeDrawing();
-
+            statusMessage = "Tree is empty.";
+            StateHasChanged();
             return false;
         }
+
+        // Kiểm tra nếu node mục tiêu không tồn tại
+        var targetNode = bstService.SearchNode(root, targetValue);
+        if (targetNode == null)
+        {
+            statusMessage = $"Node {targetValue} not found.";
+            StateHasChanged();
+            return false;
+        }
+
+        var queue = new Queue<NodeService>();
+        queue.Enqueue(root);
+
+        while (queue.Count > 0)
+        {
+            var currentNode = queue.Dequeue();
+
+            // Thêm node hiện tại vào danh sách các bước đã duyệt
+            var step = new TraversalStep(currentNode);
+            traversalSteps.Add(step);
+
+            // Di chuyển controller tới node hiện tại
+            showController = true;
+            await StartControllerMovement(new Vector2((float)currentNode.PositionX, (float)currentNode.PositionY));
+
+            // Cập nhật UI với node mới được thêm vào
+            UpdateTraversalOrderFragment(traversalSteps.Count - 1);
+
+            // Tô sáng node hiện tại và giữ sáng cho đến khi kết thúc
+            currentNode.IsHighlighted = true;
+            UpdateTreeDrawing();
+            await Task.Delay((int)(1000 / Val3));
+
+            // Kiểm tra nếu đây là node cần tìm
+            if (currentNode.Value == targetValue)
+            {
+                await Task.Delay(2000);
+
+                OnNodeClick(currentNode);
+                statusMessage = $"Found node {targetValue} successfully.";
+
+                showController = false;
+                UpdateTreeDrawing();
+                return true;
+            }
+
+            // Thêm các node con vào hàng đợi (trái trước, phải sau)
+            if (currentNode.LeftChild != null) queue.Enqueue(currentNode.LeftChild);
+            if (currentNode.RightChild != null) queue.Enqueue(currentNode.RightChild);
+        }
+
+        UpdateTreeDrawing();
+
+        return false;
+    }
 
     private async Task BSTVisualization(int value)
     {

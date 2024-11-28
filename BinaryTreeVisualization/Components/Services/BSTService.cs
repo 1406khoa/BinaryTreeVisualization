@@ -11,9 +11,6 @@ public class BSTService
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
         new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
 
-    //public double GetRootX() => RootX;
-    //public double GetRootY() => RootY;
-
     // Danh sách để lưu trữ giá trị của các node đã thêm vào cây
     public List<int> nodeValues = new List<int>();
 
@@ -166,7 +163,8 @@ public class BSTService
 
 
 
-    
+
+
 
     public  void ArrangeNodePositions(NodeService? node, double x, double y, double offsetX, int depth = 0)
     {
@@ -235,7 +233,10 @@ public class BSTService
         }
     }
 
+
+
    
+
 
     // Hàm thu thập đường nối giữa các node cha - con
     public List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()

@@ -1,6 +1,5 @@
 ﻿using BinaryTreeVisualization.Components.Services;
 using System.Numerics;
-using System.Xml.Linq;
 
 public class BinaryTreeService
 {
@@ -30,6 +29,7 @@ public class BinaryTreeService
         }
         return nodes;
     }
+
     public NodeService? SearchNode(NodeService? currentNode, int value)
     {
         if (currentNode == null)
@@ -59,9 +59,6 @@ public class BinaryTreeService
         TraverseTree(node.LeftChild, action); // Duyệt nhánh trái
         TraverseTree(node.RightChild, action); // Duyệt nhánh phải
     }
-
-
-
 
     // Hàm thêm node cây nhị phân tổng quát
     public Guid AddNodeToBinaryTree(int value, NodeService? parentNode, bool? selectedLeftChild = null)
@@ -135,19 +132,6 @@ public class BinaryTreeService
         return newNode.NodeID;
     }
 
-
-    public (double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)? GetParentLine(NodeService node)
-    {
-        return lines.FirstOrDefault(line =>
-            line.x1 == node.Parent?.PositionX &&
-            line.y1 == node.Parent?.PositionY &&
-            line.x2 == node.PositionX &&
-            line.y2 == node.PositionY);
-    }
-
-
-
-
     // Hàm thiết lập vị trí cho các nút, giữ nguyên vị trí node gốc
     private void SetNodePosition(NodeService node, double x, double y)
     {
@@ -190,43 +174,40 @@ public class BinaryTreeService
 
     
 
-
     public void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
-{
-    double adjustedOffset = offsetX / Math.Max(1, Math.Pow(2, depth / 2.0));
-    double minOffset = Math.Max(100, adjustedOffset);
-
-    SetNodePosition(node, x, y);
-
-    node.Depth = depth;
-
-    // Kiểm tra va chạm với tất cả các node cùng cấp
-    var nodesAtSameLevel = GetAllNodes().Where(n => n.Depth == depth && n != node).ToList();
-    foreach (var existingNode in nodesAtSameLevel)
     {
-        if (IsOverlappingWithBoundary(existingNode, node))
+        double adjustedOffset = offsetX / Math.Max(1, Math.Pow(2, depth / 2.0));
+        double minOffset = Math.Max(100, adjustedOffset);
+
+        SetNodePosition(node, x, y);
+
+        node.Depth = depth;
+
+        // Kiểm tra va chạm với tất cả các node cùng cấp
+        var nodesAtSameLevel = GetAllNodes().Where(n => n.Depth == depth && n != node).ToList();
+        foreach (var existingNode in nodesAtSameLevel)
         {
-            x += minOffset; // Đẩy node mới sang phải
-            SetNodePosition(node, x, y);
+            if (IsOverlappingWithBoundary(existingNode, node))
+            {
+                x += minOffset; // Đẩy node mới sang phải
+                SetNodePosition(node, x, y);
+            }
+        }
+
+        if (node.LeftChild != null)
+        {
+            double leftX = x - minOffset;
+            double leftY = y + 100;
+            ArrangeNodePositions(node.LeftChild, leftX, leftY, offsetX, depth + 1);
+        }
+
+        if (node.RightChild != null)
+        {
+            double rightX = x + minOffset;
+            double rightY = y + 100;
+            ArrangeNodePositions(node.RightChild, rightX, rightY, offsetX, depth + 1);
         }
     }
-
-    if (node.LeftChild != null)
-    {
-        double leftX = x - minOffset;
-        double leftY = y + 100;
-        ArrangeNodePositions(node.LeftChild, leftX, leftY, offsetX, depth + 1);
-    }
-
-    if (node.RightChild != null)
-    {
-        double rightX = x + minOffset;
-        double rightY = y + 100;
-        ArrangeNodePositions(node.RightChild, rightX, rightY, offsetX, depth + 1);
-    }
-}
-
-
 
     private bool IsOverlappingWithBoundary(NodeService existingNode, NodeService newNode)
     {
@@ -236,9 +217,6 @@ public class BinaryTreeService
 
         return overlapLeft || overlapRight;
     }
-
-
-
 
     // Hàm thu thập đường nối giữa các node cha - con. 
     public virtual List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> GetLines()

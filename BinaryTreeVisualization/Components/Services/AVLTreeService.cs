@@ -249,14 +249,14 @@ public class AVLTreeService : BSTService
         StoreOldPositions(node.LeftChild);
         StoreOldPositions(node.RightChild);
     }
-    public override List<(NodeService node, double x, double y)> GetNodePositions(NodeService? root, string traversalType)
+    public override List<(NodeService node, double x, double y)> GetNodePositions(NodeService? root)
     {
         var positions = new List<(NodeService node, double x, double y)>();
         if (root == null) return positions;
 
         positions.Add((root, root.AnimatedX, root.AnimatedY));
-        positions.AddRange(GetNodePositions(root.LeftChild, traversalType));
-        positions.AddRange(GetNodePositions(root.RightChild, traversalType));
+        positions.AddRange(GetNodePositions(root.LeftChild));
+        positions.AddRange(GetNodePositions(root.RightChild));
 
         return positions;
     }

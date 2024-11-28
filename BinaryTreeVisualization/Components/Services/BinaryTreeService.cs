@@ -150,7 +150,7 @@ public class BinaryTreeService
     }
 
     // Phương thức này trả về danh sách vị trí của các node trong cây
-    public  List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node, string traversalType = "in-order")
+    public  List<(NodeService node, double x, double y)> GetNodePositions(NodeService? node)
     {
         var positions = new List<(NodeService node, double x, double y)>();
 
@@ -160,7 +160,7 @@ public class BinaryTreeService
         }
 
         // Duyệt qua cây theo kiểu được chọn và lưu trữ các node
-        var nodesInOrder = TraverseTree(node, traversalType);
+        var nodesInOrder = GetAllNodes();
 
         // Ghi lại vị trí của mỗi node trong danh sách
         foreach (var n in nodesInOrder)
@@ -172,35 +172,7 @@ public class BinaryTreeService
     }
 
 
-    // Hàm TraverseTree để duyệt cây theo kiểu được chọn (Pre-order, In-order, Post-order, v.v.)
-    public  List<NodeService> TraverseTree(NodeService? node, string traversalType)
-    {
-        var result = new List<NodeService>();
-        if (node == null) return result;
-
-        // Tạo một hành động (Action) để thêm node vào danh sách result
-        Action<NodeService> addToResult = node => result.Add(node);
-
-        switch (traversalType)
-        {
-            case "pre-order":
-                PreOrderTraversal(node, addToResult);
-                break;
-            case "in-order":
-                InOrderTraversal(node, addToResult);
-                break;
-            case "post-order":
-                PostOrderTraversal(node, addToResult);
-                break;
-            case "reverse-in-order":
-                ReverseInOrderTraversal(node, addToResult);
-                break;
-            default:
-                InOrderTraversal(node, addToResult); // Mặc định là In-order
-                break;
-        }
-        return result;
-    }
+    
 
     public void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
     {
@@ -252,38 +224,6 @@ public class BinaryTreeService
         var lines = new List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)>();
         CollectLines(Root, lines);
         return lines;
-    }
-
-    private void InOrderTraversal(NodeService? node, Action<NodeService> action)
-    {
-        if (node == null) return;
-        InOrderTraversal(node.LeftChild, action);  // Duyệt trái
-        action(node);                              // Thao tác với node hiện tại
-        InOrderTraversal(node.RightChild, action); // Duyệt phải
-    }
-
-    private void PreOrderTraversal(NodeService? node, Action<NodeService> action)
-    {
-        if (node == null) return;
-        action(node);                              // Thao tác với node hiện tại
-        PreOrderTraversal(node.LeftChild, action); // Duyệt trái
-        PreOrderTraversal(node.RightChild, action);// Duyệt phải
-    }
-
-    private void PostOrderTraversal(NodeService? node, Action<NodeService> action)
-    {
-        if (node == null) return;
-        PostOrderTraversal(node.LeftChild, action); // Duyệt trái
-        PostOrderTraversal(node.RightChild, action);// Duyệt phải
-        action(node);                               // Thao tác với node hiện tại
-    }
-
-    private void ReverseInOrderTraversal(NodeService? node, Action<NodeService> action)
-    {
-        if (node == null) return;
-        ReverseInOrderTraversal(node.RightChild, action); // Duyệt phải trước
-        action(node);                                     // Thao tác với node hiện tại
-        ReverseInOrderTraversal(node.LeftChild, action);  // Duyệt trái sau
     }
 
     // Hàm đệ quy để thu thập các đường nối giữa các node

@@ -132,6 +132,7 @@
 @code {
     @using BinaryTreeVisualization.Components.Services
     @using System.Numerics
+    private CancellationTokenSource? cancellationTokenSource;
 
     // Cụm biến liên quan đến Node và Node Selection
     private int newNodeValue;
@@ -322,73 +323,200 @@
         StateHasChanged();
     }
 
+    private void OnTraversalMethodChange(ChangeEventArgs e)
+    {
+        selectedTraversalMethod = e.Value?.ToString() ?? "in-order";
+    }
+
+
+    private async Task InOrderTraversalVisualization(NodeService? node, CancellationToken cancellationToken)
+    {
+        if (node == null || cancellationToken.IsCancellationRequested) return;
+
+        // Duyệt nhánh trái
+        if (node.LeftChild != null)
+        {
+            await MoveAlongPath(node, node.LeftChild);
+            await InOrderTraversalVisualization(node.LeftChild, cancellationToken);
+            await MoveAlongPath(node.LeftChild, node);
+        }
+
+        // Xử lý node hiện tại
+        await VisitNode(node);
+
+        // Duyệt nhánh phải
+        if (node.RightChild != null)
+        {
+            await MoveAlongPath(node, node.RightChild);
+            await InOrderTraversalVisualization(node.RightChild, cancellationToken);
+            await MoveAlongPath(node.RightChild, node);
+        }
+    }
+
+
+    private async Task PreOrderTraversalVisualization(NodeService? node, CancellationToken cancellationToken)
+    {
+        if (node == null || cancellationToken.IsCancellationRequested) return;
+
+        // Xử lý node hiện tại
+        await VisitNode(node);
+
+        // Duyệt nhánh trái
+        if (node.LeftChild != null)
+        {
+            // Di chuyển controller đến node con trái
+            await MoveAlongPath(node, node.LeftChild);
+            await PreOrderTraversalVisualization(node.LeftChild, cancellationToken);
+            // Quay lại node cha
+            await MoveAlongPath(node.LeftChild, node);
+        }
+
+        // Duyệt nhánh phải
+        if (node.RightChild != null)
+        {
+            // Di chuyển controller đến node con phải
+            await MoveAlongPath(node, node.RightChild);
+            await PreOrderTraversalVisualization(node.RightChild, cancellationToken);
+            // Quay lại node cha
+            await MoveAlongPath(node.RightChild, node);
+        }
+    }
+
+    private async Task PostOrderTraversalVisualization(NodeService? node, CancellationToken cancellationToken)
+    {
+        if (node == null) return;
+
+        // Duyệt nhánh trái
+        if (node.LeftChild != null)
+        {
+            // Di chuyển controller đến node con trái
+            await MoveAlongPath(node, node.LeftChild);
+            await PostOrderTraversalVisualization(node.LeftChild, cancellationToken);
+            // Quay lại node cha
+            await MoveAlongPath(node.LeftChild, node);
+        }
+
+        // Duyệt nhánh phải
+        if (node.RightChild != null)
+        {
+            // Di chuyển controller đến node con phải
+            await MoveAlongPath(node, node.RightChild);
+            await PostOrderTraversalVisualization(node.RightChild, cancellationToken);
+            // Quay lại node cha
+            await MoveAlongPath(node.RightChild, node);
+        }
+
+        // Xử lý node hiện tại
+        await VisitNode(node);
+    }
+
+    private async Task ReverseInOrderTraversalVisualization(NodeService? node, CancellationToken cancellationToken)
+    {
+        if (node == null) return;
+
+        // Duyệt nhánh phải
+        if (node.RightChild != null)
+        {
+            // Di chuyển controller đến node con phải
+            await MoveAlongPath(node, node.RightChild);
+            await ReverseInOrderTraversalVisualization(node.RightChild, cancellationToken);
+            // Quay lại node cha
+            await MoveAlongPath(node.RightChild, node);
+        }
+
+        // Xử lý node hiện tại
+        await VisitNode(node);
+
+        // Duyệt nhánh trái
+        if (node.LeftChild != null)
+        {
+            // Di chuyển controller đến node con trái
+            await MoveAlongPath(node, node.LeftChild);
+            await ReverseInOrderTraversalVisualization(node.LeftChild, cancellationToken);
+            // Quay lại node cha
+            await MoveAlongPath(node.LeftChild, node);
+        }
+    }
+
+
+    private async Task VisitNode(NodeService node)
+    {
+        await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
+
+        node.IsHighlighted = true;
+        traversalSteps.Add(new TraversalStep(node));
+
+        // Dừng lại để người dùng quan sát
+        await Task.Delay((int)(200 / Val3));
+
+        // Cập nhật giao diện sau khi hoàn thành
+        UpdateTreeDrawing();
+        UpdateTraversalOrderFragment(traversalSteps.Count - 1);
+        StateHasChanged();
+    }
+
+
+    private async Task MoveAlongPath(NodeService fromNode, NodeService toNode)
+    {
+        var startPoint = new Vector2((float)fromNode.PositionX, (float)fromNode.PositionY);
+        var endPoint = new Vector2((float)toNode.PositionX, (float)toNode.PositionY);
+
+        float distance = Vector2.Distance(startPoint, endPoint);
+        int steps = Math.Max(1, (int)(distance / 100000)); // Điều chỉnh theo nhu cầu
+
+        for (int i = 1; i <= steps; i++)
+        {
+            float t = (float)i / steps;
+            var intermediatePoint = Vector2.Lerp(startPoint, endPoint, t);
+
+            await StartControllerMovement(intermediatePoint);
+
+            // Giảm thời gian delay
+            await Task.Delay((int)(16 / Val3)); // Điều chỉnh thời gian nếu cần
+        }
+    }
+
+
+
     private async Task StartTraversal()
     {
         if (isTraversing) return;
-
+        // Hủy bỏ tác vụ trước đó nếu có
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource = new CancellationTokenSource();
+        traversalSteps = new List<TraversalStep>();
+        OnInitialized();
         isTraversing = true;
+        statusMessage = "Traversing...";
+        showController = true; // Hiển thị controller
+        StateHasChanged(); // Cập nhật giao diện
 
-        // Lấy danh sách các node theo kiểu duyệt
-        var nodes = bstService.TraverseTree(bstService.Root, selectedTraversalMethod);
+        switch (selectedTraversalMethod.ToLower())
+        {
+            case "in-order":
+                await InOrderTraversalVisualization(bstService.Root, cancellationTokenSource.Token);
+                break;
+            case "pre-order":
+                await PreOrderTraversalVisualization(bstService.Root, cancellationTokenSource.Token);
+                break;
+            case "post-order":
+                await PostOrderTraversalVisualization(bstService.Root, cancellationTokenSource.Token);
+                break;
+            case "reverse-in-order":
+                await ReverseInOrderTraversalVisualization(bstService.Root, cancellationTokenSource.Token);
+                break;
+            default:
+                await InOrderTraversalVisualization(bstService.Root, cancellationTokenSource.Token);
+                break;
+        }
 
-        // Khởi tạo danh sách traversalSteps từ nodes
-        traversalSteps = nodes.Select(node => new TraversalStep(node)).ToList();
-
-        StateHasChanged();
-
-        // Bắt đầu hoạt ảnh duyệt cây
-        await StartTraversalAnimation(traversalSteps.Select(ts => ts.Node).ToList());
+        showController = false; // Ẩn controller sau khi duyệt xong
         statusMessage = "Finished!";
-
         isTraversing = false;
         StateHasChanged();
     }
 
-    private async Task StartTraversalAnimation(List<NodeService> traversalOrderNodes) //animation dùng cho chức năng duyệt theo thuật toán
-    {
-        OnInitialized();
-        statusMessage = "Traversing...";
-        showController = true; // Hiển thị kiểm soát viên
-        StateHasChanged(); // Cập nhật giao diện
-
-        for (int i = 0; i < traversalOrderNodes.Count; i++)
-        {
-            var node = traversalOrderNodes[i];
-
-            // Di chuyển kiểm soát viên tới node hiện tại
-            await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
-
-            // Cập nhật RenderFragment cho bước hiện tại
-            UpdateTraversalOrderFragment(i);
-
-            // Tô sáng node hiện tại
-            node.IsHighlighted = true;
-            UpdateTreeDrawing();
-
-            // Dừng lại một chút dựa trên tốc độ từ slider
-            await Task.Delay((int)(1000 / Val3));
-
-            // Bỏ tô sáng node sau khi hoàn thành bước này
-            UpdateTreeDrawing();
-        }
-
-        showController = false; // Ẩn kiểm soát viên sau khi duyệt xong
-        StateHasChanged();
-    }
-
-    private void OnTraversalMethodChange(ChangeEventArgs e)
-    {
-        // Cập nhật phương thức duyệt được chọn từ select tag
-        selectedTraversalMethod = e.Value?.ToString() ?? "in-order";
-
-        // Lấy danh sách các node theo kiểu duyệt
-        var nodes = bstService.TraverseTree(bstService.Root, selectedTraversalMethod);
-
-        // Khởi tạo lại danh sách traversalSteps dựa trên danh sách nodes
-        traversalSteps = nodes.Select(node => new TraversalStep(node)).ToList();
-
-        StateHasChanged(); // Cập nhật giao diện để hiển thị những thay đổi mới
-    }
+    
 
     private void RemoveHighlighting()
     {
@@ -415,14 +543,13 @@
 
     private void UpdateTreeDrawing()
     {
-        var nodesInTraversalOrder = bstService.TraverseTree(bstService.Root, selectedTraversalMethod);
 
         if (bstService.Root != null)
         {
             bstService.ArrangeNodePositions(bstService.Root, binaryTreeService.GetRootX(), binaryTreeService.GetRootY(), 200);
         }
 
-        nodePositions = bstService.GetNodePositions(bstService.Root, selectedTraversalMethod);
+        nodePositions = bstService.GetNodePositions(bstService.Root);
 
         lines = bstService.GetLines()
                            .Select(line => (
@@ -430,8 +557,6 @@
                                IsHighlighted: false,
                                LineID: Guid.NewGuid()
                            )).ToList();
-        // Cập nhật dãy số duyệt cây
-        traversalOrderDisplay = string.Join(" ⭢ ", nodesInTraversalOrder.Select(n => n.Value));
         StateHasChanged();
     }
 

@@ -19,6 +19,7 @@
         public double AnimatedX { get; set; }
         public double AnimatedY { get; set; }
         public bool IsHighlighted { get; set; }  // Trạng thái highlight của node (true/false)
+        public bool IsFound { get; set; }  // Trạng thái tìm thấy của node (true/false)
 
         // Thuộc tính dùng cho việc kiểm tra cân bằng cây AVL
         public int Height { get; set; }   // Chiều cao của node trong cây

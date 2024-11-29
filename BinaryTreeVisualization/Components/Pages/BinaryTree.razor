@@ -208,6 +208,10 @@
         {
             return "lightgreen";
         }
+        else if (node.IsFound)
+        {
+            return "#87CEEB";
+        }
         else if (node.IsHighlighted) // Tô màu vàng cho node đang được tìm kiếm
         {
             return "#FFC107"; // Vàng hổ phách nhạt (Amber)
@@ -229,12 +233,15 @@
         {
             // Nếu chưa chọn nút nào, thêm nút gốc
             newNodeID = binaryTreeService.AddNodeToBinaryTree(newNodeValue, null);
+            statusMessage = $"Add {newNodeValue} successfully";
         }
         else
         {
             // Nếu đã chọn nút, thêm vào nút đã chọn
             newNodeID = binaryTreeService.AddNodeToBinaryTree(newNodeValue, selectedNode);
+            statusMessage = $"Add {newNodeValue} successfully";
         }
+
         HideDropdown();
         UpdateTreeDrawing();
 
@@ -301,6 +308,7 @@
         if (selectedNode != null)
         {
             newNodeID = binaryTreeService.AddNodeToBinaryTree(newNodeValue, selectedNode, selectedLeftChild);
+            statusMessage = $"Add {newNodeValue} successfully";
             UpdateTreeDrawing();
 
             HighlightNode(newNodeID);
@@ -343,8 +351,8 @@
                 selectedNode.LeftChild = rightChild;
                 selectedNode.RightChild = null; // Xóa child phải
             }
-
-            // Cập nhật lại giao diện
+            
+            statusMessage = "Switched child successfully";
             HideDropdown();
             UpdateTreeDrawing();
         }
@@ -592,6 +600,7 @@
         foreach (var node in binaryTreeService.GetAllNodes())
         {
             node.IsHighlighted = false;
+            node.IsFound = false;
         }
         UpdateTreeDrawing();
     }
@@ -809,6 +818,7 @@
             var node = path[i];
 
             // Di chuyển controller đến node hiện tại
+            statusMessage = $"Searching for node {targetValue}...";
             await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
 
             // Cập nhật bước duyệt trong giao diện
@@ -827,7 +837,7 @@
         // Ẩn controller sau khi hoàn thành
         showController = false;
         StateHasChanged();
-        OnNodeClick(path.Last());
+        path.Last().IsFound = true;
 
         statusMessage = $"Node {targetValue} found successfully.";
         StateHasChanged();
@@ -856,7 +866,6 @@
             return false;
         }
 
-
         var queue = new Queue<NodeService>();
         queue.Enqueue(root);
 
@@ -870,6 +879,7 @@
 
             // Di chuyển controller tới node hiện tại
             showController = true;
+            statusMessage = $"Searching for node {targetValue}...";
             await StartControllerMovement(new Vector2((float)currentNode.PositionX, (float)currentNode.PositionY));
 
             // Cập nhật UI với node mới được thêm vào
@@ -885,7 +895,7 @@
             {
                 await Task.Delay(2000);
                 showController = false;
-                OnNodeClick(currentNode);
+                currentNode.IsFound = true;
                 statusMessage = $"Found node {targetValue} successfully.";
                 UpdateTreeDrawing();
                 return true;
@@ -928,6 +938,7 @@
 
         // Di chuyển controller đến node hiện tại
         showController = true;
+        statusMessage = $"Searching for node {targetValue}...";
         await StartControllerMovement(new Vector2((float)node.PositionX, (float)node.PositionY));
         UpdateTraversalOrderFragment(traversalSteps.Count - 1);
 
@@ -941,7 +952,7 @@
         {
             await Task.Delay(2000);
             showController = false;
-            OnNodeClick(node);
+            node.IsFound = true;
             statusMessage = $"Found node {targetValue} successfully.";
             UpdateTreeDrawing();
             return true;

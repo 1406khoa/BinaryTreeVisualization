@@ -33,7 +33,7 @@
     </div>
 
     <div class="speed-control">
-        <p class="title-speed">@($"Animation Speed: x{Val3}")</p>
+        <p class="title-speed">@($"Animation Speed: x{Val3} (Duration: {1000 / Val3}ms)")</p>
         <div class="custom-slider">
             <MatSlider class="slider" @bind-Value="@Val3" Discrete="true" Pin="true" TValue="int" ValueMin="1" ValueMax="3"></MatSlider>
         </div>
@@ -55,8 +55,10 @@
 </div>
 
 <p class="title">Traversal Order</p>
-<div style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-    @traversalOrderFragment
+<div style="background-color: #f0f0f0; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+    <span style="padding: 10px">
+        @traversalOrderFragment
+    </span>
 </div>
 
 <!-- Thông báo trạng thái -->

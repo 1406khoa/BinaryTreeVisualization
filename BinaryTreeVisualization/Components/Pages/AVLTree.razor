@@ -34,7 +34,7 @@
     </div>
 
     <div class="speed-control">
-        <p class="title-speed">@($"Animation Speed: x{Val3}")</p>
+        <p class="title-speed">@($"Animation Speed: x{Val3} (Duration: {1000 / Val3}ms)")</p>
         <div class="custom-slider">
             <MatSlider class="slider" @bind-Value="@Val3" Discrete="true" Pin="true" TValue="int" ValueMin="1" ValueMax="3"></MatSlider>
         </div>
@@ -56,8 +56,10 @@
 </div>
 
 <p class="title">Traversal Order</p>
-<div style="background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-    @traversalOrderFragment
+<div style="background-color: #f0f0f0; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+    <span style="padding: 10px">
+        @traversalOrderFragment
+    </span>
 </div>
 
 <!-- Thông báo trạng thái -->
@@ -296,8 +298,11 @@
 
     private async Task AnimateRotations()
     {
-        int duration = 1000; // Thời gian animation
-        int steps = 60;
+        int baseDuration = 1000; // Thời gian cơ sở (1x)
+        int steps = 60; // Số bước animation
+
+        // Tính toán thời gian animation dựa trên slider
+        int duration = baseDuration / Val3; // Tăng tốc độ khi Val3 lớn
         int delay = duration / steps;
 
         for (int i = 1; i <= steps; i++)
@@ -313,7 +318,7 @@
             }
 
             UpdateTreeDrawing();
-            await Task.Delay(delay);
+            await Task.Delay(delay); // Điều chỉnh tốc độ dựa vào slider
         }
 
         foreach (var node in GetAllNodes(avlTreeService.Root))
@@ -326,6 +331,7 @@
 
         UpdateTreeDrawing();
     }
+
 
     private List<NodeService> GetAllNodes(NodeService? node)
     {

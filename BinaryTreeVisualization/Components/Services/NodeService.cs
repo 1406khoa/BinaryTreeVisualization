@@ -37,6 +37,8 @@
 
         public double RightWallX => PositionX + NodeRadius; // X của bức tường phải
 
+
+
         // Constructor của NodeService
         public NodeService(int value)
         {

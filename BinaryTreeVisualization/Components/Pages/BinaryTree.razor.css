@@ -60,15 +60,15 @@ select {
     width: 300px;
 }
 
-.    {
+.random-tree {
     margin-bottom: 10px;
 }
 
-.random-tree > div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
+    .random-tree > div {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
 
 
 
@@ -106,13 +106,13 @@ input {
     width: 6%;
 }
 
-.button:hover,
-.create-random-button:hover,
-.clear-button:hover {
-    background-color: #a080f6;
-    transition: 0.3s;
-    color: white;
-}
+    .button:hover,
+    .create-random-button:hover,
+    .clear-button:hover {
+        background-color: #a080f6;
+        transition: 0.3s;
+        color: white;
+    }
 
 .button:active,
 .create-random-button:active {
@@ -137,15 +137,15 @@ input {
     padding: 10px;
 }
 
-.dropdown-menu::before {
-    content: '';
-    position: absolute;
-    top: 60px;
-    left: -16px;
-    border-width: 8px;
-    border-style: solid;
-    border-color: transparent #9375e2 transparent transparent;
-}
+    .dropdown-menu::before {
+        content: '';
+        position: absolute;
+        top: 60px;
+        left: -16px;
+        border-width: 8px;
+        border-style: solid;
+        border-color: transparent #9375e2 transparent transparent;
+    }
 
 .dropdown-input {
     width: 90%;
@@ -168,21 +168,21 @@ input {
     cursor: pointer;
 }
 
-.dropdown-button:hover {
-    background-color: rgba(255,255,255,0.37);
-    transition: 0.3s;
-    color: white;
-}
+    .dropdown-button:hover {
+        background-color: rgba(255,255,255,0.37);
+        transition: 0.3s;
+        color: white;
+    }
 
-.button[disabled],
-.create-random-button[disabled],
-.clear-button[disabled],
-.dropdown-button[disabled] {
-    opacity: 0.5 !important;
-    cursor: not-allowed !important;
-    background-color: #ccc !important;
-    color: #666 !important;
-}
+    .button[disabled],
+    .create-random-button[disabled],
+    .clear-button[disabled],
+    .dropdown-button[disabled] {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        background-color: #ccc !important;
+        color: #666 !important;
+    }
 
 .status-bar {
     position: fixed;
@@ -206,30 +206,3 @@ input {
     font-weight: 500;
     font-size: 15px;
 }
-
-#refresh-button {
-    margin-left: 7px;
-    background-color: #f0f0f0; /* Nền màu xám nhạt */
-    border: 2px solid #ccc; /* Viền màu xám */
-    border-radius: 50%; /* Tạo nút hình tròn */
-    width: 40px; /* Chiều rộng */
-    height: 40px; /* Chiều cao */
-    display: flex; /* Để căn giữa biểu tượng */
-    justify-content: center; /* Căn ngang */
-    align-items: center; /* Căn dọc */
-    cursor: pointer; /* Hiển thị con trỏ khi hover */
-}
-
-    #refresh-button:hover {
-        background-color: #e0e0e0; /* Đổi màu nền khi hover */
-    }
-
-    #refresh-button:active {
-        background-color: #d0d0d0; /* Đổi màu nền khi nhấn */
-        box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.3); /* Hiệu ứng ấn vào */
-    }
-
-    #refresh-button MatIcon {
-        font-size: 24px; /* Kích thước biểu tượng */
-        color: #555; /* Màu sắc biểu tượng */
-    }

@@ -6,7 +6,6 @@ public class AVLTreeService : BSTService
     // Phương thức thêm nút vào cây AVL
     public override Guid AddNode(int value)
     {
-        // Cờ để xác định xem có xoay cây hay không
         DidRotate = false;
 
         // Thêm nút vào cây nhị phân thông qua phương thức AddNode của lớp cơ sở
@@ -85,7 +84,6 @@ public class AVLTreeService : BSTService
             // Cập nhật chiều cao của node hiện tại (tức là node cha của node đã bị xóa)
             node.UpdateHeight();
 
-            // Kiểm tra cân bằng
             if (!IsBalanced(node))
             {
                 node = PerformRotation(node);
@@ -120,7 +118,7 @@ public class AVLTreeService : BSTService
         // Lệch trái -> xoay phải
         if (balanceFactor > 1)
         {
-            if (node.LeftChild != null && GetBalanceFactor(node.LeftChild) < 0)
+            if (node.LeftChild != null && GetBalanceFactor(node.LeftChild) < 0) //Lệch trái - phải -> xoay trái trước
             {
                 node.LeftChild = RotateLeft(node.LeftChild);
             }
@@ -242,8 +240,6 @@ public class AVLTreeService : BSTService
         StoreOldPositions(node.LeftChild);
         StoreOldPositions(node.RightChild);
     }
-
-
 
     public override List<(NodeService node, double x, double y)> GetNodePositions(NodeService? root)
     {

@@ -7,7 +7,7 @@
 
 <div class="first-component">
     <div class="find-operation">
-        <p class="title">Find Node</p>
+        <p class="title">Search Node</p>
         <div>
             <select @onchange="OnSearchMethodChange">
                 <option value="shortest-path">Shortest Path</option>
@@ -15,7 +15,7 @@
                 <option value="bfs">BFS</option>
             </select>
             <input class="find-input" type="number" @bind="newNodeValue" />
-            <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Find</button>
+            <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Search</button>
         </div>
     </div>
 
@@ -395,10 +395,7 @@
     private void OnTraversalMethodChange(ChangeEventArgs e)
     {
         selectedTraversalMethod = e.Value?.ToString() ?? "in-order";
-
-
     }
-
 
     private async Task InOrderTraversalVisualization(NodeService? node, CancellationToken cancellationToken)
     {

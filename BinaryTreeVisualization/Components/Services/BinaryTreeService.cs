@@ -30,26 +30,6 @@ public class BinaryTreeService
         return nodes;
     }
 
-    public NodeService? SearchNode(NodeService? currentNode, int value)
-    {
-        if (currentNode == null)
-        {
-            return null;
-        }
-        if (currentNode.Value == value)
-        {
-            return currentNode;
-        }
-        else if (value < currentNode.Value)
-        {
-            return SearchNode(currentNode.LeftChild, value);
-        }
-        else
-        {
-            return SearchNode(currentNode.RightChild, value);
-        }
-    }
-
     // Hàm trợ giúp TraverseTree dùng đệ quy để duyệt qua tất cả các node
     private void TraverseTree(NodeService? node, Action<NodeService> action)
     {
@@ -169,10 +149,7 @@ public class BinaryTreeService
         }
 
         return positions;
-    }
-
-
-    
+    }   
 
     public void ArrangeNodePositions(NodeService node, double x, double y, double offsetX, int depth = 0)
     {
@@ -326,7 +303,7 @@ public class BinaryTreeService
         }
         else
         {
-            // Cập nhật parent để xóa node
+            // Kiểm tra xem cha của nút cần xóa là nút nào, coi nút cần xóa là con trái hay phải của cha đó để xóa
             if (nodeToDelete.Parent != null)
             {
                 if (nodeToDelete.Parent.LeftChild == nodeToDelete)

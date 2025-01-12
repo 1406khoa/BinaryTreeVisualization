@@ -14,7 +14,6 @@ public class BSTService
     // Danh sách để lưu trữ giá trị của các node đã thêm vào cây
     public List<int> nodeValues = new List<int>();
 
-
     public List<NodeService> GetAllNodes()
     {
         List<NodeService> nodes = new List<NodeService>();
@@ -351,7 +350,7 @@ public class BSTService
     }
 
     // Đệ quy xóa node khỏi cây nhị phân
-    private NodeService? DeleteNodeRecursive(NodeService? node, int value)
+    private NodeService? DeleteNodeRecursive(NodeService? node, int value) //value là giá trị cần xóa
     {
         if (node == null) return null;
 
@@ -367,7 +366,7 @@ public class BSTService
         {
             // Node cần xóa được tìm thấy
 
-            // Trường hợp 1: Node không có con hoặc chỉ có 1 con
+            // Trường hợp 1: Node không có con hoặc chỉ có 1 con (nếu có 1 con thì đưa con lên thế chỗ)
             if (node.LeftChild == null) return node.RightChild;
             if (node.RightChild == null) return node.LeftChild;
 

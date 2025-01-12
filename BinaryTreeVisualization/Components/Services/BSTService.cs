@@ -4,8 +4,8 @@ public class BSTService
 {
     public  NodeService? Root { get; protected set; }
 
-    private const double RootX = 800; // Xác định vị trí X cố định cho node gốc
-    private const double RootY = 50;  // Y cố định cho node gốc
+    public const double RootX = 800; // Xác định vị trí X cố định cho node gốc
+    public const double RootY = 50;  // Y cố định cho node gốc
 
     // Danh sách lưu các đường nối (lines) giữa các node để vẽ
     private List<(double x1, double y1, double x2, double y2, bool IsHighlighted, Guid LineID)> lines =
@@ -303,32 +303,34 @@ public class BSTService
         nodeValues.Clear();
     }
 
-    // Hàm xóa node theo giá trị
     public virtual bool DeleteNode(int value)
     {
-        // Gọi hàm đệ quy để xóa node
+        // Thực hiện xóa đệ quy
         Root = DeleteNodeRecursive(Root, value);
 
-        // Sau khi xóa node thành công, loại bỏ giá trị khỏi danh sách nodeValues
-        if (!nodeValues.Remove(value))
+        // Nếu xóa không thành công, Root sẽ không đổi hoặc nodeValues không mất giá trị
+        bool removed = nodeValues.Remove(value);
+        if (!removed)
         {
-            Console.WriteLine($"Warning: Value {value} not found in nodeValues list.");
+            Console.WriteLine($"[BSTService] Warning: Value {value} not found in nodeValues.");
         }
 
-        // Cập nhật lại tham chiếu Parent cho tất cả các node còn lại trong cây
+        // Cập nhật Parent cho toàn bộ
         UpdateParentReferences(Root, null);
 
-        // Cập nhật lại vị trí của tất cả các node nếu cây không rỗng
+        // Arrange lại vị trí nếu còn node
         if (Root != null)
         {
             ArrangeNodePositions(Root, RootX, RootY, 200);
         }
 
-        return Root != null;
+        // Trả về true nếu Root != null nghĩa là còn cây hoặc xóa xong vẫn hợp lệ
+        // Tuỳ bạn muốn logic trả true/false như thế nào.
+        return removed;
     }
 
     // Hàm đệ quy để cập nhật tham chiếu Parent của các node
-    private void UpdateParentReferences(NodeService? currentNode, NodeService? parent)
+    public void UpdateParentReferences(NodeService? currentNode, NodeService? parent)
     {
         if (currentNode == null) return;
 
@@ -340,44 +342,56 @@ public class BSTService
         UpdateParentReferences(currentNode.RightChild, currentNode);
     }
 
-    // Tìm node nhỏ nhất trong cây con
-    private NodeService FindMin(NodeService node)
-    {
-        while (node.LeftChild != null)
-        {
-            node = node.LeftChild;
-        }
-        return node;
-    }
 
-    // Đệ quy xóa node khỏi cây nhị phân
-    private NodeService? DeleteNodeRecursive(NodeService? node, int value)
+    private NodeService? DeleteNodeRecursive(NodeService? current, int value)
     {
-        if (node == null) return null;
+        if (current == null) return null;
 
-        if (value < node.Value)
+        if (value < current.Value)
         {
-            node.LeftChild = DeleteNodeRecursive(node.LeftChild, value);
+            current.LeftChild = DeleteNodeRecursive(current.LeftChild, value);
         }
-        else if (value > node.Value)
+        else if (value > current.Value)
         {
-            node.RightChild = DeleteNodeRecursive(node.RightChild, value);
+            current.RightChild = DeleteNodeRecursive(current.RightChild, value);
         }
         else
         {
-            // Node cần xóa được tìm thấy
-
-            // Trường hợp 1: Node không có con hoặc chỉ có 1 con
-            if (node.LeftChild == null) return node.RightChild;
-            if (node.RightChild == null) return node.LeftChild;
-
-            // Trường hợp 2: Node có 2 con
-            // Tìm node nhỏ nhất trong nhánh phải
-            var minLargerNode = FindMin(node.RightChild);
-            node.Value = minLargerNode.Value; // Thay thế giá trị node hiện tại bằng giá trị node nhỏ nhất nhánh phải
-            node.RightChild = DeleteNodeRecursive(node.RightChild, minLargerNode.Value); // Xóa node nhỏ nhất nhánh phải
+            // Tìm thấy node cần xóa
+            // TH1: Node lá
+            if (current.LeftChild == null && current.RightChild == null)
+            {
+                return null; // Bỏ node này (xóa)
+            }
+            // TH2: Node có 1 con
+            else if (current.LeftChild == null)
+            {
+                return current.RightChild;
+            }
+            else if (current.RightChild == null)
+            {
+                return current.LeftChild;
+            }
+            // TH3: Node có 2 con => copy predecessor
+            else
+            {
+                // Lấy node có giá trị lớn nhất bên trái
+                var predecessor = FindMax(current.LeftChild);
+                // Copy giá trị
+                current.Value = predecessor.Value;
+                // Xóa predecessor
+                current.LeftChild = DeleteNodeRecursive(current.LeftChild, predecessor.Value);
+            }
         }
+        return current;
+    }
 
+    protected NodeService FindMax(NodeService node)
+    {
+        while (node.RightChild != null)
+        {
+            node = node.RightChild;
+        }
         return node;
     }
 
@@ -386,7 +400,6 @@ public class BSTService
         Root = newRoot; // Cập nhật giá trị Root từ lớp con hoặc bên ngoài
     }
 
-    // Hàm tìm kiếm nút
     public NodeService? FindNodeFromRoot(int value)
     {
         return SearchNode(Root, value);

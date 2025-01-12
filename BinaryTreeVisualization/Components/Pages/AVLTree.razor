@@ -8,7 +8,7 @@
 
 <div class="first-component">
     <div class="find-operation">
-        <p class="title">Find Node</p>
+        <p class="title">Search Node</p>
         <div>
             <select @onchange="OnSearchMethodChange">
                 <option value="bst">Binary Search</option>
@@ -16,7 +16,7 @@
                 <option value="bfs">BFS</option>
             </select>
             <input class="find-input" type="number" @bind="newNodeValue" />
-            <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Find</button>
+            <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Search</button>
         </div>
     </div>
 
@@ -574,9 +574,6 @@
         StateHasChanged();
     }
 
-
-
-
     private async Task UpdateNode()
     {
         HideDropdown();
@@ -592,6 +589,11 @@
                 isTraversing = false;
                 StateHasChanged();
                 return;
+            }
+
+            if (avlTreeService.Root != null)
+            {
+                controllerPosition = new Vector2((float)avlTreeService.Root.PositionX, (float)avlTreeService.Root.PositionY);
             }
 
             // Tìm đường đi từ gốc đến node cần chỉnh sửa
@@ -637,6 +639,7 @@
             if (newNode != null)
             {
                 OnNodeClick(newNode);
+                statusMessage = $"Update {newNodeValue} successfully";
             }
             isTraversing = false;
         }

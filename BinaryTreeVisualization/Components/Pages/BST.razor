@@ -8,7 +8,7 @@
 
 <div class="first-component">
     <div class="find-operation">
-        <p class="title">Find Node</p>
+        <p class="title">Search Node</p>
         <div>
             <select @onchange="OnSearchMethodChange">
                 <option value="bst">Binary Search</option>
@@ -16,7 +16,7 @@
                 <option value="bfs">BFS</option>
             </select>
             <input class="find-input" type="number" @bind="newNodeValue" />
-            <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Find</button>
+            <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Search</button>
         </div>
     </div>
 
@@ -721,7 +721,6 @@
             {
                 OnNodeClick(newNode);
                 statusMessage = $"Update {newNodeValue} successfully";
-
             }
             isTraversing = false;
         }

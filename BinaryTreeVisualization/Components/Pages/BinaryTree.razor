@@ -7,7 +7,7 @@
 
 <div class="first-component">
     <div class="find-operation">
-        <p class="title">Find Node</p>
+        <p class="title">Search Node</p>
         <div>
             <select @onchange="OnSearchMethodChange">
                 <option value="shortest-path">Shortest Path</option>
@@ -15,7 +15,7 @@
                 <option value="bfs">BFS</option>
             </select>
             <input class="find-input" type="number" @bind="newNodeValue" />
-            <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Find</button>
+            <button class="button" @onclick="StartFindNodeAnimation" disabled="@isTraversing">Search</button>
         </div>
     </div>
 
@@ -210,6 +210,10 @@
         {
             return "lightgreen";
         }
+        else if (node.IsFound)
+        {
+            return "#87CEEB";
+        }
         else if (node.IsHighlighted) // Tô màu vàng cho node đang được tìm kiếm
         {
             return "#FFC107"; // Vàng hổ phách nhạt (Amber)
@@ -395,10 +399,7 @@
     private void OnTraversalMethodChange(ChangeEventArgs e)
     {
         selectedTraversalMethod = e.Value?.ToString() ?? "in-order";
-
-
     }
-
 
     private async Task InOrderTraversalVisualization(NodeService? node, CancellationToken cancellationToken)
     {
@@ -587,13 +588,12 @@
         StateHasChanged();
     }
 
-
-
     private void RemoveHighlighting()
     {
         foreach (var node in binaryTreeService.GetAllNodes())
         {
             node.IsHighlighted = false;
+            node.IsFound = false;
         }
         UpdateTreeDrawing();
     }
@@ -829,7 +829,7 @@
         // Ẩn controller sau khi hoàn thành
         showController = false;
         StateHasChanged();
-        OnNodeClick(path.Last());
+        path.Last().IsFound = true;
 
         statusMessage = $"Node {targetValue} found successfully.";
         StateHasChanged();
@@ -887,7 +887,7 @@
             {
                 await Task.Delay(2000);
                 showController = false;
-                OnNodeClick(currentNode);
+                currentNode.IsFound = true;
                 statusMessage = $"Found node {targetValue} successfully.";
                 UpdateTreeDrawing();
                 return true;
@@ -943,7 +943,7 @@
         {
             await Task.Delay(2000);
             showController = false;
-            OnNodeClick(node);
+            node.IsFound = true;
             statusMessage = $"Found node {targetValue} successfully.";
             UpdateTreeDrawing();
             return true;

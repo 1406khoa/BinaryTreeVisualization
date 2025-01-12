@@ -14,7 +14,6 @@ public class BSTService
     // Danh sách để lưu trữ giá trị của các node đã thêm vào cây
     public List<int> nodeValues = new List<int>();
 
-
     public List<NodeService> GetAllNodes()
     {
         List<NodeService> nodes = new List<NodeService>();

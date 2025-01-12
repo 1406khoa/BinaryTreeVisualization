@@ -267,6 +267,7 @@
                     statusMessage = "Rotated!";
 
                 }
+                OnInitialized();
                 HighlightNode(newNodeID);
                 // Thực hiện animation một lần sau khi cây đã cân bằng
 
@@ -513,12 +514,12 @@
         StateHasChanged();
     }
 
-    //Delete node
     private async Task DeleteNode()
     {
         HideDropdown();
+        OnInitialized();
 
-        // Lưu vị trí cũ trước khi thêm node
+        // Lưu vị trí cũ để thực hiện animation
         if (avlTreeService.Root != null)
         {
             avlTreeService.StoreOldPositions(avlTreeService.Root);
@@ -526,63 +527,51 @@
 
         // Tìm node cần xóa
         var nodeToDelete = avlTreeService.FindNodeFromRoot(newNodeValue);
-        statusMessage = $"Find {newNodeValue} to delete...";
-
-        if (nodeToDelete != null)
+        if (nodeToDelete == null)
         {
-            isTraversing = true;
-            // Tìm đường đi từ gốc đến node cần xóa
-            var pathToNode = GetPathToNode(nodeToDelete);
-
-            // Di chuyển controller theo đường đi tới node cần xóa
-            await MoveControllerAlongPath(pathToNode);
-
-            await Task.Delay(500);
-            // Sau khi controller đến node cần xóa, thực hiện xóa node
-            bool isDeleted = avlTreeService.DeleteNode(newNodeValue);
-
-            // Kiểm tra nếu xóa thành công
-            if (isDeleted)
-            {
-                showController = false;
-                if (avlTreeService.DidRotate)
-                {
-                    showController = false;
-                    statusMessage = "Rotating...";
-                    await AnimateRotations();
-                    statusMessage = "Rotated!";
-
-                }
-                else
-                {
-                    // Nếu không xoay, node mới xuất hiện ngay lập tức
-                    avlTreeService.SetAnimatedPositionToCurrent();
-                    UpdateTreeDrawing();
-                }
-                UpdateTreeDrawing();
-                OnInitialized();
-                UpdateTreeDrawing();
-                statusMessage = $"Deleted node {newNodeValue} successfully!";
-                isTraversing = false;
-            }
-            else
-            {
-                // Thông báo nếu không thể xóa (ví dụ: node không tồn tại)
-                statusMessage = $"Node {newNodeValue} does not exist.";
-                await Task.Delay(500);
-                UpdateTreeDrawing();
-                StateHasChanged();
-                isTraversing = false;
-            }
-        }
-        else
-        {
-            // Thông báo nếu node cần xóa không tồn tại
             statusMessage = $"Node {newNodeValue} does not exist.";
             await Task.Delay(500);
             UpdateTreeDrawing();
-            StateHasChanged();
+            return;
         }
+
+        isTraversing = true;
+
+        // Di chuyển controller đến node cần xóa
+        var pathToNode = GetPathToNode(nodeToDelete);
+        await MoveControllerAlongPath(pathToNode);
+
+        await Task.Delay(500);
+
+        // Thực hiện xóa
+        bool isDeleted = avlTreeService.DeleteNode(newNodeValue);
+        showController = false;
+        if (!isDeleted)
+        {
+            statusMessage = $"Cannot delete {newNodeValue}.";
+            isTraversing = false;
+            UpdateTreeDrawing();
+            return;
+        }
+
+        // Kiểm tra và thực hiện animation xoay cây nếu cần
+        if (avlTreeService.DidRotate)
+        {
+            showController = false;
+            statusMessage = "Rotating...";
+            await AnimateRotations();
+            statusMessage = "Rotation complete.";
+        }
+        else
+        {
+            avlTreeService.SetAnimatedPositionToCurrent();
+            UpdateTreeDrawing();
+        }
+
+        UpdateTreeDrawing();
+        statusMessage = $"Deleted node {newNodeValue} successfully.";
+        isTraversing = false;
+        StateHasChanged();
     }
 
     private async Task UpdateNode()
@@ -600,6 +589,11 @@
                 isTraversing = false;
                 StateHasChanged();
                 return;
+            }
+
+            if (avlTreeService.Root != null)
+            {
+                controllerPosition = new Vector2((float)avlTreeService.Root.PositionX, (float)avlTreeService.Root.PositionY);
             }
 
             // Tìm đường đi từ gốc đến node cần chỉnh sửa
@@ -645,6 +639,7 @@
             if (newNode != null)
             {
                 OnNodeClick(newNode);
+                statusMessage = $"Update {newNodeValue} successfully";
             }
             isTraversing = false;
         }

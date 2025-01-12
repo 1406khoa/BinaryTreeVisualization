@@ -210,6 +210,10 @@
         {
             return "lightgreen";
         }
+        else if (node.IsFound)
+        {
+            return "#87CEEB";
+        }
         else if (node.IsHighlighted) // Tô màu vàng cho node đang được tìm kiếm
         {
             return "#FFC107"; // Vàng hổ phách nhạt (Amber)
@@ -584,13 +588,12 @@
         StateHasChanged();
     }
 
-
-
     private void RemoveHighlighting()
     {
         foreach (var node in binaryTreeService.GetAllNodes())
         {
             node.IsHighlighted = false;
+            node.IsFound = false;
         }
         UpdateTreeDrawing();
     }
@@ -826,7 +829,7 @@
         // Ẩn controller sau khi hoàn thành
         showController = false;
         StateHasChanged();
-        OnNodeClick(path.Last());
+        path.Last().IsFound = true;
 
         statusMessage = $"Node {targetValue} found successfully.";
         StateHasChanged();
@@ -884,7 +887,7 @@
             {
                 await Task.Delay(2000);
                 showController = false;
-                OnNodeClick(currentNode);
+                currentNode.IsFound = true;
                 statusMessage = $"Found node {targetValue} successfully.";
                 UpdateTreeDrawing();
                 return true;
@@ -940,7 +943,7 @@
         {
             await Task.Delay(2000);
             showController = false;
-            OnNodeClick(node);
+            node.IsFound = true;
             statusMessage = $"Found node {targetValue} successfully.";
             UpdateTreeDrawing();
             return true;

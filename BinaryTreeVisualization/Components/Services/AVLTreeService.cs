@@ -1,4 +1,5 @@
 ﻿using BinaryTreeVisualization.Components.Services;
+using Microsoft.AspNetCore.Routing;
 
 public class AVLTreeService : BSTService
 {
@@ -53,48 +54,67 @@ public class AVLTreeService : BSTService
         return rotated;
     }
 
-    //Xóa nút
     public override bool DeleteNode(int value)
     {
         DidRotate = false;
 
-        // Tìm node cần xóa, nếu node tồn tại, lấy cha của node đó trước khi xóa
-        var nodeToDelete = FindNodeFromRoot(value);
-        NodeService? parent = nodeToDelete?.Parent;
-
-        // Gọi hàm xóa của BSTService để xóa node
+        // Gọi hàm DeleteNode của BSTService
         bool isDeleted = base.DeleteNode(value);
+        if (!isDeleted) return false;
 
-        // Nếu node đã bị xóa, kiểm tra và cân bằng lại cây
-        if (isDeleted)
+        var nodeToDelete = FindNodeFromRoot(value);
+
+        if (Root != null)
         {
-            DidRotate = BalanceTreeAfterDelete(parent);
-
+            DidRotate = BalanceTreeAfterDelete(Root);
         }
 
-        return isDeleted;
+        return true;
     }
 
-    // Kiểm tra và cân bằng cây sau khi xóa nút
+
+
     private bool BalanceTreeAfterDelete(NodeService? node)
     {
         bool rotated = false;
-        while (node != null)
+        var allNodes = new List<NodeService>();
+        CollectAllNodes(node, allNodes);
+     
+
+        bool changed = true;
+        // Quay vòng cho đến khi ko rotate nữa
+        while (changed)
         {
-            // Cập nhật chiều cao của node hiện tại (tức là node cha của node đã bị xóa)
-            node.UpdateHeight();
-
-            if (!IsBalanced(node))
+            changed = false;
+            foreach (var n in allNodes)
             {
-                node = PerformRotation(node);
-                rotated = true;
+                n.UpdateHeight();
+                if (!IsBalanced(n))
+                {
+                    PerformRotation(n);
+                    rotated = true;
+                    changed = true;
+                    // Sau xoay => break, rebuild allNodes => 
+                    //   (để logic chặt chẽ, ta reload node parent references)
+                    UpdateParentReferences(Root, null);
+                    ArrangeNodePositions(Root, RootX, RootY, 200);
+                    // Gom lại node => break foreach => while => lặp
+                    allNodes.Clear();
+                    CollectAllNodes(Root, allNodes);
+                    break;
+                }
             }
-
-            // Tiếp tục dò ngược lên cao hơn
-            node = node.Parent;
         }
-
         return rotated;
+    }
+
+    // Hàm gom toàn bộ node, BFS hoặc DFS
+    private void CollectAllNodes(NodeService? node, List<NodeService> list)
+    {
+        if (node == null) return;
+        list.Add(node);
+        CollectAllNodes(node.LeftChild, list);
+        CollectAllNodes(node.RightChild, list);
     }
 
     // Kiểm tra cân bằng tại thời điểm thêm nút
